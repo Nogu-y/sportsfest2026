@@ -1,0 +1,8 @@
+.codex
+node_modules
+.turbo
+.next
+dist
+apps/db/data
+.env
+.env.*
