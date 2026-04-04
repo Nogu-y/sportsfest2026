@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sportsfest2026-db
+    environment:
+      POSTGRES_DB: sportsfest2026
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./apps/db/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sportsfest2026"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: node:22-alpine
+    container_name: sportsfest2026-api
+    working_dir: /workspace
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/sportsfest2026
+      PORT: 8787
+    ports:
+      - "8787:8787"
+    volumes:
+      - .:/workspace
+      - pnpm-store:/pnpm/store
+    command: >
+      sh -c "corepack enable
+      && pnpm config set store-dir /pnpm/store
+      && pnpm install --no-frozen-lockfile
+      && pnpm --filter @sportsfest/api dev"
+
+volumes:
+  pnpm-store:
