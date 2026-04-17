@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { appName } from '@sportsfest/shared'
+import { apiEnv } from './env'
 
 const app = new Hono()
 
@@ -16,7 +17,7 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok' })
 })
 
-const port = Number(process.env.PORT ?? 8787)
+const port = apiEnv.PORT
 
 serve(
   {

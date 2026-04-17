@@ -2,10 +2,12 @@ services:
   db:
     image: postgres:16-alpine
     container_name: sportsfest2026-db
+    env_file:
+      - ./apps/api/.env
     environment:
-      POSTGRES_DB: sportsfest2026
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
@@ -20,15 +22,14 @@ services:
   api:
     image: node:22-alpine
     container_name: sportsfest2026-api
+    env_file:
+      - ./apps/api/.env
     working_dir: /workspace
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/sportsfest2026
-      PORT: 8787
     ports:
-      - "8787:8787"
+      - "${PORT:-8787}:${PORT:-8787}"
     volumes:
       - .:/workspace
       - pnpm-store:/pnpm/store
