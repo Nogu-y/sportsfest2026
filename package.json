@@ -3,8 +3,8 @@
   "private": true,
   "packageManager": "pnpm@10.0.0",
   "scripts": {
-    "dev": "concurrently -k -n web,infra \"pnpm --filter @sportsfest/web dev\" \"docker compose up api db\"",
-    "dev:down": "docker compose down",
+    "dev": "concurrently -k -n web,infra \"pnpm --filter @sportsfest/web dev\" \"docker compose --env-file apps/api/.env up api db\"",
+    "dev:down": "docker compose --env-file apps/api/.env down",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check": "turbo run check"
