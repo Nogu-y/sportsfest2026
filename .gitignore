@@ -1,0 +1,13 @@
+.codex
+node_modules
+.turbo
+.next
+dist
+apps/db/data
+.env
+.env.*
+
+#.vscode/settings.json は拡張機能の共通設定を含むため除外しない.
+
+# intellij用.
+.idea
