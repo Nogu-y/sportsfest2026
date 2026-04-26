@@ -7,7 +7,7 @@
 
 - Web 側から入りたい: `TypeScript` → `React / Next.js`
   - UI 部品の書き方と、画面として動かす仕組みをまとめて確認できます
-- API 側から入りたい: `TypeScript` → `Hono`
+- API 側から入りたい: `TypeScript` → `Hono` → `Valibot` → `Hono RPC`
 - DB 周りを見たい: `PostgreSQL` → `Drizzle ORM`
 - 開発環境の仕組みを知りたい: `Docker Compose` → `pnpm workspace` → `Turborepo`
 
@@ -18,6 +18,8 @@
 - [React](./stacks/react.md)
 - [Next.js](./stacks/nextjs.md)
 - [Hono](./stacks/hono.md)
+- [Valibot](./stacks/valibot.md)
+- [Hono RPC](./stacks/hono-rpc.md)
 - [PostgreSQL](./stacks/postgresql.md)
 - [Drizzle ORM](./stacks/drizzle.md)
 - [Docker Compose](./stacks/docker-compose.md)

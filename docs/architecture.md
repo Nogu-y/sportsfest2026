@@ -16,6 +16,8 @@
 ### `apps/api`
 
 - `Hono` と `@hono/node-server` で構成された API です
+- `Valibot` で入力・出力スキーマを定義し、`hono-openapi` で OpenAPI を自動生成します
+- `@hono/swagger-ui` で API ドキュメント UI を公開します
 - `Drizzle ORM` と `postgres` ドライバを利用して PostgreSQL に接続します
 - DB スキーマは `src/db/schema.ts` に定義します
 
@@ -24,6 +26,7 @@
 - アプリ名のような共有定数
 - Web/API の環境変数スキーマ
 - 共有したい Zod スキーマや型
+- Web と API の間で共有したい型の土台
 
 ### `packages/config`
 
@@ -64,6 +67,7 @@ apps/api ──> PostgreSQL
 
 - Web のトップ画面
 - API の `/` と `/health`
+- API ドキュメントの `/openapi.json` と `/docs`
 - サンプル用の Drizzle スキーマ `sample_records`
 
 本実装を進める際は、機能単位で `apps/web` と `apps/api` を拡張し、共通化すべき型のみ `packages/shared` に寄せる方針が扱いやすいです。

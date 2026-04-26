@@ -63,6 +63,8 @@ pnpm dev
 - Web: `http://localhost:3000`
 - API: `http://localhost:8787`
 - Health Check: `http://localhost:8787/health`
+- OpenAPI JSON: `http://localhost:8787/openapi.json`
+- Swagger UI: `http://localhost:8787/docs`
 
 API の `/` では、サービス名や状態を返します。
 
