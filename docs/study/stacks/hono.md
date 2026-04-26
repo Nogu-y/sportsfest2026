@@ -9,6 +9,7 @@ API の URL と処理を書くための軽量フレームワークです。
 
 - `apps/api` の API サーバー本体
 - `/` や `/health` のエンドポイントを定義している
+- `/openapi.json` と `/docs` も Hono から公開している
 - Node サーバー上で動かしている
 
 ## キーワード
@@ -53,7 +54,7 @@ app.get('/teams', (c) => {
 
 ## 実務で意識すること
 
-- ルートが増えたら `index.ts` に詰め込みすぎない
+- ルートが増えたら `routes/`、`handlers/`、`schemas/` に分けて詰め込みすぎない
 - 入出力の型やバリデーションを意識する
 - DB 操作とルーティングを同じ場所に書きすぎない
 - `GET` と `POST` の役割を混ぜない
@@ -61,3 +62,4 @@ app.get('/teams', (c) => {
 ## このプロジェクトでまず見る場所
 
 - `apps/api/src/index.ts`
+- `apps/api/src/routes/system.ts`

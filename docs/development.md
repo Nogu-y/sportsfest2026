@@ -37,8 +37,11 @@ pnpm --filter @sportsfest/api check
 
 ### API を追加する場合
 
-- エントリポイントは `apps/api/src/index.ts` です
+- アプリ本体は `apps/api/src/index.ts`、起動処理は `apps/api/src/server.ts` です
 - ルートや処理が増えたら、責務ごとにファイルを分割してください
+- ルート定義は `apps/api/src/routes`、実行処理は `apps/api/src/handlers`、API 入出力スキーマは `apps/api/src/schemas` に寄せると見通しを保ちやすくなります
+- OpenAPI の全体設定とルートごとのドキュメント定義は `apps/api/src/openapi` に置きます
+- API ドキュメントに載せるルートは `hono-openapi` の `describeRoute(...)` と `resolver(...)` を使って定義します
 - DB アクセスは `src/db` 配下に寄せると見通しを保ちやすくなります
 
 ### 共通コードを追加する場合
@@ -58,3 +61,4 @@ pnpm --filter @sportsfest/api check
 - `lint` は現状プレースホルダーです
 - API は Docker 内で起動するため、DB 接続先はコンテナネットワーク前提です
 - `packages/shared` の変更は Web/API の両方に影響する可能性があります
+- API の OpenAPI JSON は `/openapi.json`、Swagger UI は `/docs` です
