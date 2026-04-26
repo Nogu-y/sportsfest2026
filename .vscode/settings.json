@@ -1,5 +1,8 @@
 {
   "conventionalCommits.scopes": [
-    "all"
+    "all",
+    "api",
+    "frontend",
+    "db",
   ]
 }
