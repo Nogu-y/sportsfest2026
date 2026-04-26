@@ -1,27 +1,24 @@
-import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import { appName } from '@sportsfest/shared'
+import { registerOpenAPIRoutes } from './openapi'
+import { systemRoutes } from './routes/system'
+import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
-const app = new Hono()
+export const app = new Hono()
 
-app.get('/', (c) => {
-  return c.json({
-    name: appName,
-    service: 'api',
-    status: 'ok'
-  })
-})
+app.route('/', systemRoutes)
 
-app.get('/health', (c) => {
-  return c.json({ status: 'ok' })
-})
+registerOpenAPIRoutes(app)
 
-const port = apiEnv.PORT
+export type AppType = typeof app
 
-serve(
-  {
+
+
+const port = apiEnv.PORT || 8787
+
+serve({
     fetch: app.fetch,
+    // hostname: "0.0.0.0",
     port
   },
   () => {

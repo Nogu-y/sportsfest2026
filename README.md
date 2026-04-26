@@ -78,6 +78,8 @@ pnpm dev
 - Web: `http://localhost:3000`
 - API: `http://localhost:8787`
 - API ヘルスチェック: `http://localhost:8787/health`
+- OpenAPI JSON: `http://localhost:8787/openapi.json`
+- Swagger UI: `http://localhost:8787/docs`
 
 ## よく使うコマンド
 
