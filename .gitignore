@@ -11,3 +11,6 @@ apps/db/data
 
 # intellij用.
 .idea
+
+# TypeScript cache
+*.tsbuildinfo
