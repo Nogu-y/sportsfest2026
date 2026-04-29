@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm" # pnpmの依存関係のキャッシュによる高速化
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 型チェック
+      - name: Type Check
+        run: pnpm check
+
+      # Lint実行
+      - name: Lint
+        run: pnpm lint
+
+      # ビルドチェック
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8787
