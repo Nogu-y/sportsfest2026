@@ -5,8 +5,7 @@ import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
 export const app = new Hono()
-
-app.route('/', systemRoutes)
+  .route('/', systemRoutes)
 
 registerOpenAPIRoutes(app)
 
