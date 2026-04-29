@@ -12,7 +12,7 @@ export default function HomePage() {
       const data = (await (await api.health.$get()).json()).status
       setHealth(data)
     })()
-  })
+  },[])
   return (
     <main style={{ padding: 24 }}>
       <h1>{appName}</h1>
