@@ -29,7 +29,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${PORT:-8787}:${PORT:-8787}"
+      - 8787:8787
     volumes:
       - .:/workspace
       - pnpm-store:/pnpm/store
