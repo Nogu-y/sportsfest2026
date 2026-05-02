@@ -40,4 +40,8 @@ services:
       && pnpm --filter @sportsfest/api dev"
 
 volumes:
-  pnpm-store:
+  root-node-modules:
+  api-node-modules:
+  web-node-modules:
+  shared-node-modules:
+  config-node-modules:
