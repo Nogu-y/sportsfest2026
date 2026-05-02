@@ -14,7 +14,7 @@ services:
     volumes:
       - ./apps/db/data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d sportsfest2026"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d sportsfest2026" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -39,10 +39,8 @@ services:
       - config-node-modules:/workspace/packages/config/node_modules
       - pnpm-store:/pnpm/store
     command: >
-      sh -c "corepack enable
-      && pnpm config set store-dir /pnpm/store
-      && pnpm install --no-frozen-lockfile
-      && pnpm --filter @sportsfest/api dev"
+      sh -c "corepack enable && pnpm config set store-dir /pnpm/store && pnpm
+      install --no-frozen-lockfile && pnpm --filter @sportsfest/api dev"
 
 volumes:
   root-node-modules:
@@ -50,3 +48,4 @@ volumes:
   web-node-modules:
   shared-node-modules:
   config-node-modules:
+  pnpm-store:
