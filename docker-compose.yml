@@ -32,6 +32,11 @@ services:
       - 8787:8787
     volumes:
       - .:/workspace
+      - root-node-modules:/workspace/node_modules
+      - api-node-modules:/workspace/apps/api/node_modules
+      - web-node-modules:/workspace/apps/web/node_modules
+      - shared-node-modules:/workspace/packages/shared/node_modules
+      - config-node-modules:/workspace/packages/config/node_modules
       - pnpm-store:/pnpm/store
     command: >
       sh -c "corepack enable
