@@ -58,7 +58,9 @@ const cacheStrategies: RuntimeCaching[] = [
     },
     {
         matcher: ({ request, url: { pathname }, sameOrigin }) =>
-            request.headers.get("Content-Type")?.includes("text/html") &&
+            (request.mode === "navigate" ||
+                request.destination === "document" ||
+                request.headers.get("Accept")?.includes("text/html")) &&
             sameOrigin &&
             !pathname.startsWith("/api/"),
         handler: new StaleWhileRevalidate({
