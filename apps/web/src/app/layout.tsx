@@ -8,7 +8,6 @@ type RootLayoutProps = {
 export const metadata: Metadata = {
     title: "校内体育大会2026 - 一関高専",
     description: "令和8年度一関高専校内体育大会の結果速報をお届けします！",
-    manifest: "/manifest.webmanifest",
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {

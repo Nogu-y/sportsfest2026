@@ -14,3 +14,7 @@ apps/db/data
 
 # TypeScript cache
 *.tsbuildinfo
+
+apps/web/public/swe-worker-development.js
+apps/web/public/sw.js
+apps/web/certificates
