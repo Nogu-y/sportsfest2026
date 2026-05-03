@@ -4,12 +4,26 @@ import {fileURLToPath} from 'node:url'
 import withSerwistInit from "@serwist/next";
 import {execSync} from "child_process";
 
+function getRevision(): string {
+    const envRevision = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA;
+
+    if (envRevision) {
+        return envRevision.trim().slice(0, 7);
+    }
+
+    try {
+        return execSync("git rev-parse HEAD", {
+            encoding: "utf-8"
+        })
+            .trim()
+            .slice(0, 7);
+    } catch {
+        return "unknown";
+    }
+}
+
 //git commit hashをキャッシュバージョンとして使用
-const revision = execSync("git rev-parse HEAD", {
-    encoding: "utf-8"
-})
-    .trim()
-    .slice(0, 7);
+const revision = getRevision();
 
 const withSerwist = withSerwistInit({
     cacheOnNavigation: true,
