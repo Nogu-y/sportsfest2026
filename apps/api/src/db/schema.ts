@@ -177,7 +177,6 @@ export const blockRankings = pgTable(
     note: text("note"),
   },
   (t) => ({
-    uniqueRank: unique("block_rank_unique").on(t.eventBlockId, t.rank),
     uniqueTeam: unique("block_team_unique").on(t.eventBlockId, t.teamId),
   })
 );
