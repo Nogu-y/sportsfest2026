@@ -116,11 +116,6 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
-// app/sw.ts の末尾に追記
-
-// ...既存のコード
-serwist.addEventListeners();
-
 // ==========================================
 // Web Push 通知のハンドリング
 // ==========================================
