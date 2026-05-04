@@ -15,6 +15,9 @@ apps/db/data
 # TypeScript cache
 *.tsbuildinfo
 
+# PWA用
 apps/web/public/swe-worker-development.js
 apps/web/public/sw.js
+
+# nextのlocalHTTPS機能で生成される証明書を無視.
 apps/web/certificates
