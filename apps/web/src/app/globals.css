@@ -7,3 +7,7 @@
     --color-primary-lite: #91acc4;
     --color-primary-lite2: #f3f7f8;
 }
+
+body {
+    font-family: var(--font-anonymous-pro), var(--font-ibm-plex-sans-jp), sans-serif;
+}
