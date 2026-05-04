@@ -136,7 +136,7 @@ self.addEventListener("push", (event) => {
         const title = data.title || "新しい通知";
         const options: NotificationOptions = {
             body: data.body || "メッセージが届きました",
-            icon: data.icon || "https://dev.sho800.net/web-app-manifest-192x192.png", // ご自身の環境のアイコンパスに合わせてください
+            icon: data.icon || "/web-app-manifest-192x192.png", // 通知アイコン. 指定がない場合はデフォルトアイコンを使用.
             badge: data.badge || "/icons/badge.png",      // 通知バー用モノクロアイコン
             data: data.url || "/",                        // クリック時の遷移先URLなどを保持
             tag: 'match-alert-' + Date.now(), // ← 毎回ユニークなタグをつける（上書き防止）

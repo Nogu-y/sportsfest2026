@@ -36,7 +36,7 @@ export async function sendPushNotification(message: string) {
 
                 title: '5分後に次の試合が始まります！',
                 body: message,
-                icon: 'https://dev.sho800.net/web-app-manifest-192x192.png',
+                icon: '/web-app-manifest-192x192.png',
             }),
             {
                 headers: {
