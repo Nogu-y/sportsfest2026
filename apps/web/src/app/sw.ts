@@ -137,7 +137,7 @@ self.addEventListener("push", (event) => {
         const options: NotificationOptions = {
             body: data.body || "メッセージが届きました",
             icon: data.icon || "/web-app-manifest-192x192.png", // 通知アイコン. 指定がない場合はデフォルトアイコンを使用.
-            badge: data.badge || "/icons/badge.png",      // 通知バー用モノクロアイコン
+            badge: data.badge || "/web-app-manifest-192x192.png", // 既存の公開アセットを通知バッジのフォールバックに使用
             data: data.url || "/",                        // クリック時の遷移先URLなどを保持
             tag: 'match-alert-' + Date.now(), // ← 毎回ユニークなタグをつける（上書き防止）
         };
