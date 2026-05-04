@@ -7,14 +7,11 @@
         "name": "next"
       }
     ],
-"lib": [
-  "DOM",
-  "DOM.Iterable",
-  "ES2022",
-  "WebWorker"
-]
-      "webworker",
-      "dom"
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022",
+      "WebWorker"
     ],
     "types": [
       "@serwist/next/typings"
@@ -26,5 +23,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "public/sw.js"]
+  "exclude": [
+    "node_modules",
+    "public/sw.js"
+  ]
 }
