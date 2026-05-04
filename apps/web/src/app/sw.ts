@@ -140,7 +140,6 @@ self.addEventListener("push", (event) => {
             badge: data.badge || "/icons/badge.png",      // 通知バー用モノクロアイコン
             data: data.url || "/",                        // クリック時の遷移先URLなどを保持
             tag: 'match-alert-' + Date.now(), // ← 毎回ユニークなタグをつける（上書き防止）
-            renotify: true, // ← タグがあっても毎回音とバイブ（バナー）を強制する
         };
 
         // 通知を表示するまでService Workerを待機させる
