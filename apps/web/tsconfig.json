@@ -7,7 +7,12 @@
         "name": "next"
       }
     ],
-    "lib": [
+"lib": [
+  "DOM",
+  "DOM.Iterable",
+  "ES2022",
+  "WebWorker"
+]
       "webworker",
       "dom"
     ],
