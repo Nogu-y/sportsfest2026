@@ -2,10 +2,49 @@
 
 import {PushSubscription, sendNotification, setVapidDetails} from 'web-push'
 
+function getRequiredEnv(name: 'NEXT_PUBLIC_VAPID_PUBLIC_KEY' | 'VAPID_PRIVATE_KEY' | 'VAPID_MAILTO') {
+    const value = process.env[name]?.trim()
+
+    if (!value) {
+        throw new Error(`Missing required environment variable: ${name}`)
+    }
+
+    return value
+}
+
+function assertBase64UrlLike(value: string, name: 'NEXT_PUBLIC_VAPID_PUBLIC_KEY' | 'VAPID_PRIVATE_KEY', minLength: number) {
+    if (!/^[A-Za-z0-9_-]+$/.test(value) || value.length < minLength) {
+        throw new Error(
+            `Invalid ${name}: expected a base64url-encoded VAPID key`
+        )
+    }
+}
+
+function getValidatedVapidConfig() {
+    const mailto = getRequiredEnv('VAPID_MAILTO')
+    const publicKey = getRequiredEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY')
+    const privateKey = getRequiredEnv('VAPID_PRIVATE_KEY')
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailto)) {
+        throw new Error('Invalid VAPID_MAILTO: expected an email address without the mailto: prefix')
+    }
+
+    assertBase64UrlLike(publicKey, 'NEXT_PUBLIC_VAPID_PUBLIC_KEY', 32)
+    assertBase64UrlLike(privateKey, 'VAPID_PRIVATE_KEY', 32)
+
+    return {
+        mailto: `mailto:${mailto}`,
+        publicKey,
+        privateKey,
+    }
+}
+
+const vapidConfig = getValidatedVapidConfig()
+
 setVapidDetails(
-    `mailto:${process.env.VAPID_MAILTO || 'admin@example.com'}`,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
+    vapidConfig.mailto,
+    vapidConfig.publicKey,
+    vapidConfig.privateKey
 )
 
 let subscription: PushSubscription | null = null
