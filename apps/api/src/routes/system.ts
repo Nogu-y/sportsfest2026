@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { appName } from '@sportsfest/shared'
-import { getHealthStatusDoc, getServiceInfoDoc } from '../openapi/system'
+import { getHealthStatusDoc, getServiceInfoDoc } from '../schemas/system'
 
 export const systemRoutes = new Hono()
   .get('/', getServiceInfoDoc, (c) => {
