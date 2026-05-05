@@ -36,6 +36,10 @@ function PushNotificationManager() {
             updateViaCache: 'none',
         })
         const sub = await registration.pushManager.getSubscription()
+        if (sub) {
+            const serializedSub = JSON.parse(JSON.stringify(sub))
+            await subscribeUser(serializedSub)
+        }
         setSubscription(sub)
     }
 
