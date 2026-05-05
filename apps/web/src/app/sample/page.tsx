@@ -109,31 +109,43 @@ function InstallPrompt() {
         )
 
         setIsStandalone(window.matchMedia('(display-mode: standalone)').matches)
-        window.addEventListener("beforeinstallprompt", (e) => {  
+
+        const handler = (e: Event) => {
             // beforeinstallpromptは, 既にインストールされている場合は発火しないことに注意.
             e.preventDefault();
-            setPromptEvent(e);
-        });
+            setPromptEvent(e as any);
+        };
+        window.addEventListener("beforeinstallprompt", handler);
 
-
+        return () => {
+            window.removeEventListener("beforeinstallprompt", handler);
+        };
     }, [])
 
-
-    if (isStandalone || !promptEvent) {
-        return null // Don't show install button if already installed
+    if (isStandalone) {
+        return null // Don't show install UI if already installed
     }
 
+    if (!isIOS && !promptEvent) {
+        return null // Non-iOS: only show if install prompt is available
+    }
 
     return (
         <div>
             <h3>Install App</h3>
-            <button
-                onClick={() => {
-                    promptEvent.prompt();
-                }}
-            >
-                Add to Home Screen
-            </button>
+            {promptEvent && (
+                <button
+                    onClick={() => {
+                        try {
+                            promptEvent.prompt();
+                        } catch (err) {
+                            console.error('Failed to show install prompt:', err);
+                        }
+                    }}
+                >
+                    Add to Home Screen
+                </button>
+            )}
             {isIOS && (
                 <p>
                     To install this app on your iOS device, tap the share button
