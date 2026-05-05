@@ -115,3 +115,65 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// ==========================================
+// Web Push 通知のハンドリング
+// ==========================================
+
+// 1. Push通知を受信したときの処理
+self.addEventListener("push", (event) => {
+    if (!event.data) return;
+
+    try {
+        // サーバーから送信されたJSONペイロードをパース
+        const data = event.data.json();
+
+        const title = data.title || "新しい通知";
+        const options: NotificationOptions = {
+            body: data.body || "メッセージが届きました",
+            icon: data.icon || "/web-app-manifest-192x192.png", // 通知アイコン. 指定がない場合はデフォルトアイコンを使用.
+            badge: data.badge || "/web-app-manifest-192x192.png", // 既存の公開アセットを通知バッジのフォールバックに使用
+            data: data.url || "/",                        // クリック時の遷移先URLなどを保持
+            tag: 'match-alert-' + Date.now(), // ← 毎回ユニークなタグをつける（上書き防止）
+        };
+
+        // 通知を表示するまでService Workerを待機させる
+        event.waitUntil(self.registration.showNotification(title, options));
+    } catch (error) {
+        console.error("Pushイベントの処理に失敗しました:", error);
+
+        // JSON形式でない単なるテキストが送られてきた場合のフォールバック
+        event.waitUntil(
+            self.registration.showNotification("新しい通知", {
+                body: event.data.text(),
+            })
+        );
+    }
+});
+
+// 2. 通知がクリックされたときの処理
+self.addEventListener("notificationclick", (event) => {
+    // クリックされたら通知を閉じる
+    event.notification.close();
+
+    // 通知生成時に仕込んでおいたURLを取得（なければルートを開く）
+    const urlToOpen = new URL(event.notification.data || "/", self.location.origin).href;
+
+    event.waitUntil(
+        self.clients
+            .matchAll({ type: "window", includeUncontrolled: true })
+            .then((windowClients) => {
+                // 既に該当するURLのタブが開いている場合は、そのタブにフォーカスを当てる
+                for (let i = 0; i < windowClients.length; i++) {
+                    const client = windowClients[i];
+                    if (client.url === urlToOpen && "focus" in client) {
+                        return client.focus();
+                    }
+                }
+                // まだ開いていない場合は、新しいタブ（ウィンドウ）でURLを開く
+                if (self.clients.openWindow) {
+                    return self.clients.openWindow(urlToOpen);
+                }
+            })
+    );
+});
