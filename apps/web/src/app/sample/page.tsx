@@ -109,13 +109,18 @@ function InstallPrompt() {
         )
 
         setIsStandalone(window.matchMedia('(display-mode: standalone)').matches)
-        window.addEventListener("beforeinstallprompt", (e) => {  
+
+        const handleBeforeInstallPrompt = (e: Event) => {
             // beforeinstallpromptは, 既にインストールされている場合は発火しないことに注意.
             e.preventDefault();
             setPromptEvent(e);
-        });
+        }
 
+        window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
 
+        return () => {
+            window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
+        }
     }, [])
 
 
