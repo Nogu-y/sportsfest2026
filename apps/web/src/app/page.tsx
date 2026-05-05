@@ -3,6 +3,7 @@ import { appName } from '@sportsfest/shared'
 import { webEnv } from '../env'
 import { useEffect, useState } from 'react'
 import { api } from 'src/lib/api/client'
+import Link from "next/link";
 
 
 export default function HomePage() {
@@ -19,6 +20,7 @@ export default function HomePage() {
       <p>Next.js / Hono / PostgreSQL / Drizzle のモノレポひな型です。</p>
       <p>API: {webEnv.NEXT_PUBLIC_API_BASE_URL}</p>
       <p>API.health: {health}</p>
+      <Link href={"/sample"} >sample</Link>
     </main>
   )
 }
