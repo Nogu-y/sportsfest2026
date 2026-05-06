@@ -180,7 +180,7 @@ jobs:
       - name: Merge screenshots horizontally
         working-directory: apps/web
         run: |
-          magick .screenshots/*.png +append branch-mobile-screenshots.png
+          convert .screenshots/*.png +append branch-mobile-screenshots.png
 
       - name: Upload screenshots artifact
         uses: actions/upload-artifact@v4
