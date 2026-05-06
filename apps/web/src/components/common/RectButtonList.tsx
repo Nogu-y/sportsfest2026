@@ -1,28 +1,28 @@
-import EventStatusButton from "./RectButton";
+import RectButton from "./RectButton";
 
-type EventStatusOption<TValue extends string> = {
+type RectButtonOption<TValue extends string> = {
   label: string;
   value: TValue;
 };
 
-type EventStatusFilterProps<TValue extends string> = {
-  options: readonly EventStatusOption<TValue>[];
+type RectButtonListProps<TValue extends string> = {
+  options: readonly RectButtonOption<TValue>[];
   value: TValue;
   onChange?: (value: TValue) => void;
 };
 
-const EventStatusFilter = <TValue extends string>({
+const RectButtonList = <TValue extends string>({
   options,
   value,
   onChange,
-}: EventStatusFilterProps<TValue>) => {
+}: RectButtonListProps<TValue>) => {
   return (
     <div className="flex items-start gap-2 overflow-hidden">
       {options.map((option) => {
         const isActive = option.value === value;
 
         return (
-          <EventStatusButton
+          <RectButton
             key={option.value}
             option={option}
             isActive={isActive}
@@ -34,5 +34,5 @@ const EventStatusFilter = <TValue extends string>({
   );
 };
 
-export default EventStatusFilter;
-export type { EventStatusFilterProps, EventStatusOption };
+export default RectButtonList;
+export type { RectButtonListProps, RectButtonOption };

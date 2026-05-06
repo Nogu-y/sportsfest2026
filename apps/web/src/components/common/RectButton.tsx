@@ -1,19 +1,19 @@
-type EventStatusButtonOption<TValue extends string> = {
+type RectButtonOption<TValue extends string> = {
   label: string;
   value: TValue;
 };
 
-type EventStatusButtonProps<TValue extends string> = {
-  option: EventStatusButtonOption<TValue>;
+type RectButtonProps<TValue extends string> = {
+  option: RectButtonOption<TValue>;
   isActive: boolean;
   onClick?: (value: TValue) => void;
 };
 
-const EventStatusButton = <TValue extends string>({
+const RectButton = <TValue extends string>({
   option,
   isActive,
   onClick,
-}: EventStatusButtonProps<TValue>) => {
+}: RectButtonProps<TValue>) => {
   return (
     <button
       type="button"
@@ -30,5 +30,5 @@ const EventStatusButton = <TValue extends string>({
   );
 };
 
-export default EventStatusButton;
-export type { EventStatusButtonOption, EventStatusButtonProps };
+export default RectButton;
+export type { RectButtonOption, RectButtonProps };

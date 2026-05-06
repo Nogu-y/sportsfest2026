@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import Image from "next/image";
 import Clock from "./Clock";
 import HeaderNavTabs from "./HeaderNavTabs";
@@ -10,14 +9,9 @@ const tabs = [
   { label: "マッチ", href: "/map" },
 ] as const;
 
-type HeaderProps = {
-  activeTabIndex?: number;
-  children?: ReactNode;
-};
-
-const Header = ({ activeTabIndex = 0, children }: HeaderProps) => {
+const Header = ({ activeTabIndex = 0 }: { activeTabIndex?: number }) => {
   return (
-    <header className="relative flex h-55 w-full flex-col gap-4 bg-primary px-8 py-4 text-white">
+    <header className="relative flex h-35 w-full flex-col gap-4 bg-primary px-8 pt-4 text-white">
       <Clock />
 
       <div className="flex w-full items-center justify-between">
@@ -44,8 +38,6 @@ const Header = ({ activeTabIndex = 0, children }: HeaderProps) => {
       </div>
 
       <HeaderNavTabs tabs={tabs} activeIndex={activeTabIndex} />
-
-      {children}
     </header>
   );
 };
