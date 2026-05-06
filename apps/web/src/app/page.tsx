@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import EventStatusFilter from "src/components/common/EventStatusFilter";
-import SortOrderRadioGroup from "src/components/common/SortOrderRadioGroup";
+import EventStatusFilter from "src/components/common/RectButtonList";
+import SortOrderRadioGroup from "src/components/common/RadioGroup";
 import Header from "src/components/layouts/header/Header";
 
 const eventStatusOptions = [
