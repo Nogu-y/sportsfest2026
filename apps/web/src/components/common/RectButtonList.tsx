@@ -1,4 +1,4 @@
-import EventStatusButton from "./EventStatusButton";
+import EventStatusButton from "./RectButton";
 
 type EventStatusOption<TValue extends string> = {
   label: string;
