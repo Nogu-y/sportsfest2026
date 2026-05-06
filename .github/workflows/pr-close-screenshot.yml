@@ -43,9 +43,16 @@ jobs:
 
       - name: Start frontend only
         run: |
-          pnpm --filter web dev > web.log 2>&1 &
-          pnpm exec wait-on http://127.0.0.1:3000 --timeout 180000
+          pnpm --filter @sportsfest/web dev > web.log 2>&1 &
 
+          echo "Waiting for web..."
+          if ! pnpm exec wait-on http://127.0.0.1:3000 --timeout 60000; then
+            echo "===== WEB LOG ====="
+            cat web.log
+            exit 1
+          fi
+
+          echo "Web is ready"
           echo "===== WEB LOG ====="
           cat web.log
 
