@@ -32,7 +32,7 @@ const Header = ({ activeTabIndex = 0, children }: HeaderProps) => {
         >
           <Image
             src="/icons/bookmark_icon.svg"
-            alt=""
+            alt="ウォッチリストアイコン"
             width={24}
             height={24}
             aria-hidden="true"
