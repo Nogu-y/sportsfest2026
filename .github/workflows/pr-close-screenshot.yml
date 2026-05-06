@@ -119,39 +119,48 @@ jobs:
           async function collectRoutes(appDir) {
             const routes = [];
 
-            if (await hasPageFile(appDir)) {
-              routes.push("/");
-            }
-
-            const entries = await fs.readdir(appDir, {
-              withFileTypes: true,
-            });
-
-            for (const entry of entries) {
-              if (!entry.isDirectory()) continue;
-
-              const name = entry.name;
-
-              // dynamic routes
-              if (name.includes("[")) continue;
-
-              // route groups
-              if (name.startsWith("(")) continue;
-
-              // parallel routes
-              if (name.startsWith("@")) continue;
-
-              // private folders
-              if (name.startsWith("_")) continue;
-
-              const dir = path.join(appDir, name);
-
-              if (await hasPageFile(dir)) {
-                routes.push(`/${name}`);
-              }
-            }
+            await scan(appDir, "");
 
             return routes;
+
+            async function scan(currentDir, currentRoute) {
+              // page.tsx があれば route として追加
+              if (await hasPageFile(currentDir)) {
+                routes.push(currentRoute || "/");
+              }
+
+              const entries = await fs.readdir(currentDir, {
+                withFileTypes: true,
+              });
+
+              for (const entry of entries) {
+                if (!entry.isDirectory()) continue;
+
+                const name = entry.name;
+
+                // dynamic routes 無視
+                if (name.includes("[")) continue;
+
+                // parallel routes 無視
+                if (name.startsWith("@")) continue;
+
+                // private folders 無視
+                if (name.startsWith("_")) continue;
+
+                const dir = path.join(currentDir, name);
+
+                // route groups はURLに含めず探索継続
+                if (name.startsWith("(")) {
+                  await scan(dir, currentRoute);
+                  continue;
+                }
+
+                // 一階層のみ
+                if (currentRoute !== "") continue;
+
+                await scan(dir, `${currentRoute}/${name}`);
+              }
+            }
           }
 
           async function hasPageFile(dir) {

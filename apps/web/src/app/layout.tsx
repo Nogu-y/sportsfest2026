@@ -24,7 +24,7 @@ const anonymousPro = Anonymous_Pro({
 
 export const metadata: Metadata = {
   title: "校内体育大会2026 - 一関高専",
-  description: "令和8年度一関高専校内体育大会の結果速報をお届けします！",
+  description: "令和8年度一関高専校内体育大会の結果速報をお届け！",
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
