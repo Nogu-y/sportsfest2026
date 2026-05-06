@@ -31,7 +31,7 @@ const Header = ({ activeTabIndex = 0, children }: HeaderProps) => {
           aria-label="ウォッチリスト"
         >
           <Image
-            src="icons/bookmark_icon.svg"
+            src="/icons/bookmark_icon.svg"
             alt=""
             width={24}
             height={24}
