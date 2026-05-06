@@ -14,7 +14,7 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout pushed branch
+      - name: Checkout branch
         uses: actions/checkout@v4
 
       - name: Setup pnpm
@@ -29,10 +29,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create env files
+      - name: Create web env
         run: |
           cp apps/web/env.example apps/web/.env
-          cp apps/api/env.example apps/api/.env
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
@@ -42,11 +41,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Start development environment
+      - name: Start frontend only
         run: |
-          pnpm dev &
-          pnpm exec wait-on http://127.0.0.1:3000
-          pnpm exec wait-on http://127.0.0.1:8787/health
+          pnpm --filter web dev > web.log 2>&1 &
+          pnpm exec wait-on http://127.0.0.1:3000 --timeout 180000
+
+          echo "===== WEB LOG ====="
+          cat web.log
 
       - name: Generate screenshot script
         working-directory: apps/web
@@ -63,12 +64,17 @@ jobs:
 
           console.log("Routes:", routes);
 
-          await fs.mkdir(".screenshots", { recursive: true });
+          await fs.mkdir(".screenshots", {
+            recursive: true,
+          });
 
           const browser = await chromium.launch();
 
           const context = await browser.newContext({
-            viewport: { width: 393, height: 852 },
+            viewport: {
+              width: 393,
+              height: 852,
+            },
             deviceScaleFactor: 3,
             isMobile: true,
             hasTouch: true,
@@ -78,6 +84,7 @@ jobs:
 
           for (const route of routes) {
             const page = await context.newPage();
+
             const url = new URL(route, BASE_URL).toString();
 
             console.log("Capture:", url);
@@ -118,9 +125,16 @@ jobs:
 
               const name = entry.name;
 
+              // dynamic routes
               if (name.includes("[")) continue;
+
+              // route groups
               if (name.startsWith("(")) continue;
+
+              // parallel routes
               if (name.startsWith("@")) continue;
+
+              // private folders
               if (name.startsWith("_")) continue;
 
               const dir = path.join(appDir, name);
@@ -134,7 +148,14 @@ jobs:
           }
 
           async function hasPageFile(dir) {
-            for (const file of ["page.tsx", "page.ts", "page.jsx", "page.js"]) {
+            const candidates = [
+              "page.tsx",
+              "page.ts",
+              "page.jsx",
+              "page.js",
+            ];
+
+            for (const file of candidates) {
               try {
                 await fs.access(path.join(dir, file));
                 return true;
@@ -165,6 +186,6 @@ jobs:
         run: |
           curl -X POST "$DISCORD_WEBHOOK_URL" \
             -F "payload_json={
-              \"content\":\"Branch Screenshot Preview\n\nauthor: ${COMMIT_AUTHOR}\n branch: ${BRANCH_NAME}\n commit: ${COMMIT_SHA}\n message: ${COMMIT_MESSAGE}\"
+              \"content\":\"\ Branch Screenshot Preview\n\n author: ${COMMIT_AUTHOR}\n branch: ${BRANCH_NAME}\n commit: ${COMMIT_SHA}\n message: ${COMMIT_MESSAGE}\"
             }" \
             -F "files[0]=@branch-mobile-screenshots.png"
