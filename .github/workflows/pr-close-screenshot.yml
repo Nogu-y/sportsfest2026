@@ -1,0 +1,196 @@
+name: PR Close Mobile Screenshots
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  screenshot:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout PR head commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create env files
+        run: |
+          cp apps/web/env.example apps/web/.env
+          cp apps/api/env.example apps/api/.env
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      - name: Start development environment
+        run: |
+          pnpm dev &
+          pnpm exec wait-on http://127.0.0.1:3000
+          pnpm exec wait-on http://127.0.0.1:8787/health
+
+      - name: Generate screenshot script
+        working-directory: apps/web
+        run: |
+          cat > pr-close-screenshots.mjs <<'EOF'
+          import { chromium } from "playwright";
+          import fs from "node:fs/promises";
+          import path from "node:path";
+
+          const BASE_URL = "http://127.0.0.1:3000";
+          const APP_DIR = "src/app";
+
+          const routes = await collectRoutes(APP_DIR);
+
+          console.log("Routes:", routes);
+
+          await fs.mkdir(".screenshots", {
+            recursive: true,
+          });
+
+          const browser = await chromium.launch();
+
+          const context = await browser.newContext({
+            viewport: {
+              width: 393,
+              height: 852,
+            },
+            deviceScaleFactor: 3,
+            isMobile: true,
+            hasTouch: true,
+            userAgent:
+              "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+          });
+
+          for (const route of routes) {
+            const page = await context.newPage();
+
+            const url = new URL(route, BASE_URL).toString();
+
+            console.log("Capture:", url);
+
+            await page.goto(url, {
+              waitUntil: "networkidle",
+              timeout: 60000,
+            });
+
+            const filename =
+              route === "/"
+                ? ".screenshots/root.png"
+                : `.screenshots/${route.replaceAll("/", "_")}.png`;
+
+            await page.screenshot({
+              path: filename,
+              fullPage: false,
+            });
+
+            await page.close();
+          }
+
+          await browser.close();
+
+          async function collectRoutes(appDir) {
+            const routes = [];
+
+            if (await hasPageFile(appDir)) {
+              routes.push("/");
+            }
+
+            const entries = await fs.readdir(appDir, {
+              withFileTypes: true,
+            });
+
+            for (const entry of entries) {
+              if (!entry.isDirectory()) continue;
+
+              const name = entry.name;
+
+              // dynamic routes
+              if (name.includes("[")) continue;
+
+              // route groups
+              if (name.startsWith("(")) continue;
+
+              // parallel routes
+              if (name.startsWith("@")) continue;
+
+              // private folders
+              if (name.startsWith("_")) continue;
+
+              const dir = path.join(appDir, name);
+
+              if (await hasPageFile(dir)) {
+                routes.push(`/${name}`);
+              }
+            }
+
+            return routes;
+          }
+
+          async function hasPageFile(dir) {
+            const candidates = [
+              "page.tsx",
+              "page.ts",
+              "page.jsx",
+              "page.js",
+            ];
+
+            for (const file of candidates) {
+              try {
+                await fs.access(path.join(dir, file));
+                return true;
+              } catch {}
+            }
+
+            return false;
+          }
+          EOF
+
+      - name: Capture screenshots
+        working-directory: apps/web
+        run: node pr-close-screenshots.mjs
+
+      - name: Merge screenshots horizontally
+        working-directory: apps/web
+        run: |
+          magick .screenshots/*.png +append pr-close-mobile-screenshots.png
+
+      - name: Send screenshots to Discord
+        working-directory: apps/web
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          curl -X POST "$DISCORD_WEBHOOK_URL" \
+            -F "payload_json={
+              \"content\":\"PR Closed Screenshot Preview\n\nauthor: ${PR_AUTHOR}\nbranch: ${PR_BRANCH}\n PR: #${PR_NUMBER}\n title: ${PR_TITLE}\ merged: ${PR_MERGED}\"
+            }" \
+            -F "files[0]=@pr-close-mobile-screenshots.png"
