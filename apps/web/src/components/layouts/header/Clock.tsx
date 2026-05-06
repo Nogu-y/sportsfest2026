@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const clockClassName = "text-white text-[10px] font-normal text-center";
+const clockClassName = "text-white text-[12px] font-normal text-center -mb-6 mt-2";
 
 export default function Clock() {
   const [time, setTime] = useState<Date | null>(null);
@@ -18,7 +18,7 @@ export default function Clock() {
   }, []);
 
   if (!time) {
-    return <div className={`${clockClassName} invisible`}>00:00:00</div>;
+    return <div className={`${clockClassName} invisible `}>00:00:00</div>;
   }
 
   const formattedTime = time.toLocaleTimeString("ja-JP", {
