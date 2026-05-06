@@ -6,7 +6,7 @@ const tabs = [
   { label: "ホーム", href: "/" },
   { label: "スケジュール", href: "/schedule" },
   { label: "各種目", href: "/events" },
-  { label: "マッチ", href: "/map" },
+  { label: "マップ", href: "/map" },
 ] as const;
 
 const Header = ({ activeTabIndex = 0 }: { activeTabIndex?: number }) => {
