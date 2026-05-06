@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+const clockClassName = "text-white text-[10px] font-normal text-center";
+
 export default function Clock() {
   const [time, setTime] = useState<Date | null>(null);
 
@@ -16,7 +18,7 @@ export default function Clock() {
   }, []);
 
   if (!time) {
-    return <div className="h-5 opacity-0">00:00:00</div>;
+    return <div className={`${clockClassName} invisible`}>00:00:00</div>;
   }
 
   const formattedTime = time.toLocaleTimeString("ja-JP", {
@@ -25,9 +27,5 @@ export default function Clock() {
     second: "2-digit",
   });
 
-  return (
-    <div className="text-white text-[10px] font-normal text-center">
-      {formattedTime}
-    </div>
-  );
+  return <div className={clockClassName}>{formattedTime}</div>;
 }
