@@ -6,7 +6,7 @@ import Image from "next/image";
 const tabs = [
   { label: "ホーム", href: "/" },
   { label: "スケジュール", href: "/schedule" },
-  { label: "各種目", href: "/events" },
+  { label: "各種目", href: "/event" },
   { label: "マップ", href: "/map" },
 ] as const;
 
@@ -26,11 +26,11 @@ const Header = ({ activeTabIndex = 0 }: { activeTabIndex?: number }) => {
           aria-label="ウォッチリスト"
         >
           <Image
-              src="/icons/watchlist-items-icon.svg"
-              alt="ウォッチリストのアイコン"
-              width={24}
-              height={24}
-              aria-hidden="true"
+            src="/icons/watchlist-items-icon.svg"
+            alt="ウォッチリストのアイコン"
+            width={24}
+            height={24}
+            aria-hidden="true"
           />
           <span className="whitespace-nowrap text-[10px] leading-normal">
             ウォッチリスト
