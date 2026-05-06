@@ -1,21 +1,21 @@
-type SortOrderOption<TValue extends string> = {
+type Option<TValue extends string> = {
   label: string;
   value: TValue;
 };
 
-type SortOrderRadioGroupProps<TValue extends string> = {
+type RadioGroupProps<TValue extends string> = {
   name: string;
-  options: readonly SortOrderOption<TValue>[];
+  options: readonly Option<TValue>[];
   value: TValue;
   onChange?: (value: TValue) => void;
 };
 
-const SortOrderRadioGroup = <TValue extends string>({
+const RadioGroup = <TValue extends string>({
   name,
   options,
   value,
   onChange,
-}: SortOrderRadioGroupProps<TValue>) => {
+}: RadioGroupProps<TValue>) => {
   return (
     <div className="flex w-91.25 items-start gap-7 overflow-hidden">
       {options.map((option) => {
@@ -50,5 +50,5 @@ const SortOrderRadioGroup = <TValue extends string>({
   );
 };
 
-export default SortOrderRadioGroup;
-export type { SortOrderOption, SortOrderRadioGroupProps };
+export default RadioGroup;
+export type { Option, RadioGroupProps };

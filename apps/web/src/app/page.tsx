@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import EventStatusFilter from "src/components/common/RectButtonList";
-import SortOrderRadioGroup from "src/components/common/RadioGroup";
-import Header from "src/components/layouts/header/Header";
+import RadioGroup from "src/components/common/RadioGroup";
+import RectButtonList from "src/components/common/RectButtonList";
 
 const eventStatusOptions = [
   { label: "開催予定", value: "upcoming" },
@@ -19,21 +18,22 @@ const sortOrderOptions = [
 export default function HomePage() {
   return (
     <>
-      <Header>
+      <menu className="relative flex w-full flex-col gap-4 bg-primary px-8 pb-4 text-white mt-0">
         <div className="grid w-full grid-cols-1 items-start">
           <div className="col-start-1 row-start-1">
-            <EventStatusFilter options={eventStatusOptions} value="ongoing" />
+            <RectButtonList options={eventStatusOptions} value="ongoing" />
           </div>
 
           <div className="col-start-1 row-start-1 mt-10">
-            <SortOrderRadioGroup
+            <RadioGroup
               name="header-sort-order"
               options={sortOrderOptions}
               value="startsAt"
             />
           </div>
         </div>
-      </Header>
+      </menu>
+
       <main className="p-6">
         <Link href={"/sample"}>sample</Link>
       </main>
