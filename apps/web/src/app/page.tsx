@@ -1,26 +1,42 @@
-"use client"
-import { appName } from '@sportsfest/shared'
-import { webEnv } from '../env'
-import { useEffect, useState } from 'react'
-import { api } from 'src/lib/api/client'
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import EventStatusFilter from "src/components/common/EventStatusFilter";
+import SortOrderRadioGroup from "src/components/common/SortOrderRadioGroup";
+import Header from "src/components/layouts/header/Header";
+
+const eventStatusOptions = [
+  { label: "開催予定", value: "upcoming" },
+  { label: "開催中", value: "ongoing" },
+  { label: "結果", value: "result" },
+] as const;
+
+const sortOrderOptions = [
+  { label: "開始順", value: "startsAt" },
+  { label: "終了順", value: "endsAt" },
+] as const;
 
 export default function HomePage() {
-  const [health, setHealth] = useState("")
-  useEffect(()=>{
-    (async ()=>{
-      const data = (await (await api.health.$get()).json()).status
-      setHealth(data)
-    })()
-  },[])
   return (
-    <main style={{ padding: 24 }}>
-      <h1>{appName}</h1>
-      <p>Next.js / Hono / PostgreSQL / Drizzle のモノレポひな型です。</p>
-      <p>API: {webEnv.NEXT_PUBLIC_API_BASE_URL}</p>
-      <p>API.health: {health}</p>
-      <Link href={"/sample"} >sample</Link>
-    </main>
-  )
+    <>
+      <Header>
+        <div className="grid w-full grid-cols-1 items-start">
+          <div className="col-start-1 row-start-1">
+            <EventStatusFilter options={eventStatusOptions} value="ongoing" />
+          </div>
+
+          <div className="col-start-1 row-start-1 mt-10">
+            <SortOrderRadioGroup
+              name="header-sort-order"
+              options={sortOrderOptions}
+              value="startsAt"
+            />
+          </div>
+        </div>
+      </Header>
+      <main className="p-6">
+        <Link href={"/sample"}>sample</Link>
+      </main>
+    </>
+  );
 }
