@@ -1,6 +1,7 @@
-import Image from "next/image";
 import Clock from "./Clock";
 import HeaderNavTabs from "./HeaderNavTabs";
+import WatchlistIcon from "../../common/WatchlistIcon";
+import Image from "next/image";
 
 const tabs = [
   { label: "ホーム", href: "/" },
@@ -25,11 +26,11 @@ const Header = ({ activeTabIndex = 0 }: { activeTabIndex?: number }) => {
           aria-label="ウォッチリスト"
         >
           <Image
-            src="/icons/bookmark_icon.svg"
-            alt="ウォッチリストのアイコン"
-            width={24}
-            height={24}
-            aria-hidden="true"
+              src="/icons/watchlist-items-icon.svg"
+              alt="ウォッチリストのアイコン"
+              width={24}
+              height={24}
+              aria-hidden="true"
           />
           <span className="whitespace-nowrap text-[10px] leading-normal">
             ウォッチリスト
