@@ -17,7 +17,7 @@ const RectButton = <TValue extends string>({
   return (
     <button
       type="button"
-      className={`shrink-0 rounded px-2 py-1 text-[10px] leading-normal ${
+      className={`shrink-0 rounded px-2 py-1 text-[10px] leading-normal cursor-pointer transition-all transition-duration-150 ${
         isActive
           ? "w-32 bg-white text-primary"
           : "w-16 border border-primary-lite text-white/50"
