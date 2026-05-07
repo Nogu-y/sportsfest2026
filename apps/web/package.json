@@ -15,6 +15,7 @@
     "next": "^15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
     "serwist": "^9.5.10",
     "web-push": "^3.6.7"
   },
@@ -23,9 +24,9 @@
     "@types/node": "^22.14.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/web-push": "^3.6.4",
     "postcss": "^8.5.13",
     "tailwindcss": "^4.2.4",
-    "@types/web-push": "^3.6.4",
     "typescript": "^5.8.3"
   }
 }
