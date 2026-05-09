@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import MatchCard from "src/components/common/MatchCard";
 import RadioGroup from "src/components/common/RadioGroup";
 import RectButtonList from "src/components/common/RectButtonList";
 import { useState } from "react";
@@ -46,7 +47,18 @@ export default function HomePage() {
         </div>
       </SubHeader>
 
-      <main className="p-6">
+      <main className="space-y-4 p-6">
+        <h2 className="text-primary font-bold text-lg">開催中の競技</h2>
+        <MatchCard
+          eventId="valleyball"
+          eventName="バレーボール"
+          matchName="5J vs 4J"
+          dayLabel="Day1"
+          timeLabel="10:20~"
+          venueLabel="第一体育館 A1"
+          statusLabel="試合中"
+          progress={32}
+        />
         <Link href={"/sample"}>sample</Link>
       </main>
     </>
