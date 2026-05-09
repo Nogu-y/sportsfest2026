@@ -2,6 +2,7 @@ import "./globals.css";
 import { Anonymous_Pro, IBM_Plex_Sans_JP } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Header from "src/components/layouts/header/Header";
 
 type RootLayoutProps = {
   children: ReactNode;
@@ -23,13 +24,14 @@ const anonymousPro = Anonymous_Pro({
 
 export const metadata: Metadata = {
   title: "校内体育大会2026 - 一関高専",
-  description: "令和8年度一関高専校内体育大会の結果速報をお届けします！",
+  description: "令和8年度一関高専校内体育大会の結果速報をお届け！",
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja">
       <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable}`}>
+        <Header />
         {children}
       </body>
     </html>
