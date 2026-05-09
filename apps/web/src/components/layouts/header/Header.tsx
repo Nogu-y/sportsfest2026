@@ -10,7 +10,7 @@ const tabs = [
   { label: "マップ", href: "/map" },
 ] as const;
 
-const Header = ({ activeTabIndex = 0 }: { activeTabIndex?: number }) => {
+const Header = () => {
   return (
     <header className="relative flex h-35 w-full flex-col gap-4 bg-primary px-8 pt-4 text-white">
       <Clock />
@@ -38,7 +38,7 @@ const Header = ({ activeTabIndex = 0 }: { activeTabIndex?: number }) => {
         </button>
       </div>
 
-      <HeaderNavTabs tabs={tabs} activeIndex={activeTabIndex} />
+      <HeaderNavTabs tabs={tabs} />
     </header>
   );
 };
