@@ -9,7 +9,7 @@ export const masterSystemSchema = z.object({
 })
 
 export const getPublicMasterDoc = createRoute({
-  path: '/master',
+  path: '/',
   method: 'get',
   tags: ['public'],
   summary: '一般公開向けマスタデータを返す',
