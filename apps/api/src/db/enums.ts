@@ -36,6 +36,8 @@ export const matchStatusEnum = pgEnum("match_status", [
   "Cancelled",
 ]);
 
+export const staffRoleEnum = pgEnum('staff_role', ['ADMIN', 'STAFF'])
+
 //=============JSON型=============
 
 export type PointAllocation = {
