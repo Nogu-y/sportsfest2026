@@ -6,6 +6,7 @@ import { EventSchema, CreateEventRequestSchema, EventIdParamSchema, UpdateEventR
 const getEventsRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['admin_events'],
   responses: {
     200: {
       description: 'イベント一覧を取得',
@@ -30,6 +31,7 @@ const getEventsRoute = createRoute({
 const createEventsRoute = createRoute({
   method: 'post',
   path: '/',
+  tags: ['admin_events'],
   request: {
     body: {
       content: {
@@ -57,6 +59,7 @@ const createEventsRoute = createRoute({
 const updateEventRoute = createRoute({
   method: 'put',
   path: '/{id}',
+  tags: ['admin_events'],
   request: {
     params: EventIdParamSchema,
     body: {
@@ -77,6 +80,7 @@ const updateEventRoute = createRoute({
 const deleteEventRoute = createRoute({
   method: 'delete',
   path: '/{id}', // 削除する対象のID
+  tags: ['admin_events'],
   request: {
     params: EventIdParamSchema,
   },
