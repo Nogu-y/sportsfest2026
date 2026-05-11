@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
-import { getEvents, createEvent, updateEvent } from '../../repositories/admin/events'
+import { getEvents, createEvent, updateEvent, deleteEvent } from '../../repositories/admin/events'
 import { EventSchema, CreateEventRequestSchema, EventIdParamSchema, UpdateEventRequestSchema } from '../../schemas/admin/events'
 
 const getEventsRoute = createRoute({
@@ -74,6 +74,18 @@ const updateEventRoute = createRoute({
   },
 })
 
+const deleteEventRoute = createRoute({
+  method: 'delete',
+  path: '/{id}', // 削除する対象のID
+  request: {
+    params: EventIdParamSchema,
+  },
+  responses: {
+    204: { description: 'イベントの削除に成功 (No Content)' },
+    500: { description: 'サーバーエラー' },
+  },
+})
+
 export const adminEventsRoutes = new OpenAPIHono()
   // GET
   .openapi(getEventsRoute, async (c) => {
@@ -117,7 +129,7 @@ export const adminEventsRoutes = new OpenAPIHono()
       //   return c.json({ message: 'イベントが見つかりません' }, 404)
       // }
 
-      // mock
+      // mock(ここから10行めまで)
       const mockOldData = {
         id: id, // URLから取ったID
         name: "バスケットボール",
@@ -131,16 +143,34 @@ export const adminEventsRoutes = new OpenAPIHono()
       }
 
       // JavaScriptのスプレッド構文(...)を使って、古いデータに新しいデータ(body)を上書きする
-      // 送られてこなかった項目は、mockOldData の値がそのまま維持される！
+      // 送られてこなかった項目は、mockOldData の値がそのまま維持される
       const updatedEvent = {
         ...mockOldData,
         ...body,
       }
 
+
+
       return c.json(updatedEvent, 200)
     } catch (error) {
       console.error(error)
       return c.json({ message: '編集に失敗しました' })
+    }
+  })
+  // del
+  .openapi(deleteEventRoute, async (c) => {
+    try {
+      const { id } = c.req.valid('param')
+
+      // mockを使用していないので、実行してもエラー。
+      await deleteEvent(id)
+
+      // 成功したら204を返す
+      return c.body(null, 204)
+
+    } catch (error) {
+      console.error(error)
+      return c.json({ message: 'イベントの削除に失敗しました' }, 500)
     }
   })
 
