@@ -7,6 +7,7 @@ const getEventsRoute = createRoute({
   method: 'get',
   path: '/',
   tags: ['admin_events'],
+  summary: 'イベント情報を返す',
   responses: {
     200: {
       description: 'イベント一覧を取得',
@@ -32,6 +33,7 @@ const createEventsRoute = createRoute({
   method: 'post',
   path: '/',
   tags: ['admin_events'],
+  summary: 'イベントを作成する',
   request: {
     body: {
       content: {
@@ -60,6 +62,7 @@ const updateEventRoute = createRoute({
   method: 'put',
   path: '/{id}',
   tags: ['admin_events'],
+  summary: 'イベントを更新する',
   request: {
     params: EventIdParamSchema,
     body: {
@@ -81,6 +84,7 @@ const deleteEventRoute = createRoute({
   method: 'delete',
   path: '/{id}', // 削除する対象のID
   tags: ['admin_events'],
+  summary: 'イベントを削除する',
   request: {
     params: EventIdParamSchema,
   },
