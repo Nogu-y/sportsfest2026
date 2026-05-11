@@ -1,5 +1,7 @@
 import { z } from '@hono/zod-openapi'
+import { createRoute } from '@hono/zod-openapi'
 import { rankingOrderEnum , eventFormatEnum } from '../../db/enums'
+import { createReqBody, createResBody, createErrResBody } from '../../utils/schemaParser'
 
 // zodのenumスキーマを生成する
 const RankingOrderSchema = z.enum(rankingOrderEnum.enumValues)
@@ -35,3 +37,71 @@ export const EventIdParamSchema = z.object({
 })
 
 export const UpdateEventRequestSchema = CreateEventRequestSchema.partial()
+
+// 以下引越し
+
+const tags = ['Admin Events']
+
+// --- GET ---
+export const getEventsRoute = createRoute({
+  method: 'get',
+  path: '/',
+  tags,
+  summary: 'イベント一覧取得',
+  responses: {
+    200: createResBody(z.array(EventSchema), 'イベント一覧の取得に成功'),
+    500: createErrResBody('サーバーエラー'),
+  },
+})
+
+// --- POST ---
+export const createEventRoute = createRoute({
+  method: 'post',
+  path: '/',
+  tags,
+  summary: 'イベント新規作成',
+  request: {
+    ...createReqBody(CreateEventRequestSchema),
+  },
+  responses: {
+    201: createResBody(EventSchema, 'イベントの作成に成功'),
+    400: createErrResBody('バリデーションエラー'),
+    500: createErrResBody('サーバーエラー'),
+  },
+})
+
+// --- PUT ---
+export const updateEventRoute = createRoute({
+  method: 'put',
+  path: '/{id}',
+  tags,
+  summary: 'イベント更新',
+  request: {
+    params: EventIdParamSchema,
+    ...createReqBody(UpdateEventRequestSchema),
+  },
+  responses: {
+    200: createResBody(EventSchema, 'イベントの更新に成功'),
+    400: createErrResBody('バリデーションエラー'),
+    404: createErrResBody('イベントが見つかりません'),
+    500: createErrResBody('サーバーエラー'),
+  },
+})
+
+// --- DELETE ---
+export const deleteEventRoute = createRoute({
+  method: 'delete',
+  path: '/{id}',
+  tags,
+  summary: 'イベント削除',
+  request: {
+    params: EventIdParamSchema,
+  },
+  responses: {
+    // ※ 204 は "No Content" (ボディがない) ため、createResBody は使わずに直接書くのが正解です <- hoe
+    204: { description: 'イベントの削除に成功 (No Content)' },
+    404: createErrResBody('イベントが見つかりません'),
+    500: createErrResBody('サーバーエラー'),
+  },
+})
+
