@@ -1,7 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { getEvents } from '../../repositories/admin/events'
 
-export const adminEventsRoutes = new OpenAPIHono
+export const adminEventsRoutes = new OpenAPIHono()
 
 // 少し見やすく
 adminEventsRoutes.get( '/', async (c) => {
