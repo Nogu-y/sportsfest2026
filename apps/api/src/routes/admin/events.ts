@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
-import { getEvents, createEvent } from '../../repositories/admin/events'
-import { EventSchema, CreateEventRequestSchema } from '../../schemas/admin/events'
+import { getEvents, createEvent, updateEvent } from '../../repositories/admin/events'
+import { EventSchema, CreateEventRequestSchema, EventIdParamSchema, UpdateEventRequestSchema } from '../../schemas/admin/events'
 
 const getEventsRoute = createRoute({
   method: 'get',
@@ -46,13 +46,33 @@ const createEventsRoute = createRoute({
           schema: EventSchema,
         },
       },
-      description: 'ユーザー作成成功',
+      description: '作成成功',
     },
     500: {
       description: 'サーバーエラー'
     }
   },
 });
+
+const updateEventRoute = createRoute({
+  method: 'put',
+  path: '/{id}',
+  request: {
+    params: EventIdParamSchema,
+    body: {
+      content: { 'application/json': { schema: UpdateEventRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: EventSchema } },
+      description: 'イベントの更新に成功',
+    },
+    500: {
+      description: 'バリデーションエラー'
+    },
+  },
+})
 
 export const adminEventsRoutes = new OpenAPIHono()
   // GET
@@ -74,7 +94,7 @@ export const adminEventsRoutes = new OpenAPIHono()
       // await createEvent(body)
 
       const mockResponseData = {
-        // それっぽくidを錬成(仮ID)
+        // それっぽくidを錬成(仮IDを作成する)
         id: Math.floor(Math.random() * 1000) + 1,
         ...body,
       }
@@ -82,6 +102,45 @@ export const adminEventsRoutes = new OpenAPIHono()
     } catch (error) {
       console.error(error)
       return c.json({ message: '作成に失敗しました' })
+    }
+  })
+  // pull
+  .openapi( updateEventRoute, async (c) => {
+    try {
+      const { id } = c.req.valid('param')
+      const body = c.req.valid('json')
+
+      // db
+      // const updatedEvent = await updateEvent(id, body)
+      // もし指定されたIDがdbに存在しなかった場合の処理（404）
+      // if (!updatedEvent) {
+      //   return c.json({ message: 'イベントが見つかりません' }, 404)
+      // }
+
+      // mock
+      const mockOldData = {
+        id: id, // URLから取ったID
+        name: "バスケットボール",
+        description: "古い説明文",
+        color: "#000000",
+        ruleMd: "古いルール",
+        rankingOrder: "DESC" as const,
+        format: "TOURNAMENT" as const,
+        pointAllocation: {},
+        isCompleted: false,
+      }
+
+      // JavaScriptのスプレッド構文(...)を使って、古いデータに新しいデータ(body)を上書きする
+      // 送られてこなかった項目は、mockOldData の値がそのまま維持される！
+      const updatedEvent = {
+        ...mockOldData,
+        ...body,
+      }
+
+      return c.json(updatedEvent, 200)
+    } catch (error) {
+      console.error(error)
+      return c.json({ message: '編集に失敗しました' })
     }
   })
 

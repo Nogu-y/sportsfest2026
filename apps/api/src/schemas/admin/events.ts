@@ -25,3 +25,13 @@ export const CreateEventRequestSchema = EventSchema.omit({ id: true }).extend({
   isCompleted: z.boolean().optional().default(false),
 })
 
+// イベントのURLの値から数値を取り出す
+export const EventIdParamSchema = z.object({
+  // 文字列を数値に変換
+  id: z.coerce.number().openapi({
+    param: { name: 'id', in: 'path' },
+    example: 1,
+  }),
+})
+
+export const UpdateEventRequestSchema = CreateEventRequestSchema.partial()

@@ -14,10 +14,13 @@ export async function createEvent( data: typeof events.$inferInsert ) {
 }
 
 export async function updateEvent( id: number, data: Partial<typeof events.$inferInsert> ) {
-  await db
+  const [updatedEvent] = await db
     .update(events)
     .set(data)
     .where(eq(events.id, id))
+    .returning()
+
+  return updatedEvent
 }
 
 export async function deleteEvent( id: number ) {
