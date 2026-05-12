@@ -40,7 +40,7 @@ export const UpdateEventRequestSchema = CreateEventRequestSchema.partial()
 
 // 以下引越し
 
-const tags = ['Admin Events']
+const tags = ['admin']
 
 // --- GET ---
 export const getEventsRoute = createRoute({
