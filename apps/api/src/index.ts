@@ -24,10 +24,10 @@ export type AppType = typeof app
 const port = apiEnv.PORT || 8787
 
 serve({
-    fetch: app.fetch,
-    // hostname: "0.0.0.0",
-    port
-  },
+  fetch: app.fetch,
+  // hostname: "0.0.0.0",
+  port
+},
   () => {
     console.log(`api listening on http://localhost:${port}`)
   }
