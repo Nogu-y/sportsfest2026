@@ -9,10 +9,10 @@ import { apiEnv } from './env'
 
 export const app = $(
   new OpenAPIHono()
-  .use("/*", cors())
-  .route('/api/system', systemRoutes)
-  .route('/api/public', publicRoutes)
-  .route('/api/admin', adminRoutes)
+    .use("/*", cors())
+    .route('/api/system', systemRoutes)
+    .route('/api/public', publicRoutes)
+    .route('/api/admin', adminRoutes)
 )
 
 registerOpenAPIRoutes(app)
