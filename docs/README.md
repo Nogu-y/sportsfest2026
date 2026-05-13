@@ -13,6 +13,8 @@
   - 日常的な開発フロー、ファイル追加時の考え方、運用ルール
 - [データベースと Drizzle](./database.md)
   - PostgreSQL、スキーマ定義、マイグレーション関連
+- [スコア計算ロジック](./score-calculation.md)
+  - `POST /api/staff/events/:eventId/score` の入出力、計算フロー、失敗条件
 - [初心者向けガイド](./study/README.md)
   - 技術スタックの概要、学習用資料、チュートリアル
 
