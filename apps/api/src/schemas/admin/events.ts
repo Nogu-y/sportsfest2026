@@ -1,6 +1,6 @@
 import { z } from '@hono/zod-openapi'
 import { createRoute } from '@hono/zod-openapi'
-import { rankingOrderEnum , eventFormatEnum } from '../../db/enums'
+import { rankingOrderEnum, eventFormatEnum } from '../../db/enums'
 import { createReqBody, createResBody, createErrResBody } from '../../utils/schemaParser'
 
 // zodのenumスキーマを生成する
