@@ -15,7 +15,6 @@ export const app = $(
   .route('/api/public', publicRoutes)
   .route('/api/staff', staffRoutes)
   .route('/api/admin', adminRoutes)
-
 )
 
 registerOpenAPIRoutes(app)
