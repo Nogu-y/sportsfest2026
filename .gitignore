@@ -21,3 +21,9 @@ apps/web/public/sw.js
 
 # nextのlocalHTTPS機能で生成される証明書を無視.
 apps/web/certificates
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
