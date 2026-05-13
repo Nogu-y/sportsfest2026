@@ -2,6 +2,7 @@ import { $, OpenAPIHono } from '@hono/zod-openapi'
 import { cors } from "hono/cors"
 import { registerOpenAPIRoutes } from './openapi'
 import { publicRoutes } from './routes/public'
+import { staffRoutes } from './routes/staff'
 import { adminRoutes } from './routes/admin'
 import { systemRoutes } from './routes/system'
 import { serve } from '@hono/node-server'
@@ -12,7 +13,9 @@ export const app = $(
   .use("/*", cors())
   .route('/api/system', systemRoutes)
   .route('/api/public', publicRoutes)
+  .route('/api/staff', staffRoutes)
   .route('/api/admin', adminRoutes)
+
 )
 
 registerOpenAPIRoutes(app)
