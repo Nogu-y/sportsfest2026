@@ -1,16 +1,9 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { createResBody, createReqBody,createErrResBody } from '../../utils/schemaParser.js'
 
-export const createTeamSchema = z.object({
+export const teamSchema = z.object({
   name: z.string().min(1).max(100)
 });
-
-// 更新用にidとnameをそれぞれ定義
-export const deleteTeamSchema = z.object({
-  name: z.string().min(1).max(100).openapi({
-    example: 'チームA',
-  }),
-})
 
 export const TeamsParamSchema = z.object({
   // 文字列を数値に変換
@@ -20,29 +13,33 @@ export const TeamsParamSchema = z.object({
   }),
 })
 
-export const getTeamsResSchema = z.array(createTeamSchema)
+export const getTeamsResSchema = z.array(teamSchema)
 
 export const postTeamsDoc = createRoute({
   path: '/',
   method: 'post',
   tags: ['admin'],
   summary: 'チームを作成',
-  request: createReqBody(createTeamSchema),
+  request: createReqBody(teamSchema),
   responses: {
-    200: createResBody(createTeamSchema, "チーム作成完了"),
+    200: createResBody(teamSchema, "チーム作成完了"),
     400: createErrResBody('不正なリクエスト'),
-    409: createErrResBody('同じ UUID のサブスクリプションがすでに存在する'),
-    500: createErrResBody('')
+    404: createErrResBody("チームが見つからない"),
+    409: createErrResBody('同じ名前のチームが存在する'),
+    500: createErrResBody('データ取得失敗')
   },
 })
 
 export const getTeamsDoc = createRoute({
   path:'/',
-  method: 'get',
+  method: "get",
   tags:['admin'],
   summary:'チーム一覧',
   responses:{
     200:createResBody(getTeamsResSchema,"一覧表示"),
+    400: createErrResBody('不正なリクエスト'),
+    404: createErrResBody("チームが見つからない"),
+    500: createErrResBody("データ取得失敗")
   },
 })
 
@@ -55,23 +52,23 @@ export const deleteTeamsDoc = createRoute({
     params: TeamsParamSchema
   },
   responses: {
-    200: createResBody(deleteTeamSchema, "チーム作成完了"),
+    204: { description: 'チーム情報の削除に成功 (No Content)' },  
     400: createErrResBody('不正なリクエスト'),
-    409: createErrResBody('同じ UUID のサブスクリプションがすでに存在する'),
-    500: createErrResBody('')
+    404: createErrResBody("チームが見つからない"),
+    500: createErrResBody('データ取得失敗')
   },
 })
 
 export const updateTeamsDoc = createRoute({
   path: '/{id}',
-  method: 'get',
+  method: 'put',
   tags: ['admin'],
   summary: 'チームを作成',
-  request: createReqBody(deleteTeamSchema),
+  request: createReqBody(teamSchema),
   responses: {
-    200: createResBody(deleteTeamSchema, "チーム作成完了"),
+    200: createResBody(teamSchema, "チーム更新完了"),
     400: createErrResBody('不正なリクエスト'),
-    409: createErrResBody('同じ UUID のサブスクリプションがすでに存在する'),
-    500: createErrResBody('')
+    404: createErrResBody("チームが見つからない"),
+    500: createErrResBody('データ取得失敗')
   },
 })

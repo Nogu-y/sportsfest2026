@@ -3,7 +3,7 @@ import{ OpenAPIHono } from "@hono/zod-openapi"
 import{ postTeamsDoc, getTeamsDoc, deleteTeamsDoc, updateTeamsDoc } from "../../schemas/admin/teams.js"
 import{ createTeams, getTeams, deleteTeams, updateTeams } from "../../repositories/admin/teams.js"
 
-export const Teams = new OpenAPIHono()
+export const TeamsRoutes = new OpenAPIHono()
   .openapi(postTeamsDoc, async (c) => {
   const body = c.req.valid("json");
 
@@ -20,12 +20,12 @@ export const Teams = new OpenAPIHono()
   .openapi(deleteTeamsDoc, async (c) => {
     const { id } = c.req.valid('param')
     const result = await deleteTeams(id);
-    return c.json(result, 200)
+    return result? c.body(null, 204):c.json("not found",404)
   })
 
   .openapi(updateTeamsDoc, async (c) => {
     const { name } = c.req.valid('json')
     const id = Number(c.req.param('id'))
     const result = await updateTeams({id,name});
-    return c.json(result, 200)
+    return result ? c.json(result, 200) : c.json({ message: "not found" }, 404)
   })
