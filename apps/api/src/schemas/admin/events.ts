@@ -1,6 +1,6 @@
 import { z } from '@hono/zod-openapi'
 import { createRoute } from '@hono/zod-openapi'
-import { rankingOrderEnum , eventFormatEnum } from '../../db/enums'
+import { rankingOrderEnum, eventFormatEnum } from '../../db/enums'
 import { createReqBody, createResBody, createErrResBody } from '../../utils/schemaParser'
 
 // zodのenumスキーマを生成する
@@ -18,7 +18,7 @@ export const EventSchema = z.object({
   rankingOrder: RankingOrderSchema.openapi({ example: 'DESC' }),
   format: EventFormatSchema.openapi({ example: 'TOURNAMENT' }),
 
-  pointAllocation: z.record(z.any()).openapi({ example: {} }),
+  pointAllocation: z.record(z.string(), z.any()).openapi({ example: {} }),
   isCompleted: z.boolean().openapi({ example: false }),
 })
 
