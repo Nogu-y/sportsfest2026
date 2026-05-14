@@ -12,7 +12,7 @@ const tabs = [
 
 const Header = () => {
   return (
-    <header className="relative flex h-35 w-full flex-col gap-4 bg-primary px-8 pt-4 text-white">
+    <header className="relative flex h-35 w-full flex-col gap-4 bg-primary px-8 pt-4 text-white -mb-1">
       <Clock />
 
       <div className="flex w-full items-center justify-between">
