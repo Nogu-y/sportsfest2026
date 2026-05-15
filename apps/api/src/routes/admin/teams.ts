@@ -20,12 +20,12 @@ export const TeamsRoutes = new OpenAPIHono()
   .openapi(deleteTeamsDoc, async (c) => {
     const { id } = c.req.valid('param')
     const result = await deleteTeams(id);
-    return result? c.body(null, 204):c.json("not found",404)
+    return result? c.body(null, 204):c.json({ message: "not found" }, 404)
   })
 
   .openapi(updateTeamsDoc, async (c) => {
     const { name } = c.req.valid('json')
-    const id = Number(c.req.param('id'))
+    const { id } = c.req.valid('param')
     const result = await updateTeams({id,name});
     return result ? c.json(result, 200) : c.json({ message: "not found" }, 404)
   })

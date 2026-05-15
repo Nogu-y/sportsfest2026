@@ -24,7 +24,6 @@ export const postTeamsDoc = createRoute({
   responses: {
     200: createResBody(teamSchema, "チーム作成完了"),
     400: createErrResBody('不正なリクエスト'),
-    404: createErrResBody("チームが見つからない"),
     409: createErrResBody('同じ名前のチームが存在する'),
     500: createErrResBody('データ取得失敗')
   },
@@ -38,7 +37,6 @@ export const getTeamsDoc = createRoute({
   responses:{
     200:createResBody(getTeamsResSchema,"一覧表示"),
     400: createErrResBody('不正なリクエスト'),
-    404: createErrResBody("チームが見つからない"),
     500: createErrResBody("データ取得失敗")
   },
 })
@@ -64,7 +62,10 @@ export const updateTeamsDoc = createRoute({
   method: 'put',
   tags: ['admin'],
   summary: 'チームを作成',
-  request: createReqBody(teamSchema),
+  request: {
+    params: TeamsParamSchema,
+    ...createReqBody(teamSchema),
+  },
   responses: {
     200: createResBody(teamSchema, "チーム更新完了"),
     400: createErrResBody('不正なリクエスト'),
