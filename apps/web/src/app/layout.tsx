@@ -32,9 +32,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja">
       <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable}`}>
-        <ComingSoon/>
-        {/*<Header />*/}
-        {/*{children}*/}
+        {/*<ComingSoon/>*/}
+        {children}
       </body>
     </html>
   );
