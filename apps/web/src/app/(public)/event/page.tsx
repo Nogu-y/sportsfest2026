@@ -18,15 +18,10 @@ export default function Events() {
       </SubHeader>
       <EventHero>
         {/*TODO: 本ページ作成後, EventHeroのpropsにidを追加し, あちら側の責任で画像を取得できるようにする.*/}
-        <img src="/riree.webp" />
+        <img src="/relay.webp" />
       </EventHero>
       <main className="space-y-4 p-6">
-        {/* <div className="relative w-full px-8 h-8 flex flex-col justify-center items-center">
-        <div className=" w-full h-1 bg-blue-400  shadow-lg"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-1/2 text-center w-fit px-2 bg-white text-blue-400 decoration-blue-400">
-          概要
-        </div>
-      </div> */}
+        
         <HorizonTitle text="概要" />
         <Overview eventName="relay" />
 
