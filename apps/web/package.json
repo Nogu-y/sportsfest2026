@@ -17,6 +17,7 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "serwist": "^9.5.10",
+    "swr": "^2.4.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

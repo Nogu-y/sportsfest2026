@@ -105,6 +105,9 @@ importers:
       serwist:
         specifier: ^9.5.10
         version: 9.5.11(browserslist@4.28.2)(typescript@5.9.3)
+      swr:
+        specifier: ^2.4.1
+        version: 2.4.1(react@19.2.6)
       web-push:
         specifier: ^3.6.7
         version: 3.6.7
@@ -2263,6 +2266,11 @@ packages:
     resolution: {integrity: sha512-MpUEN2OodtUzxvKQl72cUF7RQ5EiHsGvSsVG0ia9c5RbWGL2CI4C7EpPS8UTBIplnlzZiNuV56w+FuNxy3ty2Q==}
     engines: {node: '>=10'}
 
+  swr@2.4.1:
+    resolution: {integrity: sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   tagged-tag@1.0.0:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
@@ -2373,6 +2381,11 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
+
+  use-sync-external-store@1.6.0:
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   valibot@1.4.0:
     resolution: {integrity: sha512-iC/x7fVcSyOwlm/VSt7RlHnzNGLGvR9GnxdifUeWoCJo0q4ZZvrVkIHC6faTlkxG47I2Y4UrFquPuVHCrOnrLg==}
@@ -4237,6 +4250,12 @@ snapshots:
     dependencies:
       has-flag: 4.0.0
 
+  swr@2.4.1(react@19.2.6):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.6
+      use-sync-external-store: 1.6.0(react@19.2.6)
+
   tagged-tag@1.0.0: {}
 
   tailwindcss@4.3.0: {}
@@ -4364,6 +4383,10 @@ snapshots:
       browserslist: 4.28.2
       escalade: 3.2.0
       picocolors: 1.1.1
+
+  use-sync-external-store@1.6.0(react@19.2.6):
+    dependencies:
+      react: 19.2.6
 
   valibot@1.4.0(typescript@5.9.3):
     optionalDependencies:
