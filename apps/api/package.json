@@ -9,7 +9,9 @@
     "check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:insert": "tsx src/db/data/insert.ts"
+    "db:insert": "tsx src/db/data/insert.ts",
+    "auth:bootstrap-admin": "tsx src/scripts/auth/accountCli.ts bootstrap-admin",
+    "auth:account": "tsx src/scripts/auth/accountCli.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.0",
