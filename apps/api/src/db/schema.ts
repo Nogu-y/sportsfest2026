@@ -16,8 +16,9 @@ import {
   PointAllocation,
   blockTypeEnum,
   stageEnum,
-  matchStatusEnum
- } from "./enums";
+  matchStatusEnum,
+  staffRoleEnum
+ } from './enums'
 
 //=============Tables=============
 
@@ -248,3 +249,57 @@ export const watchlists = pgTable("watchlists",{
     ),
   })
 );
+
+export const staffAccounts = pgTable(
+  'staff_accounts',
+  {
+    id: serial('id').primaryKey(),
+    loginId: varchar('login_id', { length: 100 }).notNull().unique(),
+    displayName: varchar('display_name', { length: 100 }).notNull(),
+    role: staffRoleEnum('role').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', {
+      withTimezone: true
+    })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', {
+      withTimezone: true
+    })
+      .notNull()
+      .defaultNow()
+  },
+  (t) => ({
+    roleIdx: index('staff_accounts_role_idx').on(t.role),
+    activeIdx: index('staff_accounts_active_idx').on(t.isActive)
+  })
+)
+
+export const staffSessions = pgTable(
+  'staff_sessions',
+  {
+    id: serial('id').primaryKey(),
+    staffAccountId: integer('staff_account_id')
+      .notNull()
+      .references(() => staffAccounts.id, { onDelete: 'cascade' }),
+    tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
+    expiresAt: timestamp('expires_at', {
+      withTimezone: true
+    }).notNull(),
+    lastSeenAt: timestamp('last_seen_at', {
+      withTimezone: true
+    })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp('created_at', {
+      withTimezone: true
+    })
+      .notNull()
+      .defaultNow()
+  },
+  (t) => ({
+    accountIdx: index('staff_sessions_account_idx').on(t.staffAccountId),
+    expiresIdx: index('staff_sessions_expires_idx').on(t.expiresAt)
+  })
+)
