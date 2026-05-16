@@ -3,6 +3,7 @@ import { Anonymous_Pro, IBM_Plex_Sans_JP } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Header from "src/components/layouts/header/Header";
+import {ComingSoon} from "../components/layouts/messagePage/ComingSoon";
 
 type RootLayoutProps = {
   children: ReactNode;
@@ -31,8 +32,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja">
       <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable}`}>
-        <Header />
-        {children}
+        <ComingSoon/>
+        {/*{children}*/}
       </body>
     </html>
   );
