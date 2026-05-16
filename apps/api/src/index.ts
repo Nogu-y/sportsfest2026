@@ -9,17 +9,16 @@ import { systemRoutes } from './routes/system'
 import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
-export const app = $(
-  new OpenAPIHono()
+export const app = new OpenAPIHono()
   .use("/*", cors())
   .route('/api/system', systemRoutes)
   .route('/api/auth', authRoutes)
   .route('/api/public', publicRoutes)
   .route('/api/staff', staffRoutes)
   .route('/api/admin', adminRoutes)
-)
 
-registerOpenAPIRoutes(app)
+
+registerOpenAPIRoutes($(app))
 
 export type AppType = typeof app
 
