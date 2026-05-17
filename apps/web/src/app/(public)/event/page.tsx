@@ -28,69 +28,69 @@ export default function Events() {
         <HorizonTitle text="進行中" />
 
         <div className="flex gap-4 overflow-x-auto p-2 snap-x snap-mandatory">
-          <MatchCard
-            eventId="basketball"
-            eventName="バスケットボール"
-            matchName="5J vs 4J"
-            dayLabel="Day1"
-            timeLabel="10:20~"
-            venueLabel="第一体育館 A1"
-            statusLabel="試合中"
-            progress={90}
-          />
-          <MatchCard
-            eventId="basketball"
-            eventName="ソフトボール"
-            matchName="5J vs 4J"
-            dayLabel="Day1"
-            timeLabel="10:20~"
-            venueLabel="第一体育館 A1"
-            statusLabel="試合中"
-            progress={90}
-          />
-          <MatchCard
-            eventId="basketball"
-            eventName="バレーボール"
-            matchName="5J vs 4J"
-            dayLabel="Day1"
-            timeLabel="10:20~"
-            venueLabel="第一体育館 A1"
-            statusLabel="試合中"
-            progress={90}
-          />
+          {/*<MatchCard*/}
+          {/*  eventId="basketball"*/}
+          {/*  eventName="バスケットボール"*/}
+          {/*  matchName="5J vs 4J"*/}
+          {/*  dayLabel="Day1"*/}
+          {/*  timeLabel="10:20~"*/}
+          {/*  venueLabel="第一体育館 A1"*/}
+          {/*  statusLabel="試合中"*/}
+          {/*  progress={90}*/}
+          {/*/>*/}
+          {/*<MatchCard*/}
+          {/*  eventId="basketball"*/}
+          {/*  eventName="ソフトボール"*/}
+          {/*  matchName="5J vs 4J"*/}
+          {/*  dayLabel="Day1"*/}
+          {/*  timeLabel="10:20~"*/}
+          {/*  venueLabel="第一体育館 A1"*/}
+          {/*  statusLabel="試合中"*/}
+          {/*  progress={90}*/}
+          {/*/>*/}
+          {/*<MatchCard*/}
+          {/*  eventId="basketball"*/}
+          {/*  eventName="バレーボール"*/}
+          {/*  matchName="5J vs 4J"*/}
+          {/*  dayLabel="Day1"*/}
+          {/*  timeLabel="10:20~"*/}
+          {/*  venueLabel="第一体育館 A1"*/}
+          {/*  statusLabel="試合中"*/}
+          {/*  progress={90}*/}
+          {/*/>*/}
         </div>
         <HorizonTitle text="次の試合" />
         <div className="flex gap-4 overflow-x-auto p-2 snap-x snap-mandatory">
-          <MatchCard
-            eventId="basketball"
-            eventName="バスケットボール"
-            matchName="5J vs 4J"
-            dayLabel="Day1"
-            timeLabel="10:20~"
-            venueLabel="第一体育館 A1"
-            statusLabel="試合中"
-            progress={90}
-          />
-          <MatchCard
-            eventId="basketball"
-            eventName="ソフトボール"
-            matchName="5J vs 4J"
-            dayLabel="Day1"
-            timeLabel="10:20~"
-            venueLabel="第一体育館 A1"
-            statusLabel="試合中"
-            progress={90}
-          />
-          <MatchCard
-            eventId="basketball"
-            eventName="バレーボール"
-            matchName="5J vs 4J"
-            dayLabel="Day1"
-            timeLabel="10:20~"
-            venueLabel="第一体育館 A1"
-            statusLabel="試合中"
-            progress={90}
-          />
+          {/*<MatchCard*/}
+          {/*  eventId="basketball"*/}
+          {/*  eventName="バスケットボール"*/}
+          {/*  matchName="5J vs 4J"*/}
+          {/*  dayLabel="Day1"*/}
+          {/*  timeLabel="10:20~"*/}
+          {/*  venueLabel="第一体育館 A1"*/}
+          {/*  statusLabel="試合中"*/}
+          {/*  progress={90}*/}
+          {/*/>*/}
+          {/*<MatchCard*/}
+          {/*  eventId="basketball"*/}
+          {/*  eventName="ソフトボール"*/}
+          {/*  matchName="5J vs 4J"*/}
+          {/*  dayLabel="Day1"*/}
+          {/*  timeLabel="10:20~"*/}
+          {/*  venueLabel="第一体育館 A1"*/}
+          {/*  statusLabel="試合中"*/}
+          {/*  progress={90}*/}
+          {/*/>*/}
+          {/*<MatchCard*/}
+          {/*  eventId="basketball"*/}
+          {/*  eventName="バレーボール"*/}
+          {/*  matchName="5J vs 4J"*/}
+          {/*  dayLabel="Day1"*/}
+          {/*  timeLabel="10:20~"*/}
+          {/*  venueLabel="第一体育館 A1"*/}
+          {/*  statusLabel="試合中"*/}
+          {/*  progress={90}*/}
+          {/*/>*/}
         </div>
       </main>
     </>
