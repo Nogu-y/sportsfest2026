@@ -100,14 +100,13 @@ export default function HomePage() {
                 </div>
             </SubHeader>
 
-            <main className="space-y-4 p-6">
-                <PwaNotificationPrompt />
-                <MyTeamSelector />
+            <main className="space-y-4 p-6 scrollbar-none overflow-y-visible min-h-[60dvh] border-b-2 border-gray-200 mb-4">
                 <h2 className="text-primary font-bold text-lg">{eventStatusOptions.find(o => o.value === eventStatus)?.label}の試合
                     ({displayMatches.length})</h2>
                 <MatchCardList matches={displayMatches} key={sortOrder + eventStatus}/>
-                <EventBracket eventId={1} />
             </main>
+            <PwaNotificationPrompt />
+            <MyTeamSelector />
         </>
     );
 }
