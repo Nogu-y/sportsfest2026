@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import {useEffect, useRef, useState} from 'react';
+import {TransformComponent, TransformWrapper} from 'react-zoom-pan-pinch';
 
 // ==========================================
 // 1. 画像のオリジナルサイズ（ピクセル）を指定
@@ -17,15 +17,15 @@ const IMAGE_HEIGHT = 412;
 const ANCHORS = [
     // ポイント1: 画像の左上付近（例：22番の建物の左上角）
     // 手動で1.2倍補正
-    { x: 97, y: 76, lat: 38.923105938451066, lng: 141.1052494975393 },
+    {x: 97, y: 76, lat: 38.923105938451066, lng: 141.1052494975393},
     // 38.923105938451066, 141.1052494975393
 
     // ポイント2: 画像の右上付近（例：川沿いの角）
-    { x: 417, y: 162, lat: 38.92551214286872, lng: 141.10607342991662 },
+    {x: 417, y: 162, lat: 38.92551214286872, lng: 141.10607342991662},
     // 38.92551214286872, 141.10607342991662
 
     // ポイント3: 画像の左下付近（例：正門）
-    { x: 178, y: 374, lat: 38.923679737563546, lng: 141.10821709071854 },
+    {x: 178, y: 374, lat: 38.923679737563546, lng: 141.10821709071854},
 ];
 
 // ==========================================
@@ -54,12 +54,14 @@ function latLngToPixels(lat: number, lng: number) {
     const px = p1.x + u * (p2.x - p1.x) + v * (p3.x - p1.x);
     const py = p1.y + u * (p2.y - p1.y) + v * (p3.y - p1.y);
 
-    return { x: px, y: py };
+    return {x: px, y: py};
 }
 
 export default function CustomMapComponent() {
     const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
+    const [minScale, setMinScale] = useState<number>(1)
+    const mapContainerRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -70,7 +72,7 @@ export default function CustomMapComponent() {
         const watchId = navigator.geolocation.watchPosition(
             (position) => {
                 // GPSから取得した緯度経度
-                const { latitude, longitude } = position.coords;
+                const {latitude, longitude} = position.coords;
 
                 // 緯度経度を独自の計算式で画像のX,Yピクセルに変換！
                 const pixels = latLngToPixels(latitude, longitude);
@@ -79,17 +81,42 @@ export default function CustomMapComponent() {
                 }
             },
             (error) => setErrorMsg('位置情報の取得に失敗しました。'),
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
         );
 
         return () => navigator.geolocation.clearWatch(watchId);
     }, []);
+    
+    useEffect(() => {
+        if (!mapContainerRef.current) return;
+        const size = mapContainerRef.current.getBoundingClientRect()
+        if (size.height > size.width) {  // 縦長
+            setMinScale(size.width / IMAGE_WIDTH)
+        } else {  // 横長
+            setMinScale(size.height / IMAGE_HEIGHT)
+        }
+        
+    }, [mapContainerRef])
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100vh', backgroundColor: '#e0e0e0', overflow: 'hidden' }}>
+        <div ref={mapContainerRef} style={{
+            position: 'relative',
+            width: '100%',
+            height: '100vh',
+            backgroundColor: '#e0e0e0',
+            overflow: 'hidden'
+        }}>
 
             {errorMsg && (
-                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1000, background: 'white', padding: '10px', color: 'red' }}>
+                <div style={{
+                    position: 'absolute',
+                    top: 10,
+                    left: 10,
+                    zIndex: 1000,
+                    background: 'white',
+                    padding: '10px',
+                    color: 'red'
+                }}>
                     {errorMsg}
                 </div>
             )}
@@ -97,12 +124,15 @@ export default function CustomMapComponent() {
             {/* ズーム・パン機能のラッパー */}
             <TransformWrapper
                 initialScale={1}
-                minScale={0.5}
+                minScale={minScale}
                 maxScale={4}
                 centerOnInit={true}
-                wheel={{ step: 0.1 }} // マウスホイールでのズームの滑らかさ
+                limitToBounds={true}
+                disablePadding={true}
+                centerZoomedOut={true}
+                wheel={{step: 0.1}} // マウスホイールでのズームの滑らかさ
             >
-                <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+                <TransformComponent wrapperStyle={{width: "100%", height: "100%"}}>
 
                     {/* 地図画像とピンを配置するコンテナ（画像サイズを基準にする） */}
                     <div style={{
@@ -116,7 +146,7 @@ export default function CustomMapComponent() {
                         <img
                             src="/img/map/campus.svg"
                             alt="Campus Map"
-                            style={{ width: '100%', height: '100%', display: 'block', pointerEvents: 'none' }}
+                            style={{width: '100%', height: '100%', display: 'block', pointerEvents: 'none'}}
                         />
 
                         {/* 現在地のピン (計算されたX, Y座標に絶対配置) */}
@@ -135,7 +165,9 @@ export default function CustomMapComponent() {
                             >
                                 {/* 簡易的なピンのデザイン（SVG） */}
                                 <svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 0C5.37 0 0 5.37 0 12C0 21 12 36 12 36C12 36 24 21 24 12C24 5.37 18.63 0 12 0ZM12 16.5C9.51 16.5 7.5 14.49 7.5 12C7.5 9.51 9.51 7.5 12 7.5C14.49 7.5 16.5 9.51 16.5 12C16.5 14.49 14.49 16.5 12 16.5Z" fill="#E91E63"/>
+                                    <path
+                                        d="M12 0C5.37 0 0 5.37 0 12C0 21 12 36 12 36C12 36 24 21 24 12C24 5.37 18.63 0 12 0ZM12 16.5C9.51 16.5 7.5 14.49 7.5 12C7.5 9.51 9.51 7.5 12 7.5C14.49 7.5 16.5 9.51 16.5 12C16.5 14.49 14.49 16.5 12 16.5Z"
+                                        fill="#E91E63"/>
                                 </svg>
                             </div>
                         )}
