@@ -116,13 +116,21 @@ export const mapEvent = (
     isCompleted: e.isCompleted
 });
 
+const mapBlockRanking = (
+    ranking: typeof blockRankings.$inferSelect
+): PublicMasterResponse['blocks'][number]['rankings'][number] =>
+    ranking as PublicMasterResponse['blocks'][number]['rankings'][number];
+
 export const mapEventBlocks = (
-    block: typeof eventBlocks.$inferSelect
+    block: typeof eventBlocks.$inferSelect,
+    rankings: typeof blockRankings.$inferSelect[] = []
 ): PublicMasterResponse['blocks'][number] => ({
     id: block.id,
     eventId: block.eventId,
     name: block.name,
     type: block.type,
     stage: block.stage,
-    rankings: []
+    rankings: rankings
+        .filter((ranking) => ranking.eventBlockId === block.id)
+        .map(mapBlockRanking)
 })
