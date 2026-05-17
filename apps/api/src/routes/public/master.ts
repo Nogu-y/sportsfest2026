@@ -8,13 +8,31 @@ const createEtag = (value: string) => {
     return `"${createHash('sha1').update(value).digest('hex')}"`
 }
 
+// HTTPの弱い比較に合わせてETagを正規化する
+const normalizeEtag = (tag: string) => {
+    let normalized = tag.trim()
+
+    if (normalized.startsWith('W/')) {
+        normalized = normalized.slice(2).trim()
+    }
+
+    if (normalized.startsWith('"') && normalized.endsWith('"') && normalized.length >= 2) {
+        normalized = normalized.slice(1, -1)
+    }
+
+    return normalized
+}
+
 // クライアントから送られた If-None-Match との照合関数
 const hasMatchingEtag = (value: string | undefined, etag: string) => {
     if (!value) return false
+
+    const normalizedEtag = normalizeEtag(etag)
+
     return value
         .split(',')
         .map((tag) => tag.trim())
-        .includes(etag)
+        .some((tag) => tag === '*' || normalizeEtag(tag) === normalizedEtag)
 }
 
 export const publicMasterRoutes = new OpenAPIHono()
