@@ -2,7 +2,7 @@
   "name": "@sportsfest/web",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000 --experimental-https",
+    "dev": "next dev --port 3000",
     "build": "next build",
     "lint": "echo 'lint not configured'",
     "check": "tsc --noEmit"
