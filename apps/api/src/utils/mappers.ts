@@ -116,10 +116,6 @@ export const mapEvent = (
     isCompleted: e.isCompleted
 });
 
-const mapBlockRanking = (
-    ranking: typeof blockRankings.$inferSelect
-): PublicMasterResponse['blocks'][number]['rankings'][number] =>
-    ranking as PublicMasterResponse['blocks'][number]['rankings'][number];
 
 export const mapEventBlocks = (
     block: typeof eventBlocks.$inferSelect,

@@ -59,7 +59,11 @@ export default function HomePage() {
           statusLabel="試合中"
           progress={32}
         />
-        <Link href={"/sample"}>sample</Link>
+        
+        {/*<Link href={"/sample"}>sample</Link>*/}
+        
+        
+        
       </main>
     </>
   );
