@@ -67,7 +67,7 @@ const Modal = ({
                 </header>
 
                 {/* コンテンツ挿入部分 */}
-                <div className="max-h-[70vh] overflow-y-auto px-5 py-5">
+                <div className="max-h-[70vh] overflow-y-auto px-5 py-5 scrollbar-none">
                     {children}
                 </div>
             </section>
