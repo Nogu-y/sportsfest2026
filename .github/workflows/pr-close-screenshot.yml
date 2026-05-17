@@ -1,0 +1,213 @@
+name: Branch Mobile Screenshots
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create web env
+        run: |
+          cp apps/web/env.example apps/web/.env
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      - name: Start frontend only
+        run: |
+          pnpm --filter @sportsfest/web dev > web.log 2>&1 &
+
+          echo "Waiting for web..."
+          NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm exec wait-on https://127.0.0.1:3000 --timeout 60000
+
+          echo "Web is ready"
+          echo "===== WEB LOG ====="
+          cat web.log
+
+      - name: Generate screenshot script
+        working-directory: apps/web
+        run: |
+          cat > branch-screenshots.mjs <<'EOF'
+          import { chromium } from "playwright";
+          import fs from "node:fs/promises";
+          import path from "node:path";
+
+          const BASE_URL = "https://127.0.0.1:3000";
+          const APP_DIR = "src/app";
+
+          const routes = await collectRoutes(APP_DIR);
+
+          console.log("Routes:", routes);
+
+          await fs.mkdir(".screenshots", {
+            recursive: true,
+          });
+
+          const browser = await chromium.launch();
+
+          const context = await browser.newContext({
+            ignoreHTTPSErrors: true,
+
+            viewport: {
+              width: 393,
+              height: 852,
+            },
+
+            deviceScaleFactor: 3,
+            isMobile: true,
+            hasTouch: true,
+
+            userAgent:
+              "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+          });
+
+          for (const route of routes) {
+            const page = await context.newPage();
+
+            const url = new URL(route, BASE_URL).toString();
+
+            console.log("Capture:", url);
+
+            await page.goto(url, {
+              waitUntil: "networkidle",
+              timeout: 60000,
+            });
+
+            const filename =
+              route === "/"
+                ? ".screenshots/root.png"
+                : `.screenshots/${route.replaceAll("/", "_")}.png`;
+
+            await page.screenshot({
+              path: filename,
+              fullPage: false,
+            });
+
+            await page.close();
+          }
+
+          await browser.close();
+
+          async function collectRoutes(appDir) {
+            const routes = [];
+
+            await scan(appDir, "");
+
+            return routes;
+
+            async function scan(currentDir, currentRoute) {
+              // page.tsx があれば route として追加
+              if (await hasPageFile(currentDir)) {
+                routes.push(currentRoute || "/");
+              }
+
+              const entries = await fs.readdir(currentDir, {
+                withFileTypes: true,
+              });
+
+              for (const entry of entries) {
+                if (!entry.isDirectory()) continue;
+
+                const name = entry.name;
+
+                // dynamic routes 無視
+                if (name.includes("[")) continue;
+
+                // parallel routes 無視
+                if (name.startsWith("@")) continue;
+
+                // private folders 無視
+                if (name.startsWith("_")) continue;
+
+                const dir = path.join(currentDir, name);
+
+                // route groups はURLに含めず探索継続
+                if (name.startsWith("(")) {
+                  await scan(dir, currentRoute);
+                  continue;
+                }
+
+                // 一階層のみ
+                if (currentRoute !== "") continue;
+
+                await scan(dir, `${currentRoute}/${name}`);
+              }
+            }
+          }
+
+          async function hasPageFile(dir) {
+            const candidates = [
+              "page.tsx",
+              "page.ts",
+              "page.jsx",
+              "page.js",
+            ];
+
+            for (const file of candidates) {
+              try {
+                await fs.access(path.join(dir, file));
+                return true;
+              } catch {}
+            }
+
+            return false;
+          }
+          EOF
+
+      - name: Capture screenshots
+        working-directory: apps/web
+        run: node branch-screenshots.mjs
+
+      - name: Merge screenshots horizontally
+        working-directory: apps/web
+        run: |
+          convert .screenshots/*.png +append branch-mobile-screenshots.png
+
+      - name: Upload screenshots artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-mobile-screenshots
+          path: apps/web/branch-mobile-screenshots.png
+
+      - name: Send screenshots to Discord
+        working-directory: apps/web
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_AUTHOR: ${{ github.event.head_commit.author.name }}
+        run: |
+          curl -X POST "$DISCORD_WEBHOOK_URL" \
+            -F "payload_json={
+              \"content\":\" Branch Screenshot Preview\n\n author: ${COMMIT_AUTHOR}\n branch: ${BRANCH_NAME}\n commit: ${COMMIT_SHA}\n message: ${COMMIT_MESSAGE}\"
+            }" \
+            -F "files[0]=@branch-mobile-screenshots.png"

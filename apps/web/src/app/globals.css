@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@theme {
+    --color-white: #ffffff;
+    --color-dark: #1e1e1e;
+    --color-primary: #3b6e9b;
+    --color-primary-lite: #91acc4;
+    --color-primary-lite2: #f3f7f8;
+}
+
+body {
+    font-family: var(--font-anonymous-pro), var(--font-ibm-plex-sans-jp), sans-serif;
+}
+
+/* オーロラアニメーションのキーフレーム定義 */
+@keyframes northern-lights {
+    0% {
+        background-position: 50% 50%, 50% 50%;
+    }
+    100% {
+        background-position: -250% 50%, 50% 50%;
+    }
+}
+
+/* Tailwindのクラスとして使用するためのユーティリティクラス */
+@layer utilities {
+    .animate-northern-lights {
+        animation: northern-lights 1s linear infinite;
+    }
+}

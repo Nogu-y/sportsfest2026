@@ -2,23 +2,33 @@
   "name": "@sportsfest/web",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "next dev --port 3000 --experimental-https",
     "build": "next build",
     "lint": "echo 'lint not configured'",
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@serwist/next": "^9.5.10",
     "@sportsfest/shared": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.4",
     "hono": "^4.7.7",
     "next": "^15.2.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "react-zoom-pan-pinch": "^4.0.3",
+    "serwist": "^9.5.10",
+    "swr": "^2.4.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@sportsfest/config": "workspace:*",
     "@types/node": "^22.14.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/web-push": "^3.6.4",
+    "postcss": "^8.5.13",
+    "tailwindcss": "^4.2.4",
     "typescript": "^5.8.3"
   }
 }

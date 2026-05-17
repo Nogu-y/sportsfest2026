@@ -42,6 +42,15 @@ services:
       sh -c "corepack enable && pnpm config set store-dir /pnpm/store && pnpm
       install --no-frozen-lockfile && pnpm --filter @sportsfest/api dev"
 
+  pgweb:
+    image: sosedoff/pgweb
+    container_name: "pgweb"
+    env_file:
+      - ./apps/api/.env
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
 volumes:
   root-node-modules:
   api-node-modules:

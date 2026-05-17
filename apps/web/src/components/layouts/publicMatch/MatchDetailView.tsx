@@ -1,0 +1,140 @@
+"use client";
+
+import { useState } from "react";
+import { useSportsFestData } from "../../../hooks/useSportsFestData";
+import { formatStatusLabel, formatTimeLabel } from "../../../lib/matchUtils";
+
+type MatchDetailViewProps = {
+    matchId: number;
+};
+
+export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
+    const {
+        isLoading,
+        dayLabelConverter,
+        getEvent,
+        getLocation,
+        getMatchTeamsLabel,
+        getMatch
+    } = useSportsFestData();
+
+    // コピー完了のフィードバック用ステート
+    const [isCopied, setIsCopied] = useState(false);
+
+    if (isLoading) {
+        return <div className="py-8 text-center text-sm text-gray-500">読み込み中...</div>;
+    }
+
+    const match = getMatch(matchId);
+
+    if (!match) {
+        return <div className="py-8 text-center text-sm text-gray-500">試合データが見つかりませんでした。</div>;
+    }
+
+    // データ解決
+    const event = getEvent(match.eventId);
+    const eventName = event?.name ?? "";
+    const dayLabel = dayLabelConverter(new Date(match.scheduledStartTime));
+    const timeLabel = formatTimeLabel(match.scheduledStartTime);
+    const venue = match.locationId ? getLocation(match.locationId) : null;
+    const statusLabel = formatStatusLabel(match.status);
+    const teamsNames = getMatchTeamsLabel(match.participants);
+    const matchName = match.name
+
+    // 共有機能
+    const handleShare = async () => {
+        // 現在のURLではなく, 必ず実体ページのURLを生成する
+        // (トップページのモーダルで開いている場合、URLが '/' になっているのを防ぐため)
+        const shareUrl = `${window.location.origin}/match/${matchId}`;
+        const shareData = {
+            title: `試合 ${name} - 体育大会App`,
+            text: `${eventName} 「${teamsNames}」の試合状況をチェック！`,
+            url: shareUrl,
+        };
+
+        if (navigator.share) {
+            // モバイル端末など、Web Share APIが使える場合
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                // ユーザーが共有をキャンセルした場合はエラーが飛ぶので無視する
+                console.log("共有がキャンセルされました", err);
+            }
+        } else {
+            // PCなど, Web Share APIが使えない場合はクリップボードにコピー
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2000); // 2秒後に元に戻す
+            } catch (err) {
+                console.error("URLのコピーに失敗しました", err);
+                alert("共有リンクの取得に失敗しました。");
+            }
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <span className="text-sm font-mono text-gray-500">#{match.id}</span>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                    {statusLabel}
+                </span>
+            </div>
+
+            <div className="text-center py-4">
+                <h3 className="text-2xl font-bold text-dark">{teamsNames}</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-y border-gray-100 py-4">
+                <div>
+                    <p className="text-[10px] text-gray-400">会場</p>
+                    <p className="text-sm font-medium text-dark">{venue?.name || "未定"}</p>
+                </div>
+                <div>
+                    <p className="text-[10px] text-gray-400">時刻</p>
+                    <p className="text-sm font-medium text-dark">
+                        {dayLabel} {timeLabel}
+                    </p>
+                </div>
+            </div>
+
+            {match.note && (
+                <div className="rounded-lg bg-gray-50 p-3">
+                    <p className="text-[10px] text-gray-400 mb-1">備考</p>
+                    <p className="text-sm text-dark leading-relaxed">{match.note}</p>
+                </div>
+            )}
+
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-gray-200">
+                <div className="flex h-full items-center justify-center text-gray-400 text-xs">
+                    会場マップ（開発中）
+                </div>
+            </div>
+
+            {/* 共有ボタン */}
+            <div className="pt-2">
+                <button
+                    onClick={handleShare}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 py-3 text-sm font-bold text-dark transition-colors hover:bg-gray-200 active:scale-[0.98]"
+                >
+                    {isCopied ? (
+                        <>
+                            <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            URLをコピーしました
+                        </>
+                    ) : (
+                        <>
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                            </svg>
+                            この試合を共有
+                        </>
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+};
