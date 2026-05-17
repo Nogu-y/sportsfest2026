@@ -32,7 +32,7 @@ import {
 export async function getMasterData(): Promise<PublicMasterResponse> {
 
     const [
-        systemInfoRows,
+        currentSystemInfo,
         mapRows,
         locationRows,
         teamRows,
@@ -42,7 +42,7 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
         rankingRows,
         scoreRows
     ] = await Promise.all([
-        db.select().from(systemInfo).orderBy(desc(systemInfo.id)).limit(1),
+        db.select().from(systemInfo).orderBy(desc(systemInfo.id)).limit(1).then((rows) => rows[0]),
         db.select().from(maps).orderBy(asc(maps.id)),
         db.select().from(locations).orderBy(asc(locations.id)),
         db.select().from(teams).orderBy(asc(teams.id)),
@@ -54,7 +54,6 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
     ])
 
     // systemInfoのレコード存在チェック
-    const currentSystemInfo = systemInfoRows[0]
     if (!currentSystemInfo) {
         throw new Error("SystemInfoのレコードがありません.")
     }
