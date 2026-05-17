@@ -88,7 +88,7 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
         ),
         blockRankings: rankingRows.map(mapBlockRanking),
         scores: scoreRows.map(mapScore),
-        blocks: blockRows.map(mapEventBlocks),
+        blocks: blockRows.map(blockRow => mapEventBlocks(blockRow, rankingRows)),
         // 不足していた静的マスタの配列マッピングを適用
         maps: mapRows.map(mapMap),
         locations: locationRows.map(mapLocation),
