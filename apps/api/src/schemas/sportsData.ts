@@ -84,8 +84,7 @@ export const blockRankingSchema = z.object({
     note: z.string().nullable()
 })
 
-export type MatchType = z.infer<typeof matchSchema>;
-export type Participant = z.infer<typeof participantSchema>;
+
 
 export const eventBlockSchema = z.object({
     id: positiveIntegerSchema,
@@ -104,3 +103,12 @@ export const scoreSchema = z.object({
     points: z.number().int(),
     reason: z.string().nullable(),
 });
+
+export type rankingOrderEnumType = z.infer<typeof rankingOrderEnumSchema>; 
+export type eventFormatEnumType = z.infer<typeof eventFormatEnumSchema>; 
+export type blockTypeEnumType = z.infer<typeof blockTypeEnumSchema>; 
+export type stageEnumType = z.infer<typeof stageEnumSchema>; 
+export type matchStatusEnumType = z.infer<typeof matchStatusEnumSchema>; 
+
+export type MatchType = z.infer<typeof matchSchema>;
+export type ParticipantType = z.infer<typeof participantSchema>;

@@ -4,6 +4,7 @@ import {api} from '../lib/api/client';
 import type {PublicMasterResponse} from '../../../api/src/schemas/public/master';
 import type {LiveResponse} from '../../../api/src/schemas/public/live';
 import type {MatchWithEventIdType} from '../types/SportsFestDataTypes';
+import {ParticipantType} from "../../../api/src/schemas/sportsData";
 
 export function useSportsFestData() {
     const latestMasterRef = useRef<PublicMasterResponse | null>(null);
@@ -148,6 +149,50 @@ export function useSportsFestData() {
             return "Day2";
         }
     }
+    
+    
+    const eventsMap = useMemo(() => new Map(masterData?.events.map((e) => [e.id, e])), [masterData?.events]);
+    const locationsMap = useMemo(() => new Map(masterData?.locations.map((l) => [l.id, l])), [masterData?.locations]);
+    const teamsMap = useMemo(() => new Map(masterData?.teams.map((t) => [t.id, t])), [masterData?.teams]);
+    const blocksMap = useMemo(() => new Map(masterData?.blocks.map((b) => [b.id, b])), [masterData?.blocks]);
+    const masterMatchesMap = useMemo(() => new Map(masterData?.matches?.map((m) => [m.id, m])), [masterData?.matches]);
+
+    
+    const getEvent = (eventId: number) => eventsMap.get(eventId);
+    const getLocation = (locationId: number) => locationsMap.get(locationId);
+
+    /**
+     * participants を解析し、「〇〇 vs 〇〇」や「〇〇の勝者 vs 〇〇」の文字列を生成する
+     */
+    const getMatchTeamsLabel = (participants?: ParticipantType[]): string => {
+        if (!participants || participants.length === 0) return "対戦カード未定";
+
+        const teamNames = participants.map((p) => {
+            // 1. チームが確定している場合
+            if (p.teamId) {
+                return teamsMap.get(p.teamId)?.name ?? "不明なチーム";
+            }
+
+            // 2. チームが未確定で, 前提試合(勝ち上がり元)が設定されている場合
+            if (p.prereqMatchId) {
+                const prereqMatch = masterMatchesMap.get(p.prereqMatchId);
+                return prereqMatch?.name ? `${prereqMatch.name}の勝者` : "未定の勝者";
+            }
+
+            // 3. チームが未確定で, 前提ブロック(リーグ予選抜け等)が設定されている場合
+            if (p.prereqBlockId) {
+                const prereqBlock = blocksMap.get(p.prereqBlockId);
+                // 順位条件(prereqRank)がある場合は「Aブロック 1位」のようにする
+                const rankText = p.prereqRank ? ` ${p.prereqRank}位` : " 代表";
+                return prereqBlock?.name ? `${prereqBlock.name}${rankText}` : `未定の${rankText}`;
+            }
+
+            return "未定";
+        });
+
+        // " vs " で結合して返す（3チーム以上の対戦にも自動対応）
+        return teamNames.join(' vs ');
+    };
         
 
     // 外部コンポーネントに公開.
@@ -161,7 +206,7 @@ export function useSportsFestData() {
         locations: masterData?.locations || [],
         teams: masterData?.teams || [],
         events: masterData?.events || [],
-
+        eventBlocks: masterData?.blocks,
         // ライブデータで上書きした情報
         matches: integratedMatches,
         blockRankings: liveData?.blockRankings || [],
@@ -169,5 +214,8 @@ export function useSportsFestData() {
 
         refreshMaster: mutateMaster,
         dayLabelConverter,
+        getEvent,
+        getLocation,
+        getMatchTeamsLabel,
     };
 }
