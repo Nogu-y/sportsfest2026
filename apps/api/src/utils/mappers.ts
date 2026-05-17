@@ -11,7 +11,7 @@ import {
     teams
 } from "../db/schema";
 import {toIsoString} from "./dates";
-import {PublicMasterResponse} from "../schemas/public/master";
+import type {PublicMasterResponse} from "../schemas/public/master";
 
 export const mapParticipant = (
     participant: typeof matchParticipants.$inferSelect
