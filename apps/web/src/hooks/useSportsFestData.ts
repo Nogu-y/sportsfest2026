@@ -135,6 +135,20 @@ export function useSportsFestData() {
      }
      }, [liveData, masterData, mutateMaster]);
      **/
+    
+    
+    // systemInfoの日付データを使用し, 与えられた試合が1日目か2日目かを返す
+    const dayLabelConverter = (startTime: Date) => {
+        if (!masterData ) return null
+        const day2 = new Date(masterData.systemInfo.day2);
+
+        if (startTime < day2) {
+            return "Day1";
+        }else {
+            return "Day2";
+        }
+    }
+        
 
     // 外部コンポーネントに公開.
     return {
@@ -154,5 +168,6 @@ export function useSportsFestData() {
         scores: liveData?.scores || [],
 
         refreshMaster: mutateMaster,
+        dayLabelConverter,
     };
 }
