@@ -1,6 +1,7 @@
 "use client"
 
 import dynamic from 'next/dynamic';
+import {useEffect} from "react";
 
 // SSR（サーバーサイドレンダリング）を無効にして動的インポート
 const DynamicMap = dynamic(() => import('../../../components/map/MapComponent'), {
@@ -10,20 +11,28 @@ const DynamicMap = dynamic(() => import('../../../components/map/MapComponent'),
 
 export default function Home() {
 
-    // デフォルトのブラウザによる, 2連タップでのズームを抑制
-    const touchHandler = (event: any) => {
-        if (event.touches.length > 1) {
-            event.preventDefault();
-        }
-    };
-    document.addEventListener('touchstart', touchHandler, {
-        passive: false
-    });
+    useEffect(() => {
+        // デフォルトのブラウザによる, 2連タップでのズームを抑制
+        const touchHandler = (event: any) => {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        };
+
+        if (!document) return;
+
+        document.addEventListener('touchstart', touchHandler, {
+            passive: false
+        });
+    }, [])
 
 
     return (
-        <main style={{ width: '100vw', height: '100vh' }}>
-            <DynamicMap />
+        <main className={"w-screen min-h-screen h-full flex flex-col items-center justify-center"}>
+            <div className={"aspect-video h-auto w-full"}>
+                
+                <DynamicMap/>
+            </div>
         </main>
     );
 }
