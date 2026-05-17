@@ -32,7 +32,7 @@ export const publicLiveRoutes = new OpenAPIHono()
         if (hasMatchingEtag(c.req.header('if-none-match'), etag)) {
           return c.body(null, 304)
         }
-
+        
         return c.json(data, 200)
       } catch {
         return c.json({ message: 'failed to fetch' }, 500)
