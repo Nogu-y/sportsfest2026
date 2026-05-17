@@ -5,6 +5,7 @@ import { MatchWithEventIdType } from "../../types/SportsFestDataTypes";
 import { useSportsFestData } from "../../hooks/useSportsFestData";
 import { formatStatusLabel, formatTimeLabel } from "../../lib/matchUtils";
 import { ProgressBar } from "./ProgressBar";
+import {useWatchlist} from "../../hooks/useWatchlist";
 
 type MatchCardProps = {
     match: MatchWithEventIdType;
@@ -20,11 +21,12 @@ const MatchCard = ({
                        showVenueLabel = true,
                        showStatusLabel = true,
                        showProgress = true,
-                       isWatchlisted = false,
                        className = "",
                    }: MatchCardProps) => {
     
     const { isLoading, dayLabelConverter, getEvent, getLocation, getMatchTeamsLabel } = useSportsFestData();
+    const { isWatched } = useWatchlist();
+    
 
     if (isLoading) return null;
 
@@ -37,6 +39,7 @@ const MatchCard = ({
     const venue = match.locationId ? getLocation(match.locationId) : null;
     const statusLabel = formatStatusLabel(match.status);
     const teamsNames = getMatchTeamsLabel(match.participants);
+    const watched = isWatched(match.id);
 
     return (
     <Link href={`/match/${match.id}`} className="block w-full">
@@ -53,7 +56,7 @@ const MatchCard = ({
                         console.log("ウォッチリスト処理");
                     }}>
                         <Image
-                            src={isWatchlisted ? "/icons/watchlist-on-icon.svg" : "/icons/watchlist-off-icon.svg"}
+                            src={watched ? "/icons/watchlist-on-icon.svg" : "/icons/watchlist-off-icon.svg"}
                             alt=""
                             width={10}
                             height={13}

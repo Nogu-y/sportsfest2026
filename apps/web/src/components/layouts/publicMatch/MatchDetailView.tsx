@@ -92,7 +92,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
                             alt={watched ? "ウォッチリスト登録中" : "ウォッチリスト未登録"}
                             width={20}
                             height={24}
-                            className="h-6 w-5"
+                            className="h-6 w-5 invert-75"
                         />
                     </button>
                     <div className="flex flex-col">
