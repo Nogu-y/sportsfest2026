@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja">
-      <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable}`}>
+      <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable} overflow-x-hidden scrollbar-none`}>
         {children}
       </body>
     </html>
