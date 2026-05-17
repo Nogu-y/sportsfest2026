@@ -84,6 +84,9 @@ export const blockRankingSchema = z.object({
     note: z.string().nullable()
 })
 
+export type MatchType = z.infer<typeof matchSchema>;
+export type Participant = z.infer<typeof participantSchema>;
+
 export const eventBlockSchema = z.object({
     id: positiveIntegerSchema,
     eventId: positiveIntegerSchema,
