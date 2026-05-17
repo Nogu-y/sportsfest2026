@@ -193,6 +193,10 @@ export function useSportsFestData() {
         // " vs " で結合して返す（3チーム以上の対戦にも自動対応）
         return teamNames.join(' vs ');
     };
+    
+    const getMatch = (matchId: number) => {
+        return integratedMatches.find((m) => m.id === matchId);
+    }
         
 
     // 外部コンポーネントに公開.
@@ -217,5 +221,6 @@ export function useSportsFestData() {
         getEvent,
         getLocation,
         getMatchTeamsLabel,
+        getMatch,
     };
 }
