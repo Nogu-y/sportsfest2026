@@ -2,7 +2,7 @@ import "./globals.css";
 import { Anonymous_Pro, IBM_Plex_Sans_JP } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Header from "src/components/layouts/header/Header";
+
 
 type RootLayoutProps = {
   children: ReactNode;
@@ -29,9 +29,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ja">
-      <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable}`}>
-        <Header />
+    <html lang="ja" className={"scrollbar-none"}>
+      <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable} overflow-x-hidden scrollbar-none`}>
+      
         {children}
       </body>
     </html>

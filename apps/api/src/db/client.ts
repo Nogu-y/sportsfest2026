@@ -5,3 +5,4 @@ import { apiEnv } from '../env'
 const client = postgres(apiEnv.DATABASE_URL)
 
 export const db = drizzle(client)
+export { client }

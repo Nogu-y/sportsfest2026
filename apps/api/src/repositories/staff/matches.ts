@@ -1,134 +1,54 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db } from '../../db/client'
-import { matchParticipants, matchPlans } from '../../db/schema'
+import { matchPlans } from '../../db/schema'
 import type {
-  StaffMatchResultReq,
-  StaffMatchResultRes
+  UpdateMatchStatusReq,
+  UpdateMatchStatusRes
 } from '../../schemas/staff/matches'
+import { toIsoString } from '../../utils/dates'
 
-type UpdateMatchResultMode = 'create' | 'edit'
+const mapMatchStatus = (
+  match: typeof matchPlans.$inferSelect
+): UpdateMatchStatusRes => ({
+  id: match.id,
+  status: match.status,
+  startedAt: toIsoString(match.startedAt),
+  endedAt: toIsoString(match.endedAt)
+})
 
-type UpdateMatchResultError =
-  | { error: 'match_not_found' }
-  | { error: 'invalid_status' }
-  | { error: 'dependency_unresolved' }
-  | { error: 'participant_mismatch' }
-
-export type UpdateMatchResultErrorCode = UpdateMatchResultError['error']
-
-type UpdateMatchResultResult = StaffMatchResultRes | UpdateMatchResultError
-
-const creatableStatuses = ['Finished'] as const
-const editableStatuses = ['Finished', 'Completed'] as const
-
-const mapAllowedStatuses = (mode: UpdateMatchResultMode) => {
-  return new Set<string>(
-    mode === 'create' ? creatableStatuses : editableStatuses
-  )
-}
-
-export const updateStaffMatchResult = async (
+export const updateMatchStatus = async (
   matchId: number,
-  input: StaffMatchResultReq,
-  mode: UpdateMatchResultMode
-): Promise<UpdateMatchResultResult> => {
-  const [match] = await db
+  input: UpdateMatchStatusReq
+) => {
+  const [currentMatch] = await db
     .select()
     .from(matchPlans)
     .where(eq(matchPlans.id, matchId))
+    .limit(1)
 
-  if (!match) {
-    return { error: 'match_not_found' }
+  if (!currentMatch) {
+    return null
   }
 
-  if (!mapAllowedStatuses(mode).has(match.status)) {
-    return { error: 'invalid_status' }
+  const now = new Date()
+  const values: Partial<typeof matchPlans.$inferInsert> = {
+    status: input.status
   }
 
-  const currentParticipants = await db
-    .select()
-    .from(matchParticipants)
-    .where(eq(matchParticipants.matchPlanId, matchId))
-
-  if (currentParticipants.some((participant) => participant.teamId === null)) {
-    return { error: 'dependency_unresolved' }
+  if (input.status === 'Playing') {
+    values.startedAt = currentMatch.startedAt ?? now
+    values.endedAt = null
   }
 
-  const currentParticipantIds = currentParticipants
-    .map((participant) => participant.id)
-    .sort((a, b) => a - b)
-
-  const inputParticipantIds = input.participants
-    .map((participant) => participant.participantId)
-    .sort((a, b) => a - b)
-
-  if (
-    currentParticipantIds.length !== inputParticipantIds.length ||
-    currentParticipantIds.some((id, index) => id !== inputParticipantIds[index])
-  ) {
-    return { error: 'participant_mismatch' }
+  if (input.status === 'Finished') {
+    values.endedAt = currentMatch.endedAt ?? now
   }
 
-  const participantsById = new Map(
-    input.participants.map((participant) => [participant.participantId, participant])
-  )
+  const [updatedMatch] = await db
+    .update(matchPlans)
+    .set(values)
+    .where(eq(matchPlans.id, matchId))
+    .returning()
 
-  return db.transaction(async (tx) => {
-    const participantIds = input.participants.map(
-      (participant) => participant.participantId
-    )
-
-    for (const participant of input.participants) {
-      await tx
-        .update(matchParticipants)
-        .set({
-          score: participant.score,
-          rank: participant.rank,
-          isDisqualified: participant.isDisqualified
-        })
-        .where(
-          and(
-            eq(matchParticipants.id, participant.participantId),
-            eq(matchParticipants.matchPlanId, matchId)
-          )
-        )
-    }
-
-    await tx
-      .update(matchPlans)
-      .set({
-        status: 'Completed',
-        note: input.note ?? null
-      })
-      .where(eq(matchPlans.id, matchId))
-
-    const updatedParticipants = await tx
-      .select()
-      .from(matchParticipants)
-      .where(
-        and(
-          eq(matchParticipants.matchPlanId, matchId),
-          inArray(matchParticipants.id, participantIds)
-        )
-      )
-
-    return {
-      matchId,
-      status: 'Completed',
-      note: input.note ?? null,
-      participants: updatedParticipants
-        .sort((a, b) => a.id - b.id)
-        .map((participant) => {
-          const payload = participantsById.get(participant.id)
-
-          return {
-            participantId: participant.id,
-            teamId: participant.teamId,
-            score: payload?.score ?? participant.score,
-            rank: payload?.rank ?? participant.rank,
-            isDisqualified: payload?.isDisqualified ?? participant.isDisqualified
-          }
-        })
-    } satisfies StaffMatchResultRes
-  })
+  return mapMatchStatus(updatedMatch)
 }

@@ -1,4 +1,4 @@
-import { AppType } from "../../../../api/src/index"
+import type { AppType } from "../../../../api/src"
 import { hc } from "hono/client"
 import { webEnv } from "src/env"
 
