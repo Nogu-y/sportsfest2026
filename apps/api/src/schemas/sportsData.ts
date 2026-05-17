@@ -44,7 +44,7 @@ export const eventSchema = z.object({
 
 export const teamSchema = z.object({
     id: positiveIntegerSchema,
-    name: z.string()
+    name: z.string().max(100),
 })
 
 
