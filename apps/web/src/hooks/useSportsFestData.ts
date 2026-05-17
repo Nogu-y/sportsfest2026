@@ -64,7 +64,7 @@ export function useSportsFestData() {
         data: liveData,
         error: liveError
     } = useSWR<LiveResponse>('api/public/live', fetchLive, {  // URLでは無くあくまでkey
-        refreshInterval: 1500, // 15秒ごとに自動更新
+        refreshInterval: 15000, // 15秒ごとに自動更新
         dedupingInterval: 2000,  // 2秒以内の重複リクエストは1つにまとめる.
     });
 
