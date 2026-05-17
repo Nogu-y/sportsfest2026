@@ -10,7 +10,8 @@ const CSV_LINE_BREAK = /\r?\n/
 function escapeCsvValue(value: DataControlValue) {
   if (value === null || value === undefined) return ''
 
-  const stringValue = String(value)
+  const stringValue =
+    typeof value === 'object' ? JSON.stringify(value) : String(value)
   if (!/[,"\n]/.test(stringValue)) return stringValue
 
   return `"${stringValue.replaceAll('"', '""')}"`
@@ -72,7 +73,7 @@ function normalizeBooleanValue(value: string) {
 
 export function convertImportedValue(field: DataControlField, value: unknown): DataControlValue {
   if (value === null || value === undefined || value === '') {
-    return field.required ? '' : null
+    return field.nullable || !field.required ? null : ''
   }
 
   if (field.type === 'number') {
@@ -85,6 +86,11 @@ export function convertImportedValue(field: DataControlField, value: unknown): D
 
     const parsed = normalizeBooleanValue(String(value))
     return parsed ?? false
+  }
+
+  if (field.type === 'json') {
+    if (typeof value === 'object') return value as DataControlValue
+    return JSON.parse(String(value)) as DataControlValue
   }
 
   return String(value)

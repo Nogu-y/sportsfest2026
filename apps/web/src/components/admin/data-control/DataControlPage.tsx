@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import {
   createAdminResourceDefinitions,
-  fetchMapOptions,
+  fetchAdminMasterOptions,
 } from './resourceDefinitions'
 import {
   downloadTextFile,
@@ -30,6 +30,7 @@ type RecordFormProps = {
 
 function toDisplayValue(value: DataControlValue) {
   if (value === null || value === undefined) return ''
+  if (typeof value === 'object') return JSON.stringify(value)
   if (typeof value === 'boolean') return value ? 'true' : 'false'
   return String(value)
 }
@@ -43,14 +44,19 @@ function getInitialDraft(fields: DataControlField[]) {
       return acc
     }
 
-    acc[field.key] = ''
+    if (field.type === 'json') {
+      acc[field.key] = {}
+      return acc
+    }
+
+    acc[field.key] = field.nullable ? null : ''
     return acc
   }, {})
 }
 
 function normalizeDraftValue(field: DataControlField, rawValue: string) {
   if (field.type === 'number') {
-    if (rawValue === '') return ''
+    if (rawValue === '') return field.nullable ? null : ''
     return Number(rawValue)
   }
 
@@ -59,11 +65,21 @@ function normalizeDraftValue(field: DataControlField, rawValue: string) {
   }
 
   if (field.type === 'select') {
-    if (rawValue === '') return ''
+    if (rawValue === '') return field.nullable ? null : ''
     const numericValue = Number(rawValue)
     return Number.isNaN(numericValue) ? rawValue : numericValue
   }
 
+  if (field.type === 'datetime') {
+    if (rawValue === '') return field.nullable ? null : ''
+    return new Date(rawValue).toISOString()
+  }
+
+  if (field.type === 'json') {
+    return rawValue
+  }
+
+  if (rawValue === '' && field.nullable) return null
   return rawValue
 }
 
@@ -84,6 +100,23 @@ function validateDraft(fields: DataControlField[], draft: Record<string, DataCon
   if (missingField) {
     throw new Error(`${missingField.label} は必須です`)
   }
+}
+
+function prepareDraftForSubmit(fields: DataControlField[], draft: Record<string, DataControlValue>) {
+  return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
+    const value = draft[field.key]
+
+    if (value === undefined) return acc
+
+    if (field.type === 'json' && typeof value === 'string') {
+      const normalized = value.trim()
+      acc[field.key] = normalized === '' ? (field.nullable ? null : {}) : JSON.parse(normalized)
+      return acc
+    }
+
+    acc[field.key] = value
+    return acc
+  }, {})
 }
 
 function sortRecords(records: DataControlRecord[], primaryKey: string) {
@@ -158,6 +191,45 @@ function RecordForm({
                     </option>
                   ))}
                 </select>
+              </label>
+            )
+          }
+
+          if (field.type === 'textarea' || field.type === 'json') {
+            return (
+              <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700 md:col-span-2">
+                <span className="font-medium">{field.label}</span>
+                <textarea
+                  value={
+                    field.type === 'json'
+                      ? typeof currentValue === 'string'
+                        ? currentValue
+                        : JSON.stringify(currentValue ?? {}, null, 2)
+                      : toDisplayValue(currentValue)
+                  }
+                  placeholder={field.placeholder}
+                  onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+                  className="min-h-32 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm"
+                />
+              </label>
+            )
+          }
+
+          if (field.type === 'datetime') {
+            const inputValue =
+              typeof currentValue === 'string' && currentValue
+                ? new Date(currentValue).toISOString().slice(0, 16)
+                : ''
+
+            return (
+              <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
+                <span className="font-medium">{field.label}</span>
+                <input
+                  type="datetime-local"
+                  value={inputValue}
+                  onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                />
               </label>
             )
           }
@@ -243,8 +315,12 @@ export function DataControlPage() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const mapOptions = await fetchMapOptions()
-        const definitions = createAdminResourceDefinitions(mapOptions)
+        const { mapOptions, locationOptions, eventBlockOptions } = await fetchAdminMasterOptions()
+        const definitions = createAdminResourceDefinitions(
+          mapOptions,
+          locationOptions,
+          eventBlockOptions,
+        )
 
         setResourceDefinitions(definitions)
         setActiveResourceKey(definitions[0]?.key ?? '')
@@ -287,7 +363,9 @@ export function DataControlPage() {
     try {
       validateDraft(activeResource.fields, createDraft)
       setErrorMessage(null)
-      const created = await activeResource.createRecord(createDraft)
+      const created = await activeResource.createRecord(
+        prepareDraftForSubmit(activeResource.fields, createDraft),
+      )
       setRecords((current) => sortRecords([...current, created], activeResource.primaryKey))
       setCreateDraft(getInitialDraft(activeResource.fields))
     } catch (error) {
@@ -308,7 +386,10 @@ export function DataControlPage() {
     try {
       validateDraft(activeResource.fields, editDraft)
       setErrorMessage(null)
-      const updated = await activeResource.updateRecord(editingRecordId, editDraft)
+      const updated = await activeResource.updateRecord(
+        editingRecordId,
+        prepareDraftForSubmit(activeResource.fields, editDraft),
+      )
 
       setRecords((current) =>
         sortRecords(
@@ -416,7 +497,7 @@ export function DataControlPage() {
           <p className="text-sm font-medium text-slate-500">System Admin</p>
           <h1 className="mt-2 text-2xl font-semibold">データコントロール</h1>
           <p className="mt-2 text-sm text-slate-600">
-            `teams` と `locations` の個別編集、一覧確認、JSON / CSV の入出力を行います。
+            `teams` `locations` `events` `matches` の個別編集、一覧確認、JSON / CSV の入出力を行います。
           </p>
         </section>
 
