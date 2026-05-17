@@ -1,10 +1,25 @@
-export type DataControlValue = string | number | boolean | null
+export type DataControlJsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | DataControlJsonValue[]
+  | { [key: string]: DataControlJsonValue }
+
+export type DataControlValue = DataControlJsonValue
 
 export type DataControlRecord = {
   [key: string]: DataControlValue
 }
 
-export type DataControlFieldType = 'text' | 'number' | 'boolean' | 'select'
+export type DataControlFieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'boolean'
+  | 'select'
+  | 'datetime'
+  | 'json'
 
 export type DataControlOption = {
   label: string
@@ -16,6 +31,7 @@ export type DataControlField = {
   label: string
   type: DataControlFieldType
   required?: boolean
+  nullable?: boolean
   readOnly?: boolean
   widthClassName?: string
   placeholder?: string
