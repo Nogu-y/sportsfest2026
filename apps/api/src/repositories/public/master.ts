@@ -16,7 +16,7 @@ import type {LiveResponse} from "../../schemas/public/live"
 import type {PublicMasterResponse} from "../../schemas/public/master"
 import {
     mapBlockRanking,
-    mapEvent,
+    mapEvent, mapEventBlocks,
     mapLocation,
     mapMap,
     mapMatch,
@@ -37,7 +37,7 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
         locationRows,
         teamRows,
         eventRows,
-        blockRows, // 将来的に拡張･利用する際のために保持
+        blockRows, 
         matchRows,
         rankingRows,
         scoreRows
@@ -88,6 +88,7 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
         ),
         blockRankings: rankingRows.map(mapBlockRanking),
         scores: scoreRows.map(mapScore),
+        blocks: blockRows.map(mapEventBlocks),
         // 不足していた静的マスタの配列マッピングを適用
         maps: mapRows.map(mapMap),
         locations: locationRows.map(mapLocation),

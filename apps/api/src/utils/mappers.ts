@@ -1,6 +1,6 @@
 import type {LiveResponse} from "../schemas/public/live";
 import {
-    blockRankings,
+    blockRankings, eventBlocks,
     events,
     locations,
     maps,
@@ -116,23 +116,13 @@ export const mapEvent = (
     isCompleted: e.isCompleted
 });
 
-
-export const mapPublicMaster = (
-    system: typeof systemInfo.$inferSelect,
-    matchPlansRows: LiveResponse['matches'],
-    blockRankingsRows: LiveResponse['blockRankings'],
-    scoresRows: LiveResponse['scores'],
-    mapsRows: typeof maps.$inferSelect[],
-    locationsRows: typeof locations.$inferSelect[],
-    teamsRows: typeof teams.$inferSelect[],
-    eventsRows: typeof events.$inferSelect[]
-): PublicMasterResponse => ({
-    systemInfo: mapSystemInfo(system),
-    matches: matchPlansRows as PublicMasterResponse['matches'],
-    blockRankings: blockRankingsRows as PublicMasterResponse['blockRankings'],
-    scores: scoresRows as PublicMasterResponse['scores'],
-    maps: mapsRows.map(mapMap),
-    locations: locationsRows.map(mapLocation),
-    teams: teamsRows.map(mapTeam),
-    events: eventsRows.map(mapEvent)
-});
+export const mapEventBlocks = (
+    block: typeof eventBlocks.$inferSelect
+): PublicMasterResponse['blocks'][number] => ({
+    id: block.id,
+    eventId: block.eventId,
+    name: block.name,
+    type: block.type,
+    stage: block.stage,
+    rankings: []
+})

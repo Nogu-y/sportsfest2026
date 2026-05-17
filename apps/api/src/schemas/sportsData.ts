@@ -12,13 +12,6 @@ export const pointAllocationSchema = z.object({
     BLOCK: z.record(stageEnumSchema, z.record(z.string(), z.number())).optional(),
 });
 
-export const systemInfoSchema = z.object({
-    id: positiveIntegerSchema,
-    day1: isoDateTimeSchema,
-    day2: isoDateTimeSchema,
-    masterVersion: z.string().max(255),
-});
-
 export const mapSchema = z.object({
     id: positiveIntegerSchema,
     filePath: z.string().max(255), // APIレスポンスはキャメルケースに統一
@@ -65,21 +58,7 @@ export const participantSchema = z.object({
     rank: z.number().int().nullable(),
     isDisqualified: z.boolean(),
 });
-export const matchPlanSchema = z.object({
-    id: positiveIntegerSchema,
-    eventBlockId: positiveIntegerSchema,
-    locationId: positiveIntegerSchema.nullable(),
-    name: z.string().max(100).nullable(),
-    description: z.string().nullable(),
-    stage: stageEnumSchema,
-    status: matchStatusEnumSchema,
-    scheduledStartTime: isoDateTimeSchema,
-    scheduledEndTime: isoDateTimeSchema,
-    startedAt: isoDateTimeSchema.nullable(),
-    endedAt: isoDateTimeSchema.nullable(),
-    participants: z.array(participantSchema),
-    note: z.string().nullable(),
-});
+
 
 export const matchSchema = z.object({
     id: positiveIntegerSchema,
@@ -87,8 +66,8 @@ export const matchSchema = z.object({
     locationId: positiveIntegerSchema.nullable(),
     name: z.string().nullable(),
     description: z.string().nullable(),
-    stage: z.string(),
-    status: z.string(),
+    stage: stageEnumSchema,
+    status: matchStatusEnumSchema,
     scheduledStartTime: isoDateTimeSchema,
     scheduledEndTime: isoDateTimeSchema,
     startedAt: isoDateTimeSchema.nullable(),
@@ -113,6 +92,7 @@ export const eventBlockSchema = z.object({
     stage: stageEnumSchema,
     rankings: z.array(blockRankingSchema), // ブロック内順位をネスト
 });
+
 
 export const scoreSchema = z.object({
     id: positiveIntegerSchema,
