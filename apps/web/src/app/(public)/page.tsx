@@ -9,6 +9,7 @@ import {useSportsFestData} from "../../hooks/useSportsFestData";
 import {MatchCardList} from "../../components/common/MatchCardList";
 import {matchStatusEnumType} from "../../../../api/src/schemas/sportsData";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
+import {EventBracket} from "../../components/bracket/EventBracket";
 
 const eventStatusOptions = [
     {label: "開催予定", value: "upcoming"},
