@@ -19,7 +19,7 @@ export const MyTeamSelector = () => {
     const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
     return (
-        <div className="w-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="w-full rounded-sm border border-gray-200 bg-white p-4 shadow-sm">
             <h3 className="text-sm font-bold text-dark mb-1 flex items-center gap-1.5">
                 自クラス (応援チーム) の設定
             </h3>
@@ -34,9 +34,9 @@ export const MyTeamSelector = () => {
                         const val = e.target.value;
                         saveMyTeam(val ? parseInt(val, 10) : null);
                     }}
-                    className="w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 p-3 pr-10 text-sm font-bold text-dark transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full appearance-none rounded-sm border border-gray-300 bg-gray-50 p-3 pr-10 text-sm font-bold text-dark transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                    <option value="">クラスを選択してください</option>
+                    <option value="">未選択</option>
                     {sortedTeams.map((team) => (
                         <option key={team.id} value={team.id}>
                             {team.name}
