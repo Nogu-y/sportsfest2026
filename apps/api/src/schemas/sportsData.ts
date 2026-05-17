@@ -79,8 +79,8 @@ export const matchSchema = z.object({
 export const blockRankingSchema = z.object({
     eventBlockId: positiveIntegerSchema,
     teamId: positiveIntegerSchema,
-    rank: z.number(),
-    points: z.number(),
+    rank: z.number().int(),
+    points: z.number().int(),
     note: z.string().nullable()
 })
 
