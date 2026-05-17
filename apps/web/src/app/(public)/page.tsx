@@ -9,6 +9,8 @@ import {MatchCardList} from "../../components/common/MatchCardList";
 import {matchStatusEnumType} from "../../../../api/src/schemas/sportsData";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
 import {PwaNotificationPrompt} from "../../components/home/PwaNotificationPrompt";
+import {MyTeamSelector} from "../../components/common/MyTeamSelector";
+import {EventBracket} from "../../components/bracket/EventBracket";
 
 const eventStatusOptions = [
     {label: "開催予定", value: "upcoming"},
@@ -99,10 +101,12 @@ export default function HomePage() {
             </SubHeader>
 
             <main className="space-y-4 p-6">
-                <PwaNotificationPrompt/>
+                <PwaNotificationPrompt />
+                <MyTeamSelector />
                 <h2 className="text-primary font-bold text-lg">{eventStatusOptions.find(o => o.value === eventStatus)?.label}の試合
                     ({displayMatches.length})</h2>
                 <MatchCardList matches={displayMatches} key={sortOrder + eventStatus}/>
+                <EventBracket eventId={1} />
             </main>
         </>
     );
