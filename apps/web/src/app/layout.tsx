@@ -2,7 +2,7 @@ import "./globals.css";
 import { Anonymous_Pro, IBM_Plex_Sans_JP } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import {ComingSoon} from "../components/layouts/messagePage/ComingSoon";
+
 
 type RootLayoutProps = {
   children: ReactNode;
@@ -31,8 +31,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja">
       <body className={`${ibmPlexSansJP.variable} ${anonymousPro.variable} overflow-x-hidden scrollbar-none`}>
-        <ComingSoon/>
-        {/*{children}*/}
+      
+        {children}
       </body>
     </html>
   );
