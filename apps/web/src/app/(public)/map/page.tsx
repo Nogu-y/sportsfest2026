@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 // SSR（サーバーサイドレンダリング）を無効にして動的インポート
-const DynamicMap = dynamic(() => import('../../components/map/MapComponent'), {
+const DynamicMap = dynamic(() => import('../../../components/map/MapComponent'), {
     ssr: false,
     loading: () => <p>地図を読み込み中...</p>, // 読み込み中のプレースホルダー
 });
