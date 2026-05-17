@@ -11,7 +11,7 @@ export function useSportsFestData() {
     const liveEtagRef = useRef<string>('');
 
 
-    // SWRに渡すフェっチャー関数
+    // SWRに渡すフェッチャー関数
     const fetchMaster = async (): Promise<PublicMasterResponse> => {
         const headers: Record<string, string> = {};
         if (masterEtagRef.current) headers['If-None-Match'] = masterEtagRef.current;
@@ -31,7 +31,7 @@ export function useSportsFestData() {
         return json as PublicMasterResponse;
     };
 
-    // SWRに渡すフェっチャー関数
+    // SWRに渡すフェッチャー関数
     const fetchLive = async (): Promise<LiveResponse> => {
         const headers: Record<string, string> = {};
         if (liveEtagRef.current) headers['If-None-Match'] = liveEtagRef.current;
