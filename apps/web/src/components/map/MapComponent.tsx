@@ -60,7 +60,7 @@ function latLngToPixels(lat: number, lng: number) {
 export default function CustomMapComponent() {
     const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
-    const [minScale, setMinScale] = useState<number>(1)
+    const [minScale, setMinScale] = useState<null | number>(null)
     const mapContainerRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
@@ -86,23 +86,38 @@ export default function CustomMapComponent() {
 
         return () => navigator.geolocation.clearWatch(watchId);
     }, []);
-    
-    useEffect(() => {
-        if (!mapContainerRef.current) return;
-        const size = mapContainerRef.current.getBoundingClientRect()
+
+
+    // minScaleを変更する関数.
+    const calcMinScale = (size: { width: number; height: number }) => {
         if (size.height > size.width) {  // 縦長
             setMinScale(size.width / IMAGE_WIDTH)
         } else {  // 横長
             setMinScale(size.height / IMAGE_HEIGHT)
         }
-        
-    }, [mapContainerRef])
+    }
+    
+    // 画面サイズ変更時にminScaleを変更する関数.
+    useEffect(() => {
+        if (!mapContainerRef.current) return;
+
+        const calcMinScaleHandler = (e: Event) => {
+            const size = (e.target as HTMLDivElement).getBoundingClientRect()
+            calcMinScale(size)
+        }
+
+        calcMinScale(mapContainerRef.current.getBoundingClientRect())
+        mapContainerRef.current.addEventListener("resize", calcMinScaleHandler)
+        return () => {
+            mapContainerRef.current?.removeEventListener("resize", calcMinScaleHandler)
+        }
+    }, [mapContainerRef, mapContainerRef.current])
 
     return (
         <div ref={mapContainerRef} style={{
             position: 'relative',
             width: '100%',
-            height: '100vh',
+            height: '100%',
             backgroundColor: '#e0e0e0',
             overflow: 'hidden'
         }}>
@@ -120,61 +135,61 @@ export default function CustomMapComponent() {
                     {errorMsg}
                 </div>
             )}
+            {minScale ? (
+                <TransformWrapper  /* ズーム・パン機能のラッパー */
+                    initialScale={1}
+                    minScale={minScale}
+                    maxScale={4}
+                    centerOnInit={true}
+                    limitToBounds={true}
+                    disablePadding={true}
+                    centerZoomedOut={true}
+                    wheel={{step: 0.1}} // マウスホイールでのズームの滑らかさ
+                >
+                    <TransformComponent wrapperStyle={{width: "100%", height: "100%"}}>
 
-            {/* ズーム・パン機能のラッパー */}
-            <TransformWrapper
-                initialScale={1}
-                minScale={minScale}
-                maxScale={4}
-                centerOnInit={true}
-                limitToBounds={true}
-                disablePadding={true}
-                centerZoomedOut={true}
-                wheel={{step: 0.1}} // マウスホイールでのズームの滑らかさ
-            >
-                <TransformComponent wrapperStyle={{width: "100%", height: "100%"}}>
+                        {/* 地図画像とピンを配置するコンテナ（画像サイズを基準にする） */}
+                        <div style={{
+                            position: 'relative',
+                            width: `${IMAGE_WIDTH}px`,
+                            height: `${IMAGE_HEIGHT}px`
+                        }}>
 
-                    {/* 地図画像とピンを配置するコンテナ（画像サイズを基準にする） */}
-                    <div style={{
-                        position: 'relative',
-                        width: `${IMAGE_WIDTH}px`,
-                        height: `${IMAGE_HEIGHT}px`
-                    }}>
+                            {/* 地図画像 */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src="/img/map/campus.svg"
+                                alt="Campus Map"
+                                style={{width: '100%', height: '100%', display: 'block', pointerEvents: 'none'}}
+                            />
 
-                        {/* 地図画像 */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src="/img/map/campus.svg"
-                            alt="Campus Map"
-                            style={{width: '100%', height: '100%', display: 'block', pointerEvents: 'none'}}
-                        />
+                            {/* 現在地のピン (計算されたX, Y座標に絶対配置) */}
+                            {currentPos && (
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        // ピンの先端が座標を指すように、少し上にずらして配置 (-50%, -100%)
+                                        transform: 'translate(-50%, -100%)',
+                                        left: `${currentPos.x}px`,
+                                        top: `${currentPos.y}px`,
+                                        width: '24px',
+                                        height: '36px',
+                                        zIndex: 10,
+                                    }}
+                                >
+                                    {/* 簡易的なピンのデザイン（SVG） */}
+                                    <svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M12 0C5.37 0 0 5.37 0 12C0 21 12 36 12 36C12 36 24 21 24 12C24 5.37 18.63 0 12 0ZM12 16.5C9.51 16.5 7.5 14.49 7.5 12C7.5 9.51 9.51 7.5 12 7.5C14.49 7.5 16.5 9.51 16.5 12C16.5 14.49 14.49 16.5 12 16.5Z"
+                                            fill="#E91E63"/>
+                                    </svg>
+                                </div>
+                            )}
 
-                        {/* 現在地のピン (計算されたX, Y座標に絶対配置) */}
-                        {currentPos && (
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    // ピンの先端が座標を指すように、少し上にずらして配置 (-50%, -100%)
-                                    transform: 'translate(-50%, -100%)',
-                                    left: `${currentPos.x}px`,
-                                    top: `${currentPos.y}px`,
-                                    width: '24px',
-                                    height: '36px',
-                                    zIndex: 10,
-                                }}
-                            >
-                                {/* 簡易的なピンのデザイン（SVG） */}
-                                <svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M12 0C5.37 0 0 5.37 0 12C0 21 12 36 12 36C12 36 24 21 24 12C24 5.37 18.63 0 12 0ZM12 16.5C9.51 16.5 7.5 14.49 7.5 12C7.5 9.51 9.51 7.5 12 7.5C14.49 7.5 16.5 9.51 16.5 12C16.5 14.49 14.49 16.5 12 16.5Z"
-                                        fill="#E91E63"/>
-                                </svg>
-                            </div>
-                        )}
-
-                    </div>
-                </TransformComponent>
-            </TransformWrapper>
+                        </div>
+                    </TransformComponent>
+                </TransformWrapper>
+            ) : null}
         </div>
     );
 }
