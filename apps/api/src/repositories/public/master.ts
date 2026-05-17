@@ -42,15 +42,15 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
         rankingRows,
         scoreRows
     ] = await Promise.all([
-        db.select().from(systemInfo),
-        db.select().from(maps),
-        db.select().from(locations),
-        db.select().from(teams),
-        db.select().from(events),
-        db.select().from(eventBlocks),
-        db.select().from(matchPlans),
-        db.select().from(blockRankings),
-        db.select().from(scores)
+        db.select().from(systemInfo).orderBy(asc(systemInfo.id)),
+        db.select().from(maps).orderBy(asc(maps.id)),
+        db.select().from(locations).orderBy(asc(locations.id)),
+        db.select().from(teams).orderBy(asc(teams.id)),
+        db.select().from(events).orderBy(asc(events.id)),
+        db.select().from(eventBlocks).orderBy(asc(eventBlocks.id)),
+        db.select().from(matchPlans).orderBy(asc(matchPlans.scheduledStartTime), asc(matchPlans.id)),
+        db.select().from(blockRankings).orderBy(asc(blockRankings.id)),
+        db.select().from(scores).orderBy(asc(scores.id))
     ])
 
     // systemInfoのレコード存在チェック
