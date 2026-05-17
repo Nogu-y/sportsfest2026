@@ -1,15 +1,14 @@
 "use client";
 
-import MatchCard from "src/components/common/MatchCard";
 import RadioGroup from "src/components/common/RadioGroup";
 import RectButtonList from "src/components/common/RectButtonList";
-import {useCallback, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import {useSportsFestData} from "../../hooks/useSportsFestData";
 import {MatchCardList} from "../../components/common/MatchCardList";
 import {matchStatusEnumType} from "../../../../api/src/schemas/sportsData";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
-import {EventBracket} from "../../components/bracket/EventBracket";
+import {PwaNotificationPrompt} from "../../components/home/PwaNotificationPrompt";
 
 const eventStatusOptions = [
     {label: "開催予定", value: "upcoming"},
@@ -64,7 +63,7 @@ export default function HomePage() {
 
     const sportsFestData = useSportsFestData()
     const [displayMatches, setDisplayMatches] = useState<MatchWithEventIdType[]>(filterMatches(sportsFestData.matches, eventStatus, sortOrder));
-    
+
     useEffect(() => {
         setDisplayMatches(filterMatches(sportsFestData.matches, eventStatus, sortOrder))
     }, [eventStatus, sortOrder, sportsFestData.matches])
@@ -100,8 +99,10 @@ export default function HomePage() {
             </SubHeader>
 
             <main className="space-y-4 p-6">
-                <h2 className="text-primary font-bold text-lg">{eventStatusOptions.find(o => o.value === eventStatus)?.label}の試合 ({displayMatches.length})</h2>
-                <MatchCardList  matches={displayMatches} key={sortOrder+eventStatus}/>
+                <PwaNotificationPrompt/>
+                <h2 className="text-primary font-bold text-lg">{eventStatusOptions.find(o => o.value === eventStatus)?.label}の試合
+                    ({displayMatches.length})</h2>
+                <MatchCardList matches={displayMatches} key={sortOrder + eventStatus}/>
             </main>
         </>
     );
