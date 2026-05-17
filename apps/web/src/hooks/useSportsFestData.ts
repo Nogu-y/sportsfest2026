@@ -3,6 +3,7 @@ import {useMemo, useRef} from 'react';
 import {api} from '../lib/api/client';
 import type {PublicMasterResponse} from '../../../api/src/schemas/public/master';
 import type {LiveResponse} from '../../../api/src/schemas/public/live';
+import type {MatchWithEventIdType} from '../types/SportsFestDataTypes';
 
 export function useSportsFestData() {
     const latestMasterRef = useRef<PublicMasterResponse | null>(null);
@@ -71,12 +72,24 @@ export function useSportsFestData() {
     /**
      * マスタの全試合(開始前含む)をベースに, 進行中･終了した試合をライブデータで上書き統合
      */
-    const integratedMatches = useMemo(() => {
+    const integratedMatches = useMemo((): MatchWithEventIdType[] => {
         if (!masterData?.matches) return [];
+
+        // matchにeventIdを付加するためにまずblockIdとそのeventIdをMap化
+        const blockIdToEventIdMap = new Map<number, number>();
+        if (masterData.blocks) {
+            masterData.blocks.forEach(block => {
+                blockIdToEventIdMap.set(block.id, block.eventId);
+            });
+        }
+        
 
         // ライブデータがまだない, または空の場合はマスタの全予定(Waiting)をそのまま返す
         if (!liveData?.matches || liveData.matches.length === 0) {
-            return masterData.matches;
+            return masterData.matches.map(m => ({
+                ...m,
+                eventId: blockIdToEventIdMap.get(m.eventBlockId) || 0,
+            }));
         }
 
         // O(1)でライブデータを検索できるようMap化
@@ -85,9 +98,15 @@ export function useSportsFestData() {
         // マスタの全試合スケジュールを走査
         return masterData.matches.map((masterMatch) => {
             const liveMatch = liveMatchesMap.get(masterMatch.id);  // liveデータの対応するidの試合を取得 
+            const eventId = blockIdToEventIdMap.get(masterMatch.eventBlockId) || 0;  // blockIdとeventIdのMapを使用してmatchにeventIdを紐づける
 
             // ライブデータ(進行中･終了)に存在しない試合は未開始(Waiting)のままスケジュールを表示
-            if (!liveMatch) return masterMatch;
+            if (!liveMatch) {
+                return {
+                    ...masterMatch,
+                    eventId,
+                };
+            }
 
             // 進行中･終了した試合は最新のステータス, 実績時間, スコア･順位で上書き
             return {
@@ -97,9 +116,10 @@ export function useSportsFestData() {
                 endedAt: liveMatch.endedAt,
                 note: liveMatch.note,
                 participants: liveMatch.participants, // スコアや順位, 失格フラグの同期
+                eventId,
             };
         });
-    }, [masterData?.matches, liveData?.matches]);
+    }, [masterData?.matches, masterData?.blocks, liveData?.matches]);
 
     // マスタデータの鮮度の検証
     // 現段階ではライブデータに.mvを載せていないので死文. 実装したらコメントを解除する.
