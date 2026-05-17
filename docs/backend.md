@@ -22,7 +22,6 @@ apps/api/src
 │  └─ system.ts
 ├─ schemas
 │  ├─ public
-│  ├─ common.ts
 │  └─ system.ts
 ├─ utils
 │  ├─ dates.ts
@@ -141,14 +140,14 @@ responses: {
 
 ### 基本方針
 
-- 共通で使う基本スキーマは `schemas/common.ts` に置く
+- 共通で使う基本スキーマは `schemas/matchUtils.ts` に置く
 - 機能ごとの request / response は `schemas/public/*.ts` に置く
 - `z.infer<typeof Schema>` で TypeScript 型を取り出す
 - `createRoute(...)` で API 仕様まで同じファイルに書く
 
 ### 共通スキーマの例
 
-`schemas/common.ts` では、複数機能で使う基本型を定義しています。
+`schemas/matchUtils.ts` では、複数機能で使う基本型を定義しています。
 
 - `uuidSchema`
 - `positiveIntegerSchema`
@@ -601,7 +600,7 @@ apps/api/src
 - HTTP 処理は `routes` に置く
 - DB 処理は `repositories` に置く
 - 共通の小物関数は `utils` に置く
-- 共通バリデーションは `schemas/common.ts` に寄せる
+- 共通バリデーションは `schemas/matchUtils.ts` に寄せる
 - API レスポンスは DB の生データをそのまま返さず、必要に応じて整形する
 
 ## 迷った時の判断順
