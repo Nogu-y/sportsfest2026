@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useSportsFestData } from "../../../hooks/useSportsFestData";
 import { formatStatusLabel, formatTimeLabel } from "../../../lib/matchUtils";
+import { useWatchlist } from "../../../hooks/useWatchlist";
+import Image from "next/image";
+
 
 type MatchDetailViewProps = {
     matchId: number;
@@ -17,8 +20,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
         getMatchTeamsLabel,
         getMatch
     } = useSportsFestData();
-
-    // コピー完了のフィードバック用ステート
+    const { isWatched, toggleWatchlist } = useWatchlist();
     const [isCopied, setIsCopied] = useState(false);
 
     if (isLoading) {
@@ -40,6 +42,8 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     const statusLabel = formatStatusLabel(match.status);
     const teamsNames = getMatchTeamsLabel(match.participants);
     const matchName = match.name
+
+    const watched = isWatched(matchId);
 
     // 共有機能
     const handleShare = async () => {
@@ -74,10 +78,29 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <span className="text-sm font-mono text-gray-500">#{match.id}</span>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+        <div className="space-y-6 text-dark relative">
+            {/* 1. ヘッダー情報（ウォッチリストトグルボタンを統合） */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => toggleWatchlist(matchId)}
+                        className="p-1 rounded-full hover:bg-gray-100 active:scale-90 transition-transform"
+                        aria-label="ウォッチリストを切り替え"
+                    >
+                        <Image
+                            src={watched ? "/icons/watchlist-on-icon.svg" : "/icons/watchlist-off-icon.svg"}
+                            alt={watched ? "ウォッチリスト登録中" : "ウォッチリスト未登録"}
+                            width={20}
+                            height={24}
+                            className="h-6 w-5 invert-75"
+                        />
+                    </button>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-medium uppercase">試合管理ID</span>
+                        <span className="text-sm font-mono font-bold text-gray-600">#{match.id}</span>
+                    </div>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-dark px-3 py-1 text-xs font-bold text-white">
                     {statusLabel}
                 </span>
             </div>

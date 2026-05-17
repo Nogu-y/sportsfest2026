@@ -1,13 +1,9 @@
 "use client"
 
-import dynamic from 'next/dynamic';
 import {useEffect} from "react";
+import {InteractiveMap} from "../../../components/map/InteractiveMap";
 
 // SSR（サーバーサイドレンダリング）を無効にして動的インポート
-const DynamicMap = dynamic(() => import('../../../components/map/MapComponent'), {
-    ssr: false,
-    loading: () => <p>地図を読み込み中...</p>, // 読み込み中のプレースホルダー
-});
 
 export default function Home() {
 
@@ -30,8 +26,8 @@ export default function Home() {
     return (
         <main className={"w-screen min-h-screen h-full flex flex-col items-center justify-center"}>
             <div className={"aspect-video h-auto w-full"}>
-                
-                <DynamicMap/>
+
+                <InteractiveMap/>
             </div>
         </main>
     );
