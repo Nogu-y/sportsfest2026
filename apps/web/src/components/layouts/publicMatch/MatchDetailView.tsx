@@ -76,7 +76,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-mono text-gray-500">#{match.id}</span>
+                <span className="text-sm font-mono text-gray-500">{eventName} - {matchName}</span>
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
                     {statusLabel}
                 </span>
