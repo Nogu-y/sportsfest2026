@@ -11,7 +11,7 @@ import {
     teams
 } from '../../db/schema'
 import {db} from '../../db/client'
-import {asc, inArray} from "drizzle-orm"
+import {asc, desc, inArray} from "drizzle-orm"
 import type {LiveResponse} from "../../schemas/public/live"
 import type {PublicMasterResponse} from "../../schemas/public/master"
 import {
@@ -42,7 +42,7 @@ export async function getMasterData(): Promise<PublicMasterResponse> {
         rankingRows,
         scoreRows
     ] = await Promise.all([
-        db.select().from(systemInfo).orderBy(asc(systemInfo.id)),
+        db.select().from(systemInfo).orderBy(desc(systemInfo.id)).limit(1),
         db.select().from(maps).orderBy(asc(maps.id)),
         db.select().from(locations).orderBy(asc(locations.id)),
         db.select().from(teams).orderBy(asc(teams.id)),
