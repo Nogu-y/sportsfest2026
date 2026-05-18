@@ -18,6 +18,14 @@ type LocationResponse = {
   yRatio: number
 }
 
+type MapResponse = {
+  id: number
+  filePath: string
+  displayName: string
+  width: number
+  height: number
+}
+
 type TeamResponse = {
   id: number
   name: string
@@ -142,6 +150,44 @@ export function createAdminResourceDefinitions(
   eventOptions: DataControlOption[],
   eventBlockOptions: DataControlOption[],
 ) {
+  const mapFields: DataControlField[] = [
+    {
+      key: 'id',
+      label: 'ID',
+      type: 'number',
+      readOnly: true,
+      widthClassName: 'w-24',
+    },
+    {
+      key: 'filePath',
+      label: 'ファイルパス',
+      type: 'text',
+      required: true,
+      placeholder: '/img/map/campus.svg',
+    },
+    {
+      key: 'displayName',
+      label: '表示名',
+      type: 'text',
+      required: true,
+      placeholder: '例: 校内マップ',
+    },
+    {
+      key: 'width',
+      label: '幅',
+      type: 'number',
+      required: true,
+      widthClassName: 'w-32',
+    },
+    {
+      key: 'height',
+      label: '高さ',
+      type: 'number',
+      required: true,
+      widthClassName: 'w-32',
+    },
+  ]
+
   const teamFields: DataControlField[] = [
     {
       key: 'id',
@@ -237,9 +283,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: [
-        { label: 'ASC', value: 'ASC' },
-        { label: 'DESC', value: 'DESC' },
+        { label: 'タイム系なら ASC', value: 'ASC' },
+        { label: '得点系なら DESC', value: 'DESC' },
       ],
+      description: 'タイム・秒数のように小さい値が勝ちなら ASC、得点のように大きい値が勝ちなら DESC を選びます。',
     },
     {
       key: 'format',
@@ -418,6 +465,40 @@ export function createAdminResourceDefinitions(
     },
   ]
 
+  const maps: DataControlResourceDefinition = {
+    key: 'maps',
+    label: 'マップ',
+    description: '地図画像マスタを編集し、会場が参照するベースマップを管理します',
+    fields: mapFields,
+    primaryKey: 'id',
+    async fetchRecords() {
+      const response = await api.api.admin.maps.$get()
+      await ensureSuccess(response, 'マップ一覧の取得に失敗しました')
+      return await response.json() as MapResponse[]
+    },
+    async createRecord(input) {
+      const response = await api.api.admin.maps.$post({
+        json: omitReadonlyFields(mapFields, input) as Omit<MapResponse, 'id'>,
+      })
+      await ensureSuccess(response, 'マップの作成に失敗しました')
+      return await response.json() as MapResponse
+    },
+    async updateRecord(id, input) {
+      const response = await api.api.admin.maps[':id'].$put({
+        param: { id: String(id) },
+        json: omitReadonlyFields(mapFields, input) as Partial<Omit<MapResponse, 'id'>>,
+      })
+      await ensureSuccess(response, 'マップの更新に失敗しました')
+      return await response.json() as MapResponse
+    },
+    async deleteRecord(id) {
+      const response = await api.api.admin.maps[':id'].$delete({
+        param: { id: String(id) },
+      })
+      await ensureSuccess(response, 'マップの削除に失敗しました')
+    },
+  }
+
   const teams: DataControlResourceDefinition = {
     key: 'teams',
     label: 'チーム',
@@ -587,5 +668,5 @@ export function createAdminResourceDefinitions(
     },
   }
 
-  return [teams, locations, eventBlocks, events, matches]
+  return [maps, teams, locations, eventBlocks, events, matches]
 }
