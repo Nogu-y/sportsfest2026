@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, {useMemo, useState} from "react";
 import Link from "next/link";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import HeaderEventCardList from "src/components/common/HeaderEventCardList";
 // 以下のパスは実際の構造に合わせて調整してください
-import { useSportsFestData } from "../../../hooks/useSportsFestData";
-import { useMyTeam } from "../../../hooks/useMyTeam";
-import { MatchWithEventIdType } from "../../../types/SportsFestDataTypes";
+import {useSportsFestData} from "../../../hooks/useSportsFestData";
+import {useMyTeam} from "../../../hooks/useMyTeam";
+import {MatchWithEventIdType} from "../../../types/SportsFestDataTypes";
 
 // ==========================================
 // 1. 各種UIコンポーネント
 // ==========================================
 
 // ① 会場名の区切り線
-const VenueDivider = ({ name }: { name: string }) => (
+const VenueDivider = ({name}: { name: string }) => (
     <div className="flex items-center gap-3 my-6 pt-4">
-        <div className="flex-1 h-px bg-[#2d5a8e] opacity-30" />
+        <div className="flex-1 h-px bg-[#2d5a8e] opacity-30"/>
         <span className="text-sm font-bold text-[#2d5a8e] whitespace-nowrap tracking-wider">{name}</span>
-        <div className="flex-1 h-px bg-[#2d5a8e] opacity-30" />
+        <div className="flex-1 h-px bg-[#2d5a8e] opacity-30"/>
     </div>
 );
 
@@ -56,7 +56,8 @@ const CourtCell = ({
     }
 
     return (
-        <div className={`rounded-lg p-2 text-center h-full flex flex-col justify-center transition-transform active:scale-95 ${bgColor} ${borderColor}`}>
+        <div
+            className={`rounded-lg p-2 text-center h-full flex flex-col justify-center transition-transform active:scale-95 ${bgColor} ${borderColor}`}>
             <p className={`text-[10px] mb-1 font-bold ${isPlaying ? "text-blue-200" : isFinished ? "text-gray-400" : "text-gray-500"}`}>
                 {label}
             </p>
@@ -68,7 +69,6 @@ const CourtCell = ({
 };
 
 // ③ 複数のコートが並ぶ時間帯コンポーネント
-// ③ 複数のコートが並ぶ時間帯コンポーネント (Props等は前回と同じです)
 const TimeSlot = ({
                       time,
                       matches,
@@ -88,8 +88,10 @@ const TimeSlot = ({
 }) => (
     <div className="mb-2 relative">
         <div className="flex items-center gap-3 relative z-10">
-            <div className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`} />
-            <span className={`text-sm font-bold tracking-wider ${done ? "text-gray-400" : "text-[#2d5a8e]"}`}>{time}</span>
+            <div
+                className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`}/>
+            <span
+                className={`text-sm font-bold tracking-wider ${done ? "text-gray-400" : "text-[#2d5a8e]"}`}>{time}</span>
         </div>
 
         <div className="pl-[30px] border-l-2 border-gray-100 ml-[7px] pb-8 -mt-2 pt-4">
@@ -116,19 +118,19 @@ const TimeSlot = ({
                     }).join("\n");
 
                     return (
-                    <Link
-                        href={`/match/${m.id}`}
-                        key={m.id}
-                        className="block flex-none min-w-[4.5rem] max-w-full"
-                    >
-                        <CourtCell
-                            label={m.name || "試合"}
-                            teamsText={teamsText}
-                            status={m.status}
-                            isMyTeam={isMyTeam}
-                        />
-                    </Link>
-                );
+                        <Link
+                            href={`/match/${m.id}`}
+                            key={m.id}
+                            className="block flex-none min-w-[4.5rem] max-w-full"
+                        >
+                            <CourtCell
+                                label={m.name || "試合"}
+                                teamsText={teamsText}
+                                status={m.status}
+                                isMyTeam={isMyTeam}
+                            />
+                        </Link>
+                    );
                 })}
             </div>
         </div>
@@ -148,14 +150,18 @@ const SimpleSlot = ({
     isMyTeam: boolean
 }) => (
     <div className="mb-2 relative">
-        <Link href={`/match/${match.id}`} className="flex items-center gap-3 relative z-10 py-2 active:scale-95 transition-transform">
-            <div className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`} />
-            <span className={`text-sm tracking-wider ${done ? "text-gray-400" : "text-gray-600 font-bold"}`}>{time}</span>
-            <span className={`text-sm font-bold ${done ? "text-gray-400" : "text-dark"} ${isMyTeam ? "text-amber-600" : ""}`}>
+        <Link href={`/match/${match.id}`}
+              className="flex items-center gap-3 relative z-10 py-2 active:scale-95 transition-transform">
+            <div
+                className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`}/>
+            <span
+                className={`text-sm tracking-wider ${done ? "text-gray-400" : "text-gray-600 font-bold"}`}>{time}</span>
+            <span
+                className={`text-sm font-bold ${done ? "text-gray-400" : "text-dark"} ${isMyTeam ? "text-amber-600" : ""}`}>
         {match.name || match.description || "予定"}
       </span>
         </Link>
-        <div className="border-l-2 border-gray-100 ml-[7px] h-6" />
+        <div className="border-l-2 border-gray-100 ml-[7px] h-6"/>
     </div>
 );
 
@@ -165,8 +171,8 @@ const SimpleSlot = ({
 // ==========================================
 
 export default function SchedulePage() {
-    const { matches, teams, maps, locations, eventBlocks, isLoading, dayLabelConverter } = useSportsFestData();
-    const { myTeamId } = useMyTeam();
+    const {matches, teams, maps, locations, eventBlocks, isLoading, dayLabelConverter} = useSportsFestData();
+    const {myTeamId} = useMyTeam();
 
     const [activeDay, setActiveDay] = useState<string>("Day1");
     const [selectedEventId, setSelectedEventId] = useState<number | "all">("all");
@@ -184,7 +190,6 @@ export default function SchedulePage() {
     // 試合データを時間と会場でグループ化・ソート
     const timelineItems = useMemo(() => {
         if (!matches || matches.length === 0) return [];
-
         type TimelineGroup = {
             venueName: string;
             timeLabel: string;
@@ -200,12 +205,11 @@ export default function SchedulePage() {
             const dayLabel = dayLabelConverter(new Date(match.scheduledStartTime));
             if (dayLabel !== activeDay) return;
 
-            // ★ 2. 種目によるフィルタリングを追加
+            // 2. 種目によるフィルタリングを追加
             if (selectedEventId !== "all" && match.eventId !== selectedEventId) {
                 return; // 選択された種目と異なる試合はタイムラインから除外
             }
-
-            // ... (これ以降の startMs の計算や groups への追加ロジックは前回と全く同じです) ...
+            
             const startMs = new Date(match.scheduledStartTime).getTime();
             const endMs = new Date(match.scheduledEndTime).getTime();
             const timeLabel = `${formatTime(match.scheduledStartTime)} - ${formatTime(match.scheduledEndTime)}`;
@@ -221,7 +225,7 @@ export default function SchedulePage() {
 
             const groupKey = `${startMs}-${endMs}-${venueName}`;
             if (!groups[groupKey]) {
-                groups[groupKey] = { venueName, timeLabel, startTimeMs: startMs, endTimeMs: endMs, matches: [] };
+                groups[groupKey] = {venueName, timeLabel, startTimeMs: startMs, endTimeMs: endMs, matches: []};
             }
             groups[groupKey].matches.push(match);
         });
@@ -236,7 +240,8 @@ export default function SchedulePage() {
     }, [matches, activeDay, selectedEventId, dayLabelConverter, locations, maps]);
 
     if (isLoading) {
-        return <div className="flex h-screen items-center justify-center text-gray-500">スケジュールを読み込み中...</div>;
+        return <div
+            className="flex h-screen items-center justify-center text-gray-500">スケジュールを読み込み中...</div>;
     }
 
     let currentVenue = "";
@@ -244,7 +249,6 @@ export default function SchedulePage() {
     return (
         <>
             <SubHeader>
-                {/* ★ 更新: stateをコンポーネントに渡し、変更を受け取れるようにする */}
                 <HeaderEventCardList
                     activeEventId={selectedEventId}
                     onEventChange={setSelectedEventId}
@@ -271,7 +275,7 @@ export default function SchedulePage() {
                 {/* タイムライン本体 */}
                 <div className="px-5 py-4 pb-24">
                     {timelineItems.length === 0 ? (
-                        <p className="text-center text-gray-400 mt-10">この日の予定はまだありません。</p>
+                        <p className="text-center text-gray-400 mt-10">この日の予定はありません。</p>
                     ) : (
                         timelineItems.map((item, i) => {
                             // 会場が変わったタイミングで VenueDivider を挿入
@@ -286,7 +290,7 @@ export default function SchedulePage() {
 
                             return (
                                 <React.Fragment key={i}>
-                                    {showVenueDivider && <VenueDivider name={item.venueName} />}
+                                    {showVenueDivider && <VenueDivider name={item.venueName}/>}
 
                                     {isSimple ? (
                                         <SimpleSlot
@@ -302,8 +306,8 @@ export default function SchedulePage() {
                                             done={isDone}
                                             teamsMap={teamsMap}
                                             myTeamId={myTeamId ?? null}
-                                            matchesMap={matchesMap} 
-                                            blocksMap={blocksMap} 
+                                            matchesMap={matchesMap}
+                                            blocksMap={blocksMap}
                                         />
                                     )}
                                 </React.Fragment>
