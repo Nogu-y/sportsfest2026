@@ -36,7 +36,8 @@ export const finalizeEventScoreRoute = createRoute({
     200: createResBody(finalizeEventScoreResSchema, '得点確定成功'),
     400: createErrResBody('不正なリクエスト'),
     404: createErrResBody('競技が見つからない'),
-    409: createErrResBody('得点確定に必要な結果が不足している')
+    409: createErrResBody('得点確定に必要な結果が不足している'),
+    422: createErrResBody('配点設定が不正')
   }
 })
 
