@@ -95,6 +95,7 @@ export async function fetchAdminMasterOptions() {
   const master = await fetchPublicMasterData()
 
   return {
+    masterData: master,
     mapOptions: master.maps.map((map) => ({
       label: `${map.id}: ${map.displayName}`,
       value: map.id,

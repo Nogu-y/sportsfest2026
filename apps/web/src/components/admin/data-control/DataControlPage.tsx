@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
+import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
+import { EventBracket } from '../../bracket/EventBracket'
 import {
   createAdminResourceDefinitions,
   fetchAdminMasterOptions,
@@ -273,7 +275,9 @@ function RecordForm({
 
 export function DataControlPage() {
   const [resourceDefinitions, setResourceDefinitions] = useState<DataControlResourceDefinition[]>([])
+  const [masterData, setMasterData] = useState<PublicMasterResponse | null>(null)
   const [activeResourceKey, setActiveResourceKey] = useState<string>('teams')
+  const [activeMainView, setActiveMainView] = useState<'table' | 'preview'>('table')
   const [records, setRecords] = useState<DataControlRecord[]>([])
   const [isBootstrapping, setIsBootstrapping] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -289,6 +293,63 @@ export function DataControlPage() {
     () => resourceDefinitions.find((definition) => definition.key === activeResourceKey) ?? null,
     [activeResourceKey, resourceDefinitions],
   )
+
+  const previewEventId = useMemo(() => {
+    if (!masterData) return null
+
+    if (activeResourceKey === 'events') {
+      if (editingRecordId !== null) return editingRecordId
+      const firstEventId = records[0]?.id
+      return typeof firstEventId === 'number' ? firstEventId : null
+    }
+
+    if (activeResourceKey === 'matches') {
+      const targetRecord =
+        (editingRecordId !== null
+          ? records.find((record) => record.id === editingRecordId)
+          : records[0]) ?? null
+
+      if (!targetRecord) return null
+
+      const eventBlockId = targetRecord.eventBlockId
+      if (typeof eventBlockId !== 'number') return null
+
+      return masterData.blocks.find((block) => block.id === eventBlockId)?.eventId ?? null
+    }
+
+    return null
+  }, [activeResourceKey, editingRecordId, masterData, records])
+
+  const previewData = useMemo(() => {
+    if (!masterData || !previewEventId) return null
+
+    const nextEvents =
+      activeResourceKey === 'events'
+        ? masterData.events.map((event) => {
+            const override = records.find((record) => record.id === event.id)
+            return override ? { ...event, ...override } : event
+          })
+        : masterData.events
+
+    const nextMatches =
+      activeResourceKey === 'matches'
+        ? masterData.matches.map((match) => {
+            const override = records.find((record) => record.id === match.id)
+            return override ? { ...match, ...override } : match
+          })
+        : masterData.matches
+
+    return {
+      events: nextEvents,
+      eventBlocks: masterData.blocks,
+      matches: nextMatches,
+      teams: masterData.teams,
+    }
+  }, [activeResourceKey, masterData, previewEventId, records])
+
+  const canShowPreview = Boolean(previewData && previewEventId)
+  const resolvedPreviewEventId = canShowPreview ? previewEventId : null
+  const resolvedPreviewData = canShowPreview ? previewData : null
 
   const tableFields = useMemo(() => {
     if (!activeResource) return []
@@ -315,13 +376,14 @@ export function DataControlPage() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const { mapOptions, locationOptions, eventBlockOptions } = await fetchAdminMasterOptions()
+        const { masterData, mapOptions, locationOptions, eventBlockOptions } = await fetchAdminMasterOptions()
         const definitions = createAdminResourceDefinitions(
           mapOptions,
           locationOptions,
           eventBlockOptions,
         )
 
+        setMasterData(masterData)
         setResourceDefinitions(definitions)
         setActiveResourceKey(definitions[0]?.key ?? '')
       } catch (error) {
@@ -340,6 +402,7 @@ export function DataControlPage() {
     setCreateDraft(getInitialDraft(activeResource.fields))
     setEditDraft({})
     setEditingRecordId(null)
+    setActiveMainView('table')
 
     startTransition(() => {
       setErrorMessage(null)
@@ -532,84 +595,126 @@ export function DataControlPage() {
 
         <section className="flex flex-col gap-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold">一覧</h2>
-                <p className="text-sm text-slate-500">{records.length} 件</p>
+                <h2 className="text-lg font-semibold">
+                  {activeMainView === 'preview' ? '視覚プレビュー' : '一覧'}
+                </h2>
+                <p className="text-sm text-slate-500">
+                  {activeMainView === 'preview'
+                    ? '既存の対戦表コンポーネントを使って、関連イベントの見え方を確認できます。'
+                    : `${records.length} 件`}
+                </p>
               </div>
-              <button
-                type="button"
-                onClick={() => loadActiveResource(activeResource).catch((error) => {
-                  setErrorMessage(error instanceof Error ? error.message : '再読込に失敗しました')
-                })}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
-              >
-                再読込
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMainView('table')}
+                    className={
+                      activeMainView === 'table'
+                        ? 'rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white'
+                        : 'rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700'
+                    }
+                  >
+                    一覧
+                  </button>
+                  {canShowPreview ? (
+                    <button
+                      type="button"
+                      onClick={() => setActiveMainView('preview')}
+                      className={
+                        activeMainView === 'preview'
+                          ? 'rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white'
+                          : 'rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700'
+                      }
+                    >
+                      プレビュー
+                    </button>
+                  ) : null}
+                </div>
+                {activeMainView === 'table' ? (
+                  <button
+                    type="button"
+                    onClick={() => loadActiveResource(activeResource).catch((error) => {
+                      setErrorMessage(error instanceof Error ? error.message : '再読込に失敗しました')
+                    })}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+                  >
+                    再読込
+                  </button>
+                ) : null}
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-max border-separate border-spacing-0 text-sm">
-                <thead>
-                  <tr>
-                    {tableFields.map((field) => (
-                      <th
-                        key={field.key}
-                        className="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600"
-                      >
-                        {field.label}
-                      </th>
-                    ))}
-                    <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600">
-                      操作
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((record) => (
-                    <tr key={String(record.id ?? JSON.stringify(record))} className="align-top">
+            {activeMainView === 'preview' && resolvedPreviewEventId && resolvedPreviewData ? (
+              <div className="overflow-x-auto">
+                <EventBracket eventId={resolvedPreviewEventId} previewData={resolvedPreviewData} />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-max border-separate border-spacing-0 text-sm">
+                  <thead>
+                    <tr>
                       {tableFields.map((field) => (
-                        <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
-                          <div className="min-w-24 whitespace-pre-wrap break-words">
-                            {toDisplayValue(record[field.key] ?? null)}
-                          </div>
-                        </td>
+                        <th
+                          key={field.key}
+                          className="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600"
+                        >
+                          {field.label}
+                        </th>
                       ))}
-                      <td className="border-b border-slate-100 px-3 py-3">
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => startEdit(record)}
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700"
-                          >
-                            編集
-                          </button>
-                          {typeof record.id === 'number' ? (
+                      <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600">
+                        操作
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {records.map((record) => (
+                      <tr key={String(record.id ?? JSON.stringify(record))} className="align-top">
+                        {tableFields.map((field) => (
+                          <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
+                            <div className="min-w-24 whitespace-pre-wrap break-words">
+                              {toDisplayValue(record[field.key] ?? null)}
+                            </div>
+                          </td>
+                        ))}
+                        <td className="border-b border-slate-100 px-3 py-3">
+                          <div className="flex gap-2">
                             <button
                               type="button"
-                              onClick={() => handleDelete(record.id as number)}
-                              className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700"
+                              onClick={() => startEdit(record)}
+                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700"
                             >
-                              削除
+                              編集
                             </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {records.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={tableFields.length + 1}
-                        className="px-3 py-6 text-center text-sm text-slate-500"
-                      >
-                        データがありません
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
+                            {typeof record.id === 'number' ? (
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(record.id as number)}
+                                className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700"
+                              >
+                                削除
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {records.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={tableFields.length + 1}
+                          className="px-3 py-6 text-center text-sm text-slate-500"
+                        >
+                          データがありません
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
