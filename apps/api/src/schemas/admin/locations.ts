@@ -5,6 +5,8 @@ import {
   createReqBody,
   createResBody,
 } from '../../utils/schemaParser'
+import {dayEnum} from "../../db/enums";
+import {dayEnumSchema} from "../sportsData";
 
 const ratioSchema = z.number().int().min(1).max(100)
 
@@ -14,6 +16,7 @@ export const LocationSchema = z.object({
   name: z.string().min(1).max(100).openapi({ example: '第一体育館 Aコート' }),
   xRatio: ratioSchema.openapi({ example: 42 }),
   yRatio: ratioSchema.openapi({ example: 65 }),
+  day: dayEnumSchema.openapi({ example: "both" }),
 })
 
 export const CreateLocationRequestSchema = LocationSchema.omit({ id: true })
