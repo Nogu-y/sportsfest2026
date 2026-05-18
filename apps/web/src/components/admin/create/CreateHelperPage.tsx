@@ -640,6 +640,12 @@ function ReferenceSelectField({
   )
 }
 
+function FieldDescription({ field }: { field: DataControlField }) {
+  if (!field.description) return null
+
+  return <p className="text-xs text-slate-500">{field.description}</p>
+}
+
 function RecordForm({
   fields,
   value,
@@ -667,19 +673,22 @@ function RecordForm({
                   <option value="false">false</option>
                   <option value="true">true</option>
                 </select>
+                <FieldDescription field={field} />
               </label>
             )
           }
 
           if (field.type === 'select') {
             return field.allowCustomValue ? (
-              <ReferenceSelectField
-                key={field.key}
-                field={field}
-                currentValue={currentValue}
-                onChange={onChange}
-                referenceLoadError={referenceLoadError}
-              />
+              <div key={field.key} className="flex flex-col gap-2">
+                <ReferenceSelectField
+                  field={field}
+                  currentValue={currentValue}
+                  onChange={onChange}
+                  referenceLoadError={referenceLoadError}
+                />
+                <FieldDescription field={field} />
+              </div>
             ) : (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
                 <span className="font-medium">{field.label}</span>
@@ -695,6 +704,7 @@ function RecordForm({
                     </option>
                   ))}
                 </select>
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -749,6 +759,7 @@ function RecordForm({
                   onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                   className="min-h-32 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm"
                 />
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -768,6 +779,7 @@ function RecordForm({
                   onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2"
                 />
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -782,6 +794,7 @@ function RecordForm({
                 onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2"
               />
+              <FieldDescription field={field} />
             </label>
           )
         })}

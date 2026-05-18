@@ -7,8 +7,8 @@ export const eventFormatOptions: DataControlOption[] = [
 ]
 
 export const rankingOrderOptions: DataControlOption[] = [
-  { label: 'ASC', value: 'ASC' },
-  { label: 'DESC', value: 'DESC' },
+  { label: 'タイム系なら ASC', value: 'ASC' },
+  { label: '得点系なら DESC', value: 'DESC' },
 ]
 
 export const matchStageOptions: DataControlOption[] = [
@@ -203,6 +203,7 @@ export const eventCreateFields: DataControlField[] = [
     type: 'select',
     required: true,
     options: rankingOrderOptions,
+    description: 'タイム・秒数のように小さい値が勝ちなら ASC、得点のように大きい値が勝ちなら DESC を選びます。',
   },
   {
     key: 'format',
