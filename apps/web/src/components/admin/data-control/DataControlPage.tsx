@@ -373,18 +373,24 @@ export function DataControlPage() {
     setRecords(sortRecords(nextRecords, resource.primaryKey))
   }
 
+  async function refreshMasterContext() {
+    const { masterData, mapOptions, locationOptions, eventOptions, eventBlockOptions } = await fetchAdminMasterOptions()
+    const definitions = createAdminResourceDefinitions(
+      mapOptions,
+      locationOptions,
+      eventOptions,
+      eventBlockOptions,
+    )
+
+    setMasterData(masterData)
+    setResourceDefinitions(definitions)
+    return definitions
+  }
+
   useEffect(() => {
     async function bootstrap() {
       try {
-        const { masterData, mapOptions, locationOptions, eventBlockOptions } = await fetchAdminMasterOptions()
-        const definitions = createAdminResourceDefinitions(
-          mapOptions,
-          locationOptions,
-          eventBlockOptions,
-        )
-
-        setMasterData(masterData)
-        setResourceDefinitions(definitions)
+        const definitions = await refreshMasterContext()
         setActiveResourceKey(definitions[0]?.key ?? '')
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : '初期化に失敗しました')
@@ -426,11 +432,16 @@ export function DataControlPage() {
     try {
       validateDraft(activeResource.fields, createDraft)
       setErrorMessage(null)
-      const created = await activeResource.createRecord(
+      await activeResource.createRecord(
         prepareDraftForSubmit(activeResource.fields, createDraft),
       )
-      setRecords((current) => sortRecords([...current, created], activeResource.primaryKey))
-      setCreateDraft(getInitialDraft(activeResource.fields))
+      const nextDefinitions = await refreshMasterContext()
+      const nextActiveResource =
+        nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
+      if (nextActiveResource) {
+        await loadActiveResource(nextActiveResource)
+        setCreateDraft(getInitialDraft(nextActiveResource.fields))
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '作成に失敗しました')
     }
@@ -449,17 +460,16 @@ export function DataControlPage() {
     try {
       validateDraft(activeResource.fields, editDraft)
       setErrorMessage(null)
-      const updated = await activeResource.updateRecord(
+      await activeResource.updateRecord(
         editingRecordId,
         prepareDraftForSubmit(activeResource.fields, editDraft),
       )
-
-      setRecords((current) =>
-        sortRecords(
-          current.map((record) => (record.id === editingRecordId ? updated : record)),
-          activeResource.primaryKey,
-        ),
-      )
+      const nextDefinitions = await refreshMasterContext()
+      const nextActiveResource =
+        nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
+      if (nextActiveResource) {
+        await loadActiveResource(nextActiveResource)
+      }
       setEditingRecordId(null)
       setEditDraft({})
     } catch (error) {
@@ -474,7 +484,12 @@ export function DataControlPage() {
     try {
       setErrorMessage(null)
       await activeResource.deleteRecord(id)
-      setRecords((current) => current.filter((record) => record.id !== id))
+      const nextDefinitions = await refreshMasterContext()
+      const nextActiveResource =
+        nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
+      if (nextActiveResource) {
+        await loadActiveResource(nextActiveResource)
+      }
       if (editingRecordId === id) {
         setEditingRecordId(null)
         setEditDraft({})
@@ -521,7 +536,12 @@ export function DataControlPage() {
         createdCount += 1
       }
 
-      await loadActiveResource(activeResource)
+      const nextDefinitions = await refreshMasterContext()
+      const nextActiveResource =
+        nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
+      if (nextActiveResource) {
+        await loadActiveResource(nextActiveResource)
+      }
       setImportResult(`取込完了: 新規 ${createdCount} 件 / 更新 ${updatedCount} 件`)
     } catch (error) {
       setImportResult(null)
