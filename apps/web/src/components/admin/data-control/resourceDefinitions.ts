@@ -2,7 +2,7 @@
 
 import { api } from '../../../lib/api/client'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
-import { matchStageOptions, pointAllocationPresets } from '../create/constants'
+import { dayOptions, matchStageOptions, pointAllocationPresets } from '../create/constants'
 import type {
   DataControlField,
   DataControlOption,
@@ -17,6 +17,7 @@ type LocationResponse = {
   name: string
   xRatio: number
   yRatio: number
+  day: 'day1' | 'day2' | 'both'
 }
 
 type MapResponse = {
@@ -25,6 +26,7 @@ type MapResponse = {
   displayName: string
   width: number
   height: number
+  day: 'day1' | 'day2' | 'both'
 }
 
 type TeamResponse = {
@@ -197,6 +199,15 @@ export function createAdminResourceDefinitions(
       required: true,
       widthClassName: 'w-32',
     },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'そのマップを使う日程を選びます。',
+    },
   ]
 
   const teamFields: DataControlField[] = [
@@ -242,6 +253,15 @@ export function createAdminResourceDefinitions(
       type: 'text',
       required: true,
       placeholder: '例: 第一体育館 Aコート',
+    },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'その会場を使う日程を選びます。',
     },
     {
       key: 'xRatio',
@@ -409,6 +429,8 @@ export function createAdminResourceDefinitions(
       label: '試合名',
       type: 'text',
       nullable: true,
+      placeholder: '例: 1',
+      description: '半角数字だけを入れると、保存時に ① のような丸数字へ変換します。対応範囲は 1〜20 です。',
     },
     {
       key: 'description',
@@ -444,24 +466,14 @@ export function createAdminResourceDefinitions(
       label: '開始予定',
       type: 'datetime',
       required: true,
+      defaultValue: '2026-05-21T00:00:00+09:00',
     },
     {
       key: 'scheduledEndTime',
       label: '終了予定',
       type: 'datetime',
       required: true,
-    },
-    {
-      key: 'startedAt',
-      label: '開始実績',
-      type: 'datetime',
-      nullable: true,
-    },
-    {
-      key: 'endedAt',
-      label: '終了実績',
-      type: 'datetime',
-      nullable: true,
+      defaultValue: '2026-05-21T00:00:00+09:00',
     },
     {
       key: 'note',
