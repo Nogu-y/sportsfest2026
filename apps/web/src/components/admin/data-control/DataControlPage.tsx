@@ -26,12 +26,14 @@ import type {
 } from './types'
 
 type RecordFormProps = {
+  resourceKey: string
   fields: DataControlField[]
   value: Record<string, DataControlValue>
   submitLabel: string
   onChange: (key: string, value: DataControlValue) => void
   onSubmit: () => void
   onCancel?: () => void
+  successMessage?: string | null
 }
 
 type PointAllocationRow = {
@@ -273,46 +275,55 @@ const circledNumberLabels = [
   '⑳',
 ]
 
-function normalizeMatchName(value: DataControlValue) {
-  if (typeof value !== 'string') return value
-
-  const normalized = value.trim()
-  if (!/^[0-9]+$/.test(normalized)) return value
+function convertToCircledNumber(rawValue: string) {
+  const normalized = rawValue.trim()
+  if (!/^[0-9]+$/.test(normalized)) return null
 
   const numericValue = Number(normalized)
   if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue >= circledNumberLabels.length) {
-    return value
+    return null
   }
 
   return circledNumberLabels[numericValue]
 }
 
-function prepareDraftForSubmit(
-  resourceKey: string,
-  fields: DataControlField[],
-  draft: Record<string, DataControlValue>,
-) {
+function prepareDraftForSubmit(fields: DataControlField[], draft: Record<string, DataControlValue>) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
     const rawValue = draft[field.key]
 
     if (rawValue === undefined) return acc
 
-    const value =
-      resourceKey === 'matches' && field.key === 'name'
-        ? normalizeMatchName(rawValue)
-        : rawValue
-
-    if (value === undefined) return acc
-
-    if (field.type === 'json' && typeof value === 'string') {
-      const normalized = value.trim()
+    if (field.type === 'json' && typeof rawValue === 'string') {
+      const normalized = rawValue.trim()
       acc[field.key] = normalized === '' ? (field.nullable ? null : {}) : JSON.parse(normalized)
       return acc
     }
 
-    acc[field.key] = value
+    acc[field.key] = rawValue
     return acc
   }, {})
+}
+
+function buildCreateDraftAfterSubmit(
+  resourceKey: string,
+  fields: DataControlField[],
+  currentDraft: Record<string, DataControlValue>,
+) {
+  if (resourceKey !== 'matches') {
+    return currentDraft
+  }
+
+  const nextDraft = { ...currentDraft }
+  const locationField = fields.find((field) => field.key === 'locationId')
+  const participantsField = fields.find((field) => field.key === 'participants')
+
+  nextDraft.locationId = locationField?.nullable ? null : ''
+  nextDraft.participants =
+    participantsField?.defaultValue !== undefined
+      ? participantsField.defaultValue
+      : []
+
+  return nextDraft
 }
 
 function sortRecords(records: DataControlRecord[], primaryKey: string) {
@@ -751,13 +762,76 @@ function FieldDescription({ field }: { field: DataControlField }) {
   return <p className="text-xs text-slate-500">{field.description}</p>
 }
 
+function MatchNameField({
+  field,
+  currentValue,
+  onChange,
+}: {
+  field: DataControlField
+  currentValue: DataControlValue
+  onChange: (key: string, value: DataControlValue) => void
+}) {
+  const [circledInput, setCircledInput] = useState('')
+  const circledNumber = convertToCircledNumber(circledInput)
+
+  function handleInsert() {
+    if (!circledNumber) return
+
+    const baseName = typeof currentValue === 'string' ? currentValue : ''
+    onChange(field.key, `${baseName}${circledNumber}`)
+    setCircledInput('')
+  }
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-slate-700">
+      <span className="font-medium">{field.label}</span>
+      <div className="flex flex-col gap-2">
+        <input
+          type="text"
+          value={toDisplayValue(currentValue)}
+          placeholder={field.placeholder}
+          onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+        />
+        <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs text-slate-600">
+            番号を入れて右のボタンを押すと、丸数字を試合名の末尾に追加します。
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={circledInput}
+              placeholder="例: 1"
+              onChange={(event) => setCircledInput(event.target.value)}
+              className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2"
+            />
+            <button
+              type="button"
+              onClick={handleInsert}
+              disabled={!circledNumber}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {circledNumber ? `${circledNumber} を追加` : '丸数字を追加'}
+            </button>
+          </div>
+        </div>
+      </div>
+      <FieldDescription field={field} />
+    </div>
+  )
+}
+
 function RecordForm({
+  resourceKey,
   fields,
   value,
   submitLabel,
   onChange,
   onSubmit,
   onCancel,
+  successMessage,
 }: RecordFormProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -897,6 +971,17 @@ function RecordForm({
             )
           }
 
+          if (resourceKey === 'matches' && field.key === 'name' && field.type === 'text') {
+            return (
+              <MatchNameField
+                key={field.key}
+                field={field}
+                currentValue={currentValue}
+                onChange={onChange}
+              />
+            )
+          }
+
           return (
             <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
               <span className="font-medium">{field.label}</span>
@@ -930,6 +1015,11 @@ function RecordForm({
             キャンセル
           </button>
         ) : null}
+        {successMessage ? (
+          <span className="rounded-full bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+            {successMessage}
+          </span>
+        ) : null}
       </div>
     </div>
   )
@@ -944,6 +1034,7 @@ export function DataControlPage() {
   const [isBootstrapping, setIsBootstrapping] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [createSuccessMessage, setCreateSuccessMessage] = useState<string | null>(null)
   const [editingRecordId, setEditingRecordId] = useState<number | null>(null)
   const [createDraft, setCreateDraft] = useState<Record<string, DataControlValue>>({})
   const [editDraft, setEditDraft] = useState<Record<string, DataControlValue>>({})
@@ -1104,6 +1195,7 @@ export function DataControlPage() {
     setEditingRecordId(null)
     setActiveMatchBlockId(null)
     setActiveMainView('table')
+    setCreateSuccessMessage(null)
 
     startTransition(() => {
       setErrorMessage(null)
@@ -1112,6 +1204,16 @@ export function DataControlPage() {
       })
     })
   }, [activeResource])
+
+  useEffect(() => {
+    if (!createSuccessMessage) return
+
+    const timeoutId = window.setTimeout(() => {
+      setCreateSuccessMessage(null)
+    }, 2500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [createSuccessMessage])
 
   useEffect(() => {
     if (activeResourceKey !== 'matches') return
@@ -1165,17 +1267,19 @@ export function DataControlPage() {
     try {
       validateDraft(activeResource.fields, createDraft)
       setErrorMessage(null)
-      await activeResource.createRecord(
-        prepareDraftForSubmit(activeResource.key, activeResource.fields, createDraft),
-      )
+      await activeResource.createRecord(prepareDraftForSubmit(activeResource.fields, createDraft))
       const nextDefinitions = await refreshMasterContext()
       const nextActiveResource =
         nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
       if (nextActiveResource) {
         await loadActiveResource(nextActiveResource)
-        setCreateDraft(getInitialDraft(nextActiveResource.fields))
+        setCreateDraft((current) =>
+          buildCreateDraftAfterSubmit(activeResource.key, nextActiveResource.fields, current),
+        )
       }
+      setCreateSuccessMessage(`${activeResource.label}を作成しました`)
     } catch (error) {
+      setCreateSuccessMessage(null)
       setErrorMessage(error instanceof Error ? error.message : '作成に失敗しました')
     }
   }
@@ -1195,7 +1299,7 @@ export function DataControlPage() {
       setErrorMessage(null)
       await activeResource.updateRecord(
         editingRecordId,
-        prepareDraftForSubmit(activeResource.key, activeResource.fields, editDraft),
+        prepareDraftForSubmit(activeResource.fields, editDraft),
       )
       const nextDefinitions = await refreshMasterContext()
       const nextActiveResource =
@@ -1282,11 +1386,7 @@ export function DataControlPage() {
 
       for (const importedRecord of importedRecords) {
         const idValue = importedRecord[activeResource.primaryKey]
-        const preparedRecord = prepareDraftForSubmit(
-          activeResource.key,
-          activeResource.fields,
-          importedRecord,
-        )
+        const preparedRecord = prepareDraftForSubmit(activeResource.fields, importedRecord)
 
         if (typeof idValue === 'number') {
           await activeResource.updateRecord(idValue, preparedRecord)
@@ -1629,11 +1729,13 @@ export function DataControlPage() {
               <h2 className="text-lg font-semibold">新規作成</h2>
             </div>
             <RecordForm
+              resourceKey={activeResource.key}
               fields={activeResource.fields.filter((field) => !field.readOnly)}
               value={createDraft}
               submitLabel="作成"
               onChange={updateCreateDraft}
               onSubmit={handleCreate}
+              successMessage={createSuccessMessage}
             />
           </section>
 
@@ -1651,6 +1753,7 @@ export function DataControlPage() {
               </div>
             ) : (
               <RecordForm
+                resourceKey={activeResource.key}
                 fields={activeResource.fields}
                 value={editDraft}
                 submitLabel="更新"
