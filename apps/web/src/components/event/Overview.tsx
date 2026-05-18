@@ -50,7 +50,6 @@ const Overview = ({ eventId }: { eventId: string }) => {
 
   return (
     <div className="text-center">
-        {eventId}
       {status === "success" && (
         <EventRuleMarkdown content={content} basePath={basePath} />
       )}

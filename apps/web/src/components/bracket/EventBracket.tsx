@@ -26,8 +26,8 @@ export const EventBracket = ({ eventId }: { eventId: number }) => {
     const currentBlock = blocks.find(b => b.id === currentBlockId);
 
     return (
-        <div className="w-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <h2 className="mb-4 text-xl font-bold text-dark">{event.name} 対戦表</h2>
+        <div className="w-full rounded-sm   p-4 ">
+            <h2 className="mb-4 text-xl  ">{event.name}</h2>
 
             {/* ブロック切り替えタブ */}
             {blocks.length > 1 && (
