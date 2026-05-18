@@ -2,7 +2,7 @@
 
 import { api } from '../../../lib/api/client'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
-import { matchStageOptions } from '../create/constants'
+import { matchStageOptions, pointAllocationPresets } from '../create/constants'
 import type {
   DataControlField,
   DataControlOption,
@@ -133,6 +133,14 @@ export async function fetchAdminMasterOptions() {
       label: `${event.id}: ${event.name}`,
       value: event.id,
     })),
+    teamOptions: master.teams.map((team) => ({
+      label: `${team.id}: ${team.name}`,
+      value: team.id,
+    })),
+    prereqMatchOptions: master.matches.map((match) => ({
+      label: `${match.id}: ${match.name ?? '名称未設定'}`,
+      value: match.id,
+    })),
     eventBlockOptions: master.blocks.map((block) => {
       const eventName =
         master.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
@@ -149,6 +157,8 @@ export function createAdminResourceDefinitions(
   mapOptions: DataControlOption[],
   locationOptions: DataControlOption[],
   eventOptions: DataControlOption[],
+  teamOptions: DataControlOption[],
+  prereqMatchOptions: DataControlOption[],
   eventBlockOptions: DataControlOption[],
 ) {
   const mapFields: DataControlField[] = [
@@ -220,6 +230,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: mapOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'マップIDを直接入力',
+      customValuePlaceholder: '例: 1',
       widthClassName: 'w-40',
     },
     {
@@ -305,6 +319,7 @@ export function createAdminResourceDefinitions(
       label: '得点配分(JSON)',
       type: 'json',
       required: true,
+      presets: pointAllocationPresets,
     },
     {
       key: 'isCompleted',
@@ -328,6 +343,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: eventOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'イベントIDを直接入力',
+      customValuePlaceholder: '例: 8',
     },
     {
       key: 'name',
@@ -369,6 +388,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: eventBlockOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'ブロックIDを直接入力',
+      customValuePlaceholder: '例: 12',
     },
     {
       key: 'locationId',
@@ -376,6 +399,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       nullable: true,
       options: locationOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: '会場IDを直接入力',
+      customValuePlaceholder: '例: 5',
     },
     {
       key: 'name',
@@ -444,9 +471,29 @@ export function createAdminResourceDefinitions(
     },
     {
       key: 'participants',
-      label: '参加枠(JSON)',
+      label: '参加枠(GUI / JSON)',
       type: 'json',
-      readOnly: true,
+      required: true,
+      presets: [
+        { label: '空', value: [] },
+        {
+          label: '2チーム直接指定',
+          value: [
+            { teamId: 1 },
+            { teamId: 2 },
+          ],
+        },
+        {
+          label: '勝ち上がり2枠',
+          value: [
+            { prereqMatchId: 1 },
+            { prereqMatchId: 2 },
+          ],
+        },
+      ],
+      participantTeamOptions: teamOptions,
+      participantPrereqMatchOptions: prereqMatchOptions,
+      participantPrereqBlockOptions: eventBlockOptions,
     },
   ]
 
