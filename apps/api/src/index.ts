@@ -10,7 +10,10 @@ import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
 export const app = new OpenAPIHono()
-  .use("/*", cors())
+  .use('/*', cors({
+    origin: apiEnv.WEB_ORIGIN,
+    credentials: true
+  }))
   .route('/api/system', systemRoutes)
   .route('/api/auth', authRoutes)
   .route('/api/public', publicRoutes)

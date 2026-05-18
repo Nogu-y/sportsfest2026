@@ -4,38 +4,50 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { useSportsFestData } from "../../hooks/useSportsFestData";
 import { useMyTeam } from "../../hooks/useMyTeam"; // ★ 自クラスフックの導入
+import type { PublicMasterResponse } from "../../../../api/src/schemas/public/master";
 
 const BOX_W = 200;  // 試合箱の幅
 const BOX_H = 64;   // 試合箱の高さ
 const GAP_X = 40;   // 列間隔
 const GAP_Y = 28;   // 行間隔
 
-export const TournamentTable = ({ block }: { block: any }) => {
-    const { matches, teams, eventBlocks } = useSportsFestData();
+type PreviewData = {
+    matches: PublicMasterResponse["matches"];
+    teams: PublicMasterResponse["teams"];
+    eventBlocks?: PublicMasterResponse["blocks"];
+    myTeamId?: number | null;
+};
+
+export const TournamentTable = ({ block, previewData }: { block: any; previewData?: PreviewData }) => {
+    const sportsFestData = useSportsFestData();
     const { myTeamId } = useMyTeam(); // ★ グローバルな選択チームIDを直接取得
+    const matches = previewData?.matches ?? sportsFestData.matches;
+    const teams = previewData?.teams ?? sportsFestData.teams;
+    const eventBlocks = previewData?.eventBlocks ?? sportsFestData.eventBlocks;
+    const activeMyTeamId = previewData?.myTeamId ?? myTeamId;
 
     // トーナメントのレイアウト計算（再帰処理）
     const layout = useMemo(() => {
-        const blockMatches = matches.filter(m => m.eventBlockId === block.id);
-        const roots = blockMatches.filter(m =>
-            !blockMatches.some(other => other.participants.some(p => p.prereqMatchId === m.id))
+        const blockMatches = matches.filter((m: any) => m.eventBlockId === block.id);
+        const roots = blockMatches.filter((m: any) =>
+            !blockMatches.some((other: any) => other.participants.some((p: any) => p.prereqMatchId === m.id))
         );
 
         const getDepth = (matchId: number): number => {
-            const match = blockMatches.find(m => m.id === matchId);
+            const match = blockMatches.find((m: any) => m.id === matchId);
             if (!match) return 0;
             const d0 = match.participants[0]?.prereqMatchId ? getDepth(match.participants[0].prereqMatchId) : 0;
             const d1 = match.participants[1]?.prereqMatchId ? getDepth(match.participants[1].prereqMatchId) : 0;
             return Math.max(d0, d1) + 1;
         };
 
-        const maxCols = Math.max(...roots.map(r => getDepth(r.id)), 1);
+        const maxCols = Math.max(...roots.map((r: any) => getDepth(r.id)), 1);
         const nodes: any[] = [];
         const links: any[] = [];
         let globalRow = 0;
 
         const traverse = (matchId: number, col: number) => {
-            const match = blockMatches.find(m => m.id === matchId);
+            const match = blockMatches.find((m: any) => m.id === matchId);
             if (!match) return null;
 
             const p0 = match.participants[0];
@@ -65,7 +77,7 @@ export const TournamentTable = ({ block }: { block: any }) => {
             return node;
         };
 
-        roots.forEach(root => {
+        roots.forEach((root: any) => {
             traverse(root.id, maxCols - 1);
             globalRow += 0.5;
         });
@@ -79,9 +91,9 @@ export const TournamentTable = ({ block }: { block: any }) => {
     }, [matches, block.id]);
 
     const getTeamLabel = (p: any) => {
-        if (p.teamId) return teams.find(t => t.id === p.teamId)?.name ?? "未定";
+        if (p.teamId) return teams.find((t: any) => t.id === p.teamId)?.name ?? "未定";
         if (p.prereqBlockId) {
-            const bName = eventBlocks?.find(b => b.id === p.prereqBlockId)?.name;
+            const bName = eventBlocks?.find((b: any) => b.id === p.prereqBlockId)?.name;
             return `${bName || "予選"} ${p.prereqRank || ""}位`;
         }
         return "未定";
@@ -109,7 +121,7 @@ export const TournamentTable = ({ block }: { block: any }) => {
 
                 {/* 2. 試合ボックスの配置 */}
                 {layout.nodes.map(({ match, x, y }) => {
-                    const isMyMatch = match.participants?.some((p: any) => p.teamId === myTeamId);
+                    const isMyMatch = match.participants?.some((p: any) => p.teamId === activeMyTeamId);
                     const isPlaying = match.status === "Playing";
 
                     let boxBorderClass = "border-gray-300 shadow-sm";

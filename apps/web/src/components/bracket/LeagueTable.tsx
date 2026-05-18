@@ -4,12 +4,22 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { useSportsFestData } from "../../hooks/useSportsFestData";
 import { useMyTeam } from "../../hooks/useMyTeam"; // ★ 自クラスフックの導入
+import type { PublicMasterResponse } from "../../../../api/src/schemas/public/master";
 
-export const LeagueTable = ({ block }: { block: any }) => {
-    const { matches, teams } = useSportsFestData();
+type PreviewData = {
+    matches: PublicMasterResponse["matches"];
+    teams: PublicMasterResponse["teams"];
+    myTeamId?: number | null;
+};
+
+export const LeagueTable = ({ block, previewData }: { block: any; previewData?: PreviewData }) => {
+    const sportsFestData = useSportsFestData();
     const { myTeamId } = useMyTeam(); // ★ グローバルな選択チームIDを直接取得
+    const matches = previewData?.matches ?? sportsFestData.matches;
+    const teams = previewData?.teams ?? sportsFestData.teams;
+    const activeMyTeamId = previewData?.myTeamId ?? myTeamId;
 
-    const blockMatches = useMemo(() => matches.filter(m => m.eventBlockId === block.id), [matches, block.id]);
+    const blockMatches = useMemo(() => matches.filter((m: any) => m.eventBlockId === block.id), [matches, block.id]);
 
     const participatingTeams = useMemo(() => {
         if (!block.rankings) return [];
@@ -18,7 +28,7 @@ export const LeagueTable = ({ block }: { block: any }) => {
 
     if (participatingTeams.length === 0) return <div className="text-gray-500">リーグ参加チームが未確定です。</div>;
 
-    const getTeamName = (teamId: number) => teams.find(t => t.id === teamId)?.name || "未定";
+    const getTeamName = (teamId: number) => teams.find((t: any) => t.id === teamId)?.name || "未定";
 
     return (
         <div className="min-w-max border border-gray-300 bg-white shadow-sm rounded-lg overflow-hidden">
@@ -28,7 +38,7 @@ export const LeagueTable = ({ block }: { block: any }) => {
                     <th className="border border-gray-300 bg-gray-100 p-2 min-w-[60px]">順位</th>
                     <th className="border border-gray-300 bg-gray-100 p-2 min-w-[100px]">チーム</th>
                     {participatingTeams.map((pt) => {
-                        const isMyTeamCol = pt.teamId === myTeamId;
+                        const isMyTeamCol = pt.teamId === activeMyTeamId;
                         return (
                             <th
                                 key={`header-${pt.teamId}`}
@@ -45,7 +55,7 @@ export const LeagueTable = ({ block }: { block: any }) => {
                 </thead>
                 <tbody>
                 {participatingTeams.map((rowTeam) => {
-                    const isMyTeamRow = rowTeam.teamId === myTeamId;
+                    const isMyTeamRow = rowTeam.teamId === activeMyTeamId;
 
                     return (
                         <tr
@@ -67,23 +77,23 @@ export const LeagueTable = ({ block }: { block: any }) => {
 
                             {/* 各対戦セル（N x N） */}
                             {participatingTeams.map((colTeam) => {
-                                const isMyTeamCol = colTeam.teamId === myTeamId;
+                                const isMyTeamCol = colTeam.teamId === activeMyTeamId;
 
                                 // 自分自身との交点（対角線）
                                 if (rowTeam.teamId === colTeam.teamId) {
                                     return <td key={`diag-${colTeam.teamId}`} className="border border-gray-300 bg-gray-100" />;
                                 }
 
-                                const match = blockMatches.find(m =>
-                                    m.participants.some(p => p.teamId === rowTeam.teamId) &&
-                                    m.participants.some(p => p.teamId === colTeam.teamId)
+                                const match = blockMatches.find((m: any) =>
+                                    m.participants.some((p: any) => p.teamId === rowTeam.teamId) &&
+                                    m.participants.some((p: any) => p.teamId === colTeam.teamId)
                                 );
 
                                 // 試合がまだ組まれていない
                                 if (!match) return <td key={`empty-${colTeam.teamId}`} className="border border-gray-300 text-center text-gray-300">-</td>;
 
-                                const myScore = match.participants.find(p => p.teamId === rowTeam.teamId)?.score ?? "-";
-                                const opScore = match.participants.find(p => p.teamId === colTeam.teamId)?.score ?? "-";
+                                const myScore = match.participants.find((p: any) => p.teamId === rowTeam.teamId)?.score ?? "-";
+                                const opScore = match.participants.find((p: any) => p.teamId === colTeam.teamId)?.score ?? "-";
 
                                 const isPlaying = match.status === "Playing";
                                 const isWin = myScore !== "-" && opScore !== "-" && myScore > opScore;
