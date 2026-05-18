@@ -179,6 +179,13 @@ export function parseImportedRecords(
   })
 }
 
+export function inferImportFormatFromText(rawText: string): DataControlImportFormat | null {
+  const normalized = stripBom(rawText).trimStart()
+  if (normalized.startsWith('[') || normalized.startsWith('{')) return 'json'
+  if (normalized.includes(',') || CSV_LINE_BREAK.test(normalized)) return 'csv'
+  return null
+}
+
 export function normalizeImportedRecord(
   record: Record<string, unknown>,
   fields: DataControlField[],
