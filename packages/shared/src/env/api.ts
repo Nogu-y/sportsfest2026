@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const apiEnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(8787),
+  WEB_ORIGIN: z.string().url().default('http://localhost:3000'),
   POSTGRES_DB: z.string().min(1),
   POSTGRES_USER: z.string().min(1),
   POSTGRES_PASSWORD: z.string().min(1),
