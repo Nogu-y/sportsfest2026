@@ -152,6 +152,21 @@ function toDisplayValue(value: DataControlValue) {
   return String(value)
 }
 
+function formatDateTimeLocalValue(value: DataControlValue) {
+  if (typeof value !== 'string' || value === '') return ''
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 function getInitialDraft(fields: DataControlField[]) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
     if (field.readOnly) return acc
@@ -234,9 +249,58 @@ function validateDraft(fields: DataControlField[], draft: Record<string, DataCon
   }
 }
 
-function prepareDraftForSubmit(fields: DataControlField[], draft: Record<string, DataControlValue>) {
+const circledNumberLabels = [
+  '',
+  '①',
+  '②',
+  '③',
+  '④',
+  '⑤',
+  '⑥',
+  '⑦',
+  '⑧',
+  '⑨',
+  '⑩',
+  '⑪',
+  '⑫',
+  '⑬',
+  '⑭',
+  '⑮',
+  '⑯',
+  '⑰',
+  '⑱',
+  '⑲',
+  '⑳',
+]
+
+function normalizeMatchName(value: DataControlValue) {
+  if (typeof value !== 'string') return value
+
+  const normalized = value.trim()
+  if (!/^[0-9]+$/.test(normalized)) return value
+
+  const numericValue = Number(normalized)
+  if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue >= circledNumberLabels.length) {
+    return value
+  }
+
+  return circledNumberLabels[numericValue]
+}
+
+function prepareDraftForSubmit(
+  resourceKey: string,
+  fields: DataControlField[],
+  draft: Record<string, DataControlValue>,
+) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
-    const value = draft[field.key]
+    const rawValue = draft[field.key]
+
+    if (rawValue === undefined) return acc
+
+    const value =
+      resourceKey === 'matches' && field.key === 'name'
+        ? normalizeMatchName(rawValue)
+        : rawValue
 
     if (value === undefined) return acc
 
@@ -817,10 +881,7 @@ function RecordForm({
           }
 
           if (field.type === 'datetime') {
-            const inputValue =
-              typeof currentValue === 'string' && currentValue
-                ? new Date(currentValue).toISOString().slice(0, 16)
-                : ''
+            const inputValue = formatDateTimeLocalValue(currentValue)
 
             return (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
@@ -1105,7 +1166,7 @@ export function DataControlPage() {
       validateDraft(activeResource.fields, createDraft)
       setErrorMessage(null)
       await activeResource.createRecord(
-        prepareDraftForSubmit(activeResource.fields, createDraft),
+        prepareDraftForSubmit(activeResource.key, activeResource.fields, createDraft),
       )
       const nextDefinitions = await refreshMasterContext()
       const nextActiveResource =
@@ -1134,7 +1195,7 @@ export function DataControlPage() {
       setErrorMessage(null)
       await activeResource.updateRecord(
         editingRecordId,
-        prepareDraftForSubmit(activeResource.fields, editDraft),
+        prepareDraftForSubmit(activeResource.key, activeResource.fields, editDraft),
       )
       const nextDefinitions = await refreshMasterContext()
       const nextActiveResource =
@@ -1221,14 +1282,19 @@ export function DataControlPage() {
 
       for (const importedRecord of importedRecords) {
         const idValue = importedRecord[activeResource.primaryKey]
+        const preparedRecord = prepareDraftForSubmit(
+          activeResource.key,
+          activeResource.fields,
+          importedRecord,
+        )
 
         if (typeof idValue === 'number') {
-          await activeResource.updateRecord(idValue, importedRecord)
+          await activeResource.updateRecord(idValue, preparedRecord)
           updatedCount += 1
           continue
         }
 
-        await activeResource.createRecord(importedRecord)
+        await activeResource.createRecord(preparedRecord)
         createdCount += 1
       }
 
