@@ -2,17 +2,17 @@ import Link from 'next/link'
 
 const links = [
   {
-    href: '/system/admin/create/events',
+    href: '/system/create/events',
     title: 'イベント入力補助',
     description: 'イベント定義を UI で積み上げ、JSON / CSV として出力します。',
   },
   {
-    href: '/system/admin/create/matches',
+    href: '/system/create/matches',
     title: '試合計画入力補助',
     description: '試合計画を UI で積み上げ、Import / 編集 / プレビュー / 出力を行います。',
   },
   {
-    href: '/system/admin/create/event-blocks',
+    href: '/system/create/event-blocks',
     title: 'ブロック入力補助',
     description: 'イベントブロックを UI で積み上げ、参照候補選択または手入力で出力します。',
   },
