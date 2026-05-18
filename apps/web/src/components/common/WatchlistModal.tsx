@@ -53,9 +53,25 @@ export const WatchlistModal = ({ isOpen, onClose }: WatchlistModalProps) => {
                         aria-hidden="true"
                     />
                     <p className="text-sm font-bold text-gray-500 my-1">登録されている試合はありません</p>
-                    <p className="text-xs text-gray-400">
-                        気になる試合をウォッチリストに追加しましょう!
-                    </p>
+                    
+                    <div className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 inline-block">
+                            試合カード左上の
+                        </p>
+                        <Image
+                            src={"/icons/watchlist-off-icon.svg"}
+                            alt=""
+                            width={8}
+                            height={9}
+                            className="invert-50 inline-block mx-1 mb-1"
+                        />
+                        <p className="text-xs text-gray-400 inline-block">
+                            ボタンを押して、
+                        </p>
+                        <p className="text-xs text-gray-400">
+                            気になる試合をウォッチリストに追加しましょう!
+                        </p>
+                    </div>
                 </div>
             )}
         </Modal>

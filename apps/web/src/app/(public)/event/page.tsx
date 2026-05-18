@@ -8,6 +8,7 @@ import EventHero from "src/components/layouts/eventHero/EventHero";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import Overview from "src/components/event/Overview";
 import { useSportsFestData } from "../../../hooks/useSportsFestData";
+import {EventBracket} from "../../../components/bracket/EventBracket";
 
 export default function Events() {
     const { events, matches, isLoading } = useSportsFestData();
@@ -108,6 +109,9 @@ export default function Events() {
                         <p className="text-sm text-gray-400 py-2">予定されている試合はありません</p>
                     )}
                 </div>
+                
+                <HorizonTitle text="対戦表" />
+                <EventBracket eventId={currentEvent.id} />
             </main>
         </>
     );
