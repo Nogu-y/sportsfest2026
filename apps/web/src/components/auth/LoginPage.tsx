@@ -68,14 +68,9 @@ export function LoginPage() {
         <section className="flex-1 rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur">
           <p className="text-sm tracking-[0.2em] text-cyan-200">SPORTSFEST AUTH</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight">
-            運営画面へ入るための
-            <br />
-            ログイン
+            運営画面へログイン
           </h1>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-            `/system/admin/*` と `/staff/*` は、ログイン済みユーザーだけが利用できます。
-            `/system/create/*` は現状公開のままです。
-          </p>
+
         </section>
 
         <section className="w-full max-w-xl rounded-[2rem] border border-cyan-400/20 bg-slate-950/80 p-8 shadow-2xl">

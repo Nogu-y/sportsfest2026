@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuthSession } from '../../hooks/useAuthSession'
 import {
   buildLoginPath,
@@ -26,7 +26,6 @@ function buildCurrentPath(pathname: string, searchParams: URLSearchParams) {
 }
 
 export function AuthGuard({ allowedRoles, children }: AuthGuardProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { session, error, isLoading } = useAuthSession()
@@ -37,14 +36,14 @@ export function AuthGuard({ allowedRoles, children }: AuthGuardProps) {
     }
 
     if (!session) {
-      router.replace(buildLoginPath(buildCurrentPath(pathname, searchParams)))
+      window.location.replace(buildLoginPath(buildCurrentPath(pathname, searchParams)))
       return
     }
 
     if (!allowedRoles.includes(session.account.role)) {
-      router.replace(getDefaultPathForRole(session.account.role))
+      window.location.replace(getDefaultPathForRole(session.account.role))
     }
-  }, [allowedRoles, isLoading, pathname, router, searchParams, session])
+  }, [allowedRoles, isLoading, pathname, searchParams, session])
 
   if (error) {
     return (
