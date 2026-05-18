@@ -13,6 +13,13 @@ export const staffEventRoutes = new OpenAPIHono()
         return c.json(createNotFoundResponse('対象競技が見つかりません'), 404)
       }
 
+      if (result.error === 'invalid_point_allocation') {
+        return c.json(
+          { message: '配点設定が API 仕様に準拠していません。ステージごとの順位キーは数値で指定してください' },
+          422
+        )
+      }
+
       return c.json(
         { message: '得点確定に必要な試合結果または順位データが不足しています' },
         409
