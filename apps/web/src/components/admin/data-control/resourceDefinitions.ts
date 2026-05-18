@@ -409,6 +409,8 @@ export function createAdminResourceDefinitions(
       label: '試合名',
       type: 'text',
       nullable: true,
+      placeholder: '例: 1',
+      description: '半角数字だけを入れると、保存時に ① のような丸数字へ変換します。対応範囲は 1〜20 です。',
     },
     {
       key: 'description',
@@ -444,24 +446,14 @@ export function createAdminResourceDefinitions(
       label: '開始予定',
       type: 'datetime',
       required: true,
+      defaultValue: '2026-05-21T00:00:00+09:00',
     },
     {
       key: 'scheduledEndTime',
       label: '終了予定',
       type: 'datetime',
       required: true,
-    },
-    {
-      key: 'startedAt',
-      label: '開始実績',
-      type: 'datetime',
-      nullable: true,
-    },
-    {
-      key: 'endedAt',
-      label: '終了実績',
-      type: 'datetime',
-      nullable: true,
+      defaultValue: '2026-05-21T00:00:00+09:00',
     },
     {
       key: 'note',
