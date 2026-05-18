@@ -1,13 +1,17 @@
-import React from "react";
+import React, {ReactNode} from "react";
 import EventRulePopup from "./EventRulePopup";
 
-const EventHero = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <section className="h-36 w-full bg-gray-500 flex justify-center items-center relative">
-      <h2 className="text-white text-2xl font-bold">{children}</h2>
-      <EventRulePopup ruleId="sample" />
-    </section>
-  );
+type EventHeroProps = {
+    children: ReactNode;
+};
+
+const EventHero = ({children}: EventHeroProps) => {
+    return (
+        <div className="relative  flex items-center justify-center -mb-1 bg-[#2d5a8e]">
+            {children}
+            <EventRulePopup ruleId="sample"/>
+        </div>
+    );
 };
 
 export default EventHero;

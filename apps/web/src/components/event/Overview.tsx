@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventRuleMarkdown from "../layouts/eventHero/EventRuleMarkdown";
 
-const Overview = ({ eventName }: { eventName: string }) => {
+const Overview = ({ eventId }: { eventId: string }) => {
   const basePath = "event-description";
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("idle");
@@ -9,7 +9,7 @@ const Overview = ({ eventName }: { eventName: string }) => {
   const loadedDescriptionIdRef = useRef<string | null>(null);
 
   const loadDescription = useCallback(async () => {
-    if (status === "loading" || loadedDescriptionIdRef.current === eventName) {
+    if (status === "loading" || loadedDescriptionIdRef.current === eventId) {
       return;
     }
 
@@ -17,13 +17,13 @@ const Overview = ({ eventName }: { eventName: string }) => {
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    loadedDescriptionIdRef.current = eventName;
+    loadedDescriptionIdRef.current = eventId;
     setStatus("loading");
     setContent("");
 
     try {
       const response = await fetch(
-        `/event-description/${encodeURIComponent(eventName)}.md`,
+        `/event-description/${encodeURIComponent(eventId)}.md`,
         {
           signal: controller.signal,
         },
@@ -42,7 +42,7 @@ const Overview = ({ eventName }: { eventName: string }) => {
 
       setStatus("error");
     }
-  }, [eventName, status]);
+  }, [eventId, status]);
 
   useEffect(() => {
     loadDescription();
@@ -50,6 +50,7 @@ const Overview = ({ eventName }: { eventName: string }) => {
 
   return (
     <div className="text-center">
+        {eventId}
       {status === "success" && (
         <EventRuleMarkdown content={content} basePath={basePath} />
       )}
