@@ -237,6 +237,10 @@ export function createMatchFields(
       type: 'select',
       required: true,
       options: eventBlockOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'ブロックIDを直接入力',
+      customValuePlaceholder: '例: 12',
     },
     {
       key: 'locationId',
@@ -244,6 +248,10 @@ export function createMatchFields(
       type: 'select',
       nullable: true,
       options: locationOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: '会場IDを直接入力',
+      customValuePlaceholder: '例: 5',
     },
     {
       key: 'name',
@@ -300,6 +308,48 @@ export function createMatchFields(
       label: '備考',
       type: 'textarea',
       nullable: true,
+    },
+  ]
+}
+
+export function createEventBlockFields(eventOptions: DataControlOption[]): DataControlField[] {
+  return [
+    {
+      key: 'eventId',
+      label: 'イベント',
+      type: 'select',
+      required: true,
+      options: eventOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'イベントIDを直接入力',
+      customValuePlaceholder: '例: 8',
+    },
+    {
+      key: 'name',
+      label: 'ブロック名',
+      type: 'text',
+      required: true,
+      placeholder: '例: Aブロック',
+    },
+    {
+      key: 'type',
+      label: 'ブロック種別',
+      type: 'select',
+      required: true,
+      options: [
+        { label: 'LEAGUE', value: 'LEAGUE' },
+        { label: 'TOURNAMENT', value: 'TOURNAMENT' },
+        { label: 'CUMULATIVE', value: 'CUMULATIVE' },
+        { label: 'SINGLE', value: 'SINGLE' },
+      ],
+    },
+    {
+      key: 'stage',
+      label: 'ステージ',
+      type: 'select',
+      required: true,
+      options: matchStageOptions,
     },
   ]
 }

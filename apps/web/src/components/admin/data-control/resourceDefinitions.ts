@@ -124,10 +124,15 @@ export async function fetchAdminMasterOptions() {
       label: `${event.id}: ${event.name}`,
       value: event.id,
     })),
-    eventBlockOptions: master.blocks.map((block) => ({
-      label: `${block.id}: ${block.name}`,
-      value: block.id,
-    })),
+    eventBlockOptions: master.blocks.map((block) => {
+      const eventName =
+        master.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
+
+      return {
+        label: `${block.id}: ${eventName} / ${block.name}`,
+        value: block.id,
+      }
+    }),
   }
 }
 

@@ -33,6 +33,7 @@ type CreateHelperPageProps = {
   exportBaseName: string
   fields: DataControlField[]
   renderPreview?: (rows: BuilderRow[]) => React.ReactNode
+  referenceLoadError?: string | null
 }
 
 type RecordFormProps = {
@@ -42,6 +43,7 @@ type RecordFormProps = {
   onChange: (key: string, value: DataControlValue) => void
   onSubmit: () => void
   onCancel?: () => void
+  referenceLoadError?: string | null
 }
 
 type PointAllocationRow = {
@@ -258,6 +260,102 @@ function PointAllocationEditor({
   )
 }
 
+function ReferenceSelectField({
+  field,
+  currentValue,
+  onChange,
+  referenceLoadError,
+}: {
+  field: DataControlField
+  currentValue: DataControlValue
+  onChange: (key: string, value: DataControlValue) => void
+  referenceLoadError?: string | null
+}) {
+  const hasOptions = Boolean(field.options?.length)
+  const matchesOption = field.options?.some((option) => option.value === currentValue) ?? false
+  const [inputMode, setInputMode] = useState<'preset' | 'manual'>(
+    hasOptions && matchesOption ? 'preset' : hasOptions ? 'preset' : 'manual',
+  )
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-slate-700">
+      <span className="font-medium">{field.label}</span>
+      {field.allowCustomValue ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={!hasOptions}
+            onClick={() => setInputMode('preset')}
+            className={
+              inputMode === 'preset'
+                ? 'rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-50'
+                : 'rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50'
+            }
+          >
+            候補から選択
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode('manual')}
+            className={
+              inputMode === 'manual'
+                ? 'rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white'
+                : 'rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700'
+            }
+          >
+            手入力
+          </button>
+        </div>
+      ) : null}
+
+      {field.allowCustomValue && inputMode === 'manual' ? (
+        <input
+          type={field.customValueType === 'number' ? 'number' : 'text'}
+          value={toDisplayValue(currentValue)}
+          placeholder={field.customValuePlaceholder}
+          onChange={(event) =>
+            onChange(
+              field.key,
+              normalizeDraftValue(
+                {
+                  ...field,
+                  type: field.customValueType === 'number' ? 'number' : 'text',
+                },
+                event.target.value,
+              ),
+            )
+          }
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+        />
+      ) : (
+        <select
+          value={toDisplayValue(currentValue)}
+          onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+          disabled={field.allowCustomValue ? !hasOptions : false}
+        >
+          <option value="">{hasOptions ? '選択してください' : '候補を取得できませんでした'}</option>
+          {field.options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {field.allowCustomValue ? (
+        <p className="text-xs text-slate-500">
+          {inputMode === 'manual'
+            ? field.customValueLabel ?? 'IDを直接入力できます'
+            : hasOptions
+              ? 'DB から取得した候補を使えます'
+              : referenceLoadError ?? '候補の取得に失敗したため手入力を使ってください'}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function RecordForm({
   fields,
   value,
@@ -265,6 +363,7 @@ function RecordForm({
   onChange,
   onSubmit,
   onCancel,
+  referenceLoadError,
 }: RecordFormProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -289,7 +388,15 @@ function RecordForm({
           }
 
           if (field.type === 'select') {
-            return (
+            return field.allowCustomValue ? (
+              <ReferenceSelectField
+                key={field.key}
+                field={field}
+                currentValue={currentValue}
+                onChange={onChange}
+                referenceLoadError={referenceLoadError}
+              />
+            ) : (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
                 <span className="font-medium">{field.label}</span>
                 <select
@@ -417,6 +524,7 @@ export function CreateHelperPage({
   exportBaseName,
   fields,
   renderPreview,
+  referenceLoadError,
 }: CreateHelperPageProps) {
   const [rows, setRows] = useState<BuilderRow[]>([])
   const [draft, setDraft] = useState<Record<string, DataControlValue>>(() => createInitialDraft(fields))
@@ -562,8 +670,20 @@ export function CreateHelperPage({
             >
               試合計画入力補助
             </Link>
+            <Link
+              href="/system/admin/create/event-blocks"
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            >
+              ブロック入力補助
+            </Link>
           </div>
         </section>
+
+        {referenceLoadError ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            参照候補の取得に失敗しました。候補選択は使えませんが、参照 ID の手入力で作業は続行できます。詳細: {referenceLoadError}
+          </div>
+        ) : null}
 
         {errorMessage ? (
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -697,6 +817,7 @@ export function CreateHelperPage({
             submitLabel="行を追加"
             onChange={updateDraft}
             onSubmit={handleCreate}
+            referenceLoadError={referenceLoadError}
           />
         </section>
 
@@ -718,6 +839,7 @@ export function CreateHelperPage({
               submitLabel="更新"
               onChange={updateEditDraft}
               onSubmit={handleUpdate}
+              referenceLoadError={referenceLoadError}
               onCancel={() => {
                 setEditingLocalId(null)
                 setEditDraft({})

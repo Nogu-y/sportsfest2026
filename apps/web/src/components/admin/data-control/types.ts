@@ -43,6 +43,10 @@ export type DataControlField = {
   description?: string
   options?: DataControlOption[]
   presets?: DataControlPreset[]
+  allowCustomValue?: boolean
+  customValueType?: 'text' | 'number'
+  customValueLabel?: string
+  customValuePlaceholder?: string
 }
 
 export type DataControlImportFormat = 'json' | 'csv'
