@@ -6,6 +6,7 @@ import type {
 } from './types'
 
 const CSV_LINE_BREAK = /\r?\n/
+const UTF8_BOM = '\uFEFF'
 
 function escapeCsvValue(value: DataControlValue) {
   if (value === null || value === undefined) return ''
@@ -64,6 +65,63 @@ function parseCsvLine(line: string) {
   return values
 }
 
+function stripBom(value: string) {
+  return value.startsWith(UTF8_BOM) ? value.slice(1) : value
+}
+
+function parseCsvRecords(rawText: string) {
+  const rows: string[][] = []
+  let currentRow: string[] = []
+  let currentValue = ''
+  let inQuotes = false
+  const text = stripBom(rawText)
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]
+    const next = text[index + 1]
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        currentValue += '"'
+        index += 1
+        continue
+      }
+
+      inQuotes = !inQuotes
+      continue
+    }
+
+    if (char === ',' && !inQuotes) {
+      currentRow.push(currentValue)
+      currentValue = ''
+      continue
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') {
+        index += 1
+      }
+
+      currentRow.push(currentValue)
+      if (currentRow.some((value) => value !== '')) {
+        rows.push(currentRow)
+      }
+      currentRow = []
+      currentValue = ''
+      continue
+    }
+
+    currentValue += char
+  }
+
+  currentRow.push(currentValue)
+  if (currentRow.some((value) => value !== '')) {
+    rows.push(currentRow)
+  }
+
+  return rows
+}
+
 function normalizeBooleanValue(value: string) {
   const normalized = value.trim().toLowerCase()
   if (normalized === 'true' || normalized === '1') return true
@@ -102,7 +160,7 @@ export function parseImportedRecords(
   rawText: string,
 ) {
   if (format === 'json') {
-    const parsed = JSON.parse(rawText)
+    const parsed = JSON.parse(stripBom(rawText))
     if (!Array.isArray(parsed)) {
       throw new Error('JSON は配列形式で指定してください')
     }
@@ -110,14 +168,12 @@ export function parseImportedRecords(
     return parsed.map((record) => normalizeImportedRecord(record, fields))
   }
 
-  const lines = rawText.trim().split(CSV_LINE_BREAK).filter(Boolean)
-  if (lines.length === 0) return []
+  const rows = parseCsvRecords(rawText)
+  if (rows.length === 0) return []
 
-  const [headerLine, ...dataLines] = lines
-  const headers = parseCsvLine(headerLine)
+  const [headers, ...dataRows] = rows
 
-  return dataLines.map((line) => {
-    const columns = parseCsvLine(line)
+  return dataRows.map((columns) => {
     const rawRecord = Object.fromEntries(headers.map((header, index) => [header, columns[index] ?? '']))
     return normalizeImportedRecord(rawRecord, fields)
   })
