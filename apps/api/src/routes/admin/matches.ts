@@ -1,11 +1,10 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import {
-  getMatchesRoute,
   createMatchRoute,
   updateMatchRoute,
   deleteMatchRoute,
 } from '../../schemas/admin/matches'
-import { getMatch, createMatch, updateMatch, deleteMatch } from '../../repositories/admin/matches'
+import { createMatch, updateMatch, deleteMatch } from '../../repositories/admin/matches'
 
 export const adminMatchesRoutes = new OpenAPIHono()
   // --- POST ---
