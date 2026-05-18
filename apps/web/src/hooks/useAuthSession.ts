@@ -41,10 +41,23 @@ export async function loginWithPassword(loginId: string, password: string) {
     throw new Error(await parseErrorMessage(response, 'ログインに失敗しました'))
   }
 
-  const session = await response.json() as AuthSession
-  await mutate(authSessionKey, session, false)
+  const loginSession = await response.json() as AuthSession
 
-  return session
+  // Cookie がブラウザに保存されたかを直後に確認する。
+  const sessionResponse = await api.api.auth.session.$get()
+  if (sessionResponse.status === 401) {
+    throw new Error(
+      'ログイン情報は受理されましたがセッションCookieを保存できませんでした。アクセスURL(localhost/127.0.0.1)とCORS設定を確認してください'
+    )
+  }
+  if (!sessionResponse.ok) {
+    throw new Error(await parseErrorMessage(sessionResponse, 'ログイン後のセッション確認に失敗しました'))
+  }
+
+  const session = await sessionResponse.json() as AuthSession
+  await mutate(authSessionKey, session ?? loginSession, false)
+
+  return session ?? loginSession
 }
 
 export async function updateAuthSessionCache(session: AuthSession | null) {
