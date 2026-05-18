@@ -134,6 +134,12 @@ function sortRecords(records: DataControlRecord[], primaryKey: string) {
   })
 }
 
+function FieldDescription({ field }: { field: DataControlField }) {
+  if (!field.description) return null
+
+  return <p className="text-xs text-slate-500">{field.description}</p>
+}
+
 function RecordForm({
   fields,
   value,
@@ -173,6 +179,7 @@ function RecordForm({
                   <option value="false">false</option>
                   <option value="true">true</option>
                 </select>
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -193,6 +200,7 @@ function RecordForm({
                     </option>
                   ))}
                 </select>
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -213,6 +221,7 @@ function RecordForm({
                   onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                   className="min-h-32 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm"
                 />
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -232,6 +241,7 @@ function RecordForm({
                   onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2"
                 />
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -246,6 +256,7 @@ function RecordForm({
                 onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2"
               />
+              <FieldDescription field={field} />
             </label>
           )
         })}
@@ -580,7 +591,7 @@ export function DataControlPage() {
           <p className="text-sm font-medium text-slate-500">System Admin</p>
           <h1 className="mt-2 text-2xl font-semibold">データコントロール</h1>
           <p className="mt-2 text-sm text-slate-600">
-            `teams` `locations` `events` `matches` の個別編集、一覧確認、JSON / CSV の入出力を行います。
+            `maps` `teams` `locations` `events` `matches` の個別編集、一覧確認、JSON / CSV の入出力を行います。
           </p>
         </section>
 
