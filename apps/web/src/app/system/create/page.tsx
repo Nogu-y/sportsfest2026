@@ -16,6 +16,16 @@ const links = [
     title: 'ブロック入力補助',
     description: 'イベントブロックを UI で積み上げ、参照候補選択または手入力で出力します。',
   },
+  {
+    href: '/system/create/teams',
+    title: 'チーム入力補助',
+    description: 'チーム定義を UI で積み上げ、JSON / CSV として出力します。',
+  },
+  {
+    href: '/system/create/locations',
+    title: '会場入力補助',
+    description: '会場定義を UI で積み上げ、マップ参照しながら出力します。',
+  },
 ]
 
 export default function Page() {

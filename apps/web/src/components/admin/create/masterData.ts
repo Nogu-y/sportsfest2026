@@ -44,11 +44,17 @@ export async function fetchCreateHelperMasterData() {
       value: location.id,
     }))
 
+    const mapOptions: DataControlOption[] = masterData.maps.map((map) => ({
+      label: `${map.id}: ${map.displayName}`,
+      value: map.id,
+    }))
+
     return {
       masterData,
       eventOptions,
       eventBlockOptions,
       locationOptions,
+      mapOptions,
       referenceLoadError: null,
     }
   } catch (error) {
@@ -57,6 +63,7 @@ export async function fetchCreateHelperMasterData() {
       eventOptions: [],
       eventBlockOptions: [],
       locationOptions: [],
+      mapOptions: [],
       referenceLoadError: error instanceof Error ? error.message : '参照データの取得に失敗しました',
     }
   }
