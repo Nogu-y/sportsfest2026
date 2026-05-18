@@ -5,6 +5,7 @@ import {
   createReqBody,
   createResBody,
 } from '../../utils/schemaParser'
+import {dayEnumSchema} from "../sportsData";
 
 export const MapSchema = z.object({
   id: positiveIntegerSchema.openapi({ example: 1 }),
@@ -12,6 +13,7 @@ export const MapSchema = z.object({
   displayName: z.string().min(1).max(100).openapi({ example: '校内マップ' }),
   width: positiveIntegerSchema.openapi({ example: 700 }),
   height: positiveIntegerSchema.openapi({ example: 550 }),
+  day: dayEnumSchema.openapi({ example: "both" }),
 })
 
 export const CreateMapRequestSchema = MapSchema.omit({ id: true })

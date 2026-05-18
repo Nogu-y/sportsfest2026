@@ -47,6 +47,12 @@ export const matchStatusOptions: DataControlOption[] = [
   'Cancelled',
 ].map((value) => ({ label: value, value }))
 
+export const dayOptions: DataControlOption[] = [
+  { label: '1日目 (day1)', value: 'day1' },
+  { label: '2日目 (day2)', value: 'day2' },
+  { label: '両日 (both)', value: 'both' },
+]
+
 export const pointAllocationScopeOptions: DataControlOption[] = [
   { label: 'MATCH', value: 'MATCH' },
   { label: 'BLOCK', value: 'BLOCK' },
@@ -272,6 +278,15 @@ export function createLocationFields(mapOptions: DataControlOption[]): DataContr
       type: 'text',
       required: true,
       placeholder: '例: グラウンドA',
+    },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'その会場を使う日程を選びます。',
     },
     {
       key: 'xRatio',
