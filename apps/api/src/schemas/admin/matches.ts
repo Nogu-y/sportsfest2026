@@ -50,7 +50,9 @@ export const MatchPlanSchema = z.object({
 
 export const CreateMatchRequestSchema = MatchPlanSchema.omit({
   id: true,
-  participants: true
+  participants: true,
+  startedAt: true,
+  endedAt: true,
 }).extend({
   status: StatusSchema.optional().default('Waiting'),
   participants: z.array(MatchParticipantRequestSchema).optional().default([]),
