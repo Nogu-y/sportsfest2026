@@ -429,8 +429,8 @@ export function createAdminResourceDefinitions(
       label: '試合名',
       type: 'text',
       nullable: true,
-      placeholder: '例: 1',
-      description: '半角数字だけを入れると、保存時に ① のような丸数字へ変換します。対応範囲は 1〜20 です。',
+      placeholder: '例: 準決勝①',
+      description: '必要なら下の補助欄で 1〜20 の数字を丸数字にして試合名の末尾へ追加できます。',
     },
     {
       key: 'description',
