@@ -1,11 +1,13 @@
 import {z} from "@hono/zod-openapi";
 import {isoDateTimeSchema, positiveIntegerSchema} from "./common";
+import {dayEnum} from "../db/enums";
 
 export const rankingOrderEnumSchema = z.enum(["ASC", "DESC"]);
 export const eventFormatEnumSchema = z.enum(["TOURNAMENT", "LEAGUE_TO_TOURNAMENT", "HEATS_AND_FINAL"]);
 export const blockTypeEnumSchema = z.enum(["LEAGUE", "TOURNAMENT", "CUMULATIVE", "SINGLE"]);
 export const stageEnumSchema = z.enum(["FINAL", "THIRD_PLACE", "SEMIFINAL", "QUARTERFINAL", "ROUND_2", "ROUND_1", "QUALIFIER", "CONSOLATION"]);
 export const matchStatusEnumSchema = z.enum(["Waiting", "Preparing", "Playing", "Finished", "Completed", "Cancelled"]);
+export const dayEnumSchema = z.enum(dayEnum.enumValues)
 
 export const pointAllocationSchema = z.object({
     MATCH: z.record(stageEnumSchema, z.record(z.string(), z.number())).optional(),
@@ -18,6 +20,7 @@ export const mapSchema = z.object({
     displayName: z.string().max(100),
     width: z.number().int(),
     height: z.number().int(),
+    day: dayEnumSchema,
 });
 
 export const locationSchema = z.object({
@@ -26,6 +29,7 @@ export const locationSchema = z.object({
     name: z.string().max(100),
     xRatio: z.number().int().min(1).max(100),
     yRatio: z.number().int().min(1).max(100),
+    day: dayEnumSchema,
 });
 
 
@@ -85,7 +89,6 @@ export const blockRankingSchema = z.object({
 })
 
 
-
 export const eventBlockSchema = z.object({
     id: positiveIntegerSchema,
     eventId: positiveIntegerSchema,
@@ -108,7 +111,8 @@ export type rankingOrderEnumType = z.infer<typeof rankingOrderEnumSchema>;
 export type eventFormatEnumType = z.infer<typeof eventFormatEnumSchema>; 
 export type blockTypeEnumType = z.infer<typeof blockTypeEnumSchema>; 
 export type stageEnumType = z.infer<typeof stageEnumSchema>; 
-export type matchStatusEnumType = z.infer<typeof matchStatusEnumSchema>; 
-
+export type matchStatusEnumType = z.infer<typeof matchStatusEnumSchema>;
 export type MatchType = z.infer<typeof matchSchema>;
 export type ParticipantType = z.infer<typeof participantSchema>;
+export type MapType = z.infer<typeof mapSchema>;
+export type LocationType = z.infer<typeof locationSchema>;

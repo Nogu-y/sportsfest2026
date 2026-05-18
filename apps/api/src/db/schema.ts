@@ -10,15 +10,15 @@ import {
   unique,
   index,
 } from "drizzle-orm/pg-core";
-import { 
-  rankingOrderEnum,
-  eventFormatEnum,
-  PointAllocation,
-  blockTypeEnum,
-  stageEnum,
-  matchStatusEnum,
-  staffRoleEnum
- } from './enums'
+import {
+    rankingOrderEnum,
+    eventFormatEnum,
+    PointAllocation,
+    blockTypeEnum,
+    stageEnum,
+    matchStatusEnum,
+    staffRoleEnum, dayEnum
+} from './enums'
 
 //=============Tables=============
 
@@ -39,7 +39,8 @@ export const maps = pgTable("maps", {
   filePath: varchar("file_path", { length: 255 }).notNull(),
   displayName: varchar("display_name", { length: 100 }).notNull(),
   width: integer("width").notNull(),
-  height: integer("height").notNull(),
+  height: integer("height").notNull(), 
+  day: dayEnum("day").notNull().default("both")
 });
 
 export const locations = pgTable("locations",{
@@ -51,6 +52,7 @@ export const locations = pgTable("locations",{
 
     xRatio: integer("x_ratio").notNull(),
     yRatio: integer("y_ratio").notNull(),
+    day: dayEnum("day").notNull().default("both")
   },
   (t) => ({
     mapIdx: index("locations_map_idx").on(t.mapId),
