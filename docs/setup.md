@@ -35,6 +35,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8787
 
 ```env
 PORT=8787
+WEB_ORIGIN=http://localhost:3000
 POSTGRES_DB=sportsfest2026
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
@@ -43,6 +44,7 @@ DATABASE_URL=postgres://postgres:postgres@db:5432/sportsfest2026
 
 - `DATABASE_URL` は Docker Compose 内の `db` サービスを向く設定です
 - `PORT` は API コンテナ内部・公開ポートの両方に使われます
+- `WEB_ORIGIN` は Cookie 認証で許可する Web アプリのオリジンです
 
 ## 3. 開発環境を起動
 

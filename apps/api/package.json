@@ -10,8 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:insert": "tsx src/db/data/insert.ts",
-    "auth:bootstrap-admin": "tsx src/scripts/auth/accountCli.ts bootstrap-admin",
-    "auth:account": "tsx src/scripts/auth/accountCli.ts"
+    "auth:add-user": "tsx src/scripts/auth/createUserCli.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.0",

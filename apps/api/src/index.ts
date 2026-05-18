@@ -10,7 +10,10 @@ import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
 export const app = new OpenAPIHono()
-  .use("/*", cors())
+  .use('/*', cors({
+    origin: apiEnv.WEB_ORIGIN,
+    credentials: true
+  }))
   .route('/api/system', systemRoutes)
   .route('/api/auth', authRoutes)
   .route('/api/public', publicRoutes)
@@ -27,10 +30,10 @@ export type AppType = typeof app
 const port = apiEnv.PORT || 8787
 
 serve({
-    fetch: app.fetch,
-    // hostname: "0.0.0.0",
-    port
-  },
+  fetch: app.fetch,
+  // hostname: "0.0.0.0",
+  port
+},
   () => {
     console.log(`api listening on http://localhost:${port}`)
   }
