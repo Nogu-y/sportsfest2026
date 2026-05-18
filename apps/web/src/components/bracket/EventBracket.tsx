@@ -4,15 +4,27 @@ import { useState } from "react";
 import { useSportsFestData } from "../../hooks/useSportsFestData";
 import { LeagueTable } from "./LeagueTable";
 import { TournamentTable } from "./TournamentTable";
+import type { PublicMasterResponse } from "../../../../api/src/schemas/public/master";
 
-export const EventBracket = ({ eventId }: { eventId: number }) => {
-    const { events, eventBlocks, isLoading } = useSportsFestData();
+type PreviewData = {
+    events: PublicMasterResponse["events"];
+    eventBlocks?: PublicMasterResponse["blocks"];
+    matches: PublicMasterResponse["matches"];
+    teams: PublicMasterResponse["teams"];
+    myTeamId?: number | null;
+};
+
+export const EventBracket = ({ eventId, previewData }: { eventId: number; previewData?: PreviewData }) => {
+    const sportsFestData = useSportsFestData();
     const [activeBlockId, setActiveBlockId] = useState<number | null>(null);
+    const events = previewData?.events ?? sportsFestData.events;
+    const eventBlocks = previewData?.eventBlocks ?? sportsFestData.eventBlocks;
+    const isLoading = previewData ? false : sportsFestData.isLoading;
 
     if (isLoading) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
 
-    const event = events.find(e => e.id === eventId);
-    const blocks = eventBlocks?.filter(b => b.eventId === eventId) || [];
+    const event = events.find((e: any) => e.id === eventId);
+    const blocks = eventBlocks?.filter((b: any) => b.eventId === eventId) || [];
 
     if (!event || blocks.length === 0) {
         return (
@@ -23,7 +35,7 @@ export const EventBracket = ({ eventId }: { eventId: number }) => {
     }
 
     const currentBlockId = activeBlockId ?? blocks[0].id;
-    const currentBlock = blocks.find(b => b.id === currentBlockId);
+    const currentBlock = blocks.find((b: any) => b.id === currentBlockId);
 
     return (
         <div className="w-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -32,7 +44,7 @@ export const EventBracket = ({ eventId }: { eventId: number }) => {
             {/* ブロック切り替えタブ */}
             {blocks.length > 1 && (
                 <div className="mb-6 flex gap-2 overflow-x-auto scrollbar-none pb-2">
-                    {blocks.map((block) => (
+                    {blocks.map((block: any) => (
                         <button
                             key={block.id}
                             onClick={() => setActiveBlockId(block.id)}
@@ -50,8 +62,27 @@ export const EventBracket = ({ eventId }: { eventId: number }) => {
 
             <div className="w-full overflow-x-auto">
                 <span className="text-xs text-gray-400 mb-2 block">※ 試合をタップすると詳細が開きます</span>
-                {currentBlock?.type === "LEAGUE" && <LeagueTable block={currentBlock} />}
-                {currentBlock?.type === "TOURNAMENT" && <TournamentTable block={currentBlock} />}
+                {currentBlock?.type === "LEAGUE" && (
+                    <LeagueTable
+                        block={currentBlock}
+                        previewData={previewData ? {
+                            matches: previewData.matches,
+                            teams: previewData.teams,
+                            myTeamId: previewData.myTeamId,
+                        } : undefined}
+                    />
+                )}
+                {currentBlock?.type === "TOURNAMENT" && (
+                    <TournamentTable
+                        block={currentBlock}
+                        previewData={previewData ? {
+                            matches: previewData.matches,
+                            teams: previewData.teams,
+                            eventBlocks: previewData.eventBlocks,
+                            myTeamId: previewData.myTeamId,
+                        } : undefined}
+                    />
+                )}
                 {currentBlock?.type === "CUMULATIVE" && (
                     <div className="p-4 text-center text-gray-400">ランキング集計表（開発中）</div>
                 )}
