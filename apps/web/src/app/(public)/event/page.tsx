@@ -29,9 +29,9 @@ export default function Events() {
         return events.find((e) => e.id === targetId);
     }, [events, selectedEventId]);
 
-    // 選択中の種目に紐づく「進行中の試合」と「次の試合」をフィルタリング
-    const { inProgressMatches, upcomingMatches } = useMemo(() => {
-        if (!matches || !currentEvent) return { inProgressMatches: [], upcomingMatches: [] };
+    // 選択中の種目に紐づく「進行中の試合」と「次の試合」, 「終了した試合」をフィルタリング
+    const { inProgressMatches, upcomingMatches, resultMatches } = useMemo(() => {
+        if (!matches || !currentEvent) return { inProgressMatches: [], upcomingMatches: [], resultMatches: [] };
 
         const eventMatches = matches.filter((m) => m.eventId === currentEvent.id);
 
@@ -42,8 +42,13 @@ export default function Events() {
         const upcoming = eventMatches
             .filter((m) => m.status === "Waiting" || m.status === "Preparing")
             .sort((a, b) => new Date(a.scheduledStartTime).getTime() - new Date(b.scheduledStartTime).getTime());
+        
+        // 結果 (Finished, Completed, Cancelled)
+        const result  = eventMatches
+            .filter((m) => m.status === "Finished" || m.status === "Completed" || m.status === "Cancelled")
+            .sort((a, b) => new Date(b.scheduledEndTime).getTime() - new Date(a.scheduledEndTime).getTime());
 
-        return { inProgressMatches: inProgress, upcomingMatches: upcoming };
+        return { inProgressMatches: inProgress, upcomingMatches: upcoming, resultMatches: result };
     }, [matches, currentEvent]);
 
     if (isLoading) {
@@ -85,7 +90,7 @@ export default function Events() {
                 <Overview eventId={currentEvent.id.toString()} key={currentEvent.id} />
 
                 <HorizonTitle text="進行中" />
-                <div className="flex gap-4 overflow-x-auto py-2 px-6 snap-x snap-mandatory">
+                <div className="flex gap-4 overflow-x-auto py-2 px-6 snap-x snap-mandatory scrollbar-none">
                     {inProgressMatches.length > 0 ? (
                         inProgressMatches.map((match) => (
                             <div key={match.id} className="snap-center shrink-0 w-[280px]">
@@ -97,7 +102,7 @@ export default function Events() {
                     )}
                 </div>
 
-                <HorizonTitle text="次の試合" />
+                <HorizonTitle text="以降の試合" />
                 <div className="flex gap-4 overflow-x-auto py-2 px-6 snap-x snap-mandatory scrollbar-none">
                     {upcomingMatches.length > 0 ? (
                         upcomingMatches.map((match) => (
@@ -110,8 +115,21 @@ export default function Events() {
                     )}
                 </div>
                 
-                <HorizonTitle text="対戦表" />
-                <EventBracket eventId={currentEvent.id} />
+                <HorizonTitle text="終了した試合" />
+                <div className="flex gap-4 overflow-x-auto py-2 px-6 snap-x snap-mandatory scrollbar-none">
+                    {resultMatches.length > 0 ? (
+                        resultMatches.map((match) => (
+                            <div key={match.id} className="snap-center shrink-0 w-[280px]">
+                                <MatchCard match={match} />
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-gray-400 py-2">終了した試合はありません</p>
+                    )}
+                </div>
+                
+                <HorizonTitle text="対戦表"/>
+                <EventBracket eventId={currentEvent.id}/>
             </main>
         </>
     );
