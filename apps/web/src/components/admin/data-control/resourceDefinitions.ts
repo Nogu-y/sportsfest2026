@@ -2,7 +2,7 @@
 
 import { api } from '../../../lib/api/client'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
-import { matchStageOptions, pointAllocationPresets } from '../create/constants'
+import { dayOptions, matchStageOptions, pointAllocationPresets } from '../create/constants'
 import type {
   DataControlField,
   DataControlOption,
@@ -17,6 +17,7 @@ type LocationResponse = {
   name: string
   xRatio: number
   yRatio: number
+  day: 'day1' | 'day2' | 'both'
 }
 
 type MapResponse = {
@@ -25,6 +26,7 @@ type MapResponse = {
   displayName: string
   width: number
   height: number
+  day: 'day1' | 'day2' | 'both'
 }
 
 type TeamResponse = {
@@ -197,6 +199,15 @@ export function createAdminResourceDefinitions(
       required: true,
       widthClassName: 'w-32',
     },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'そのマップを使う日程を選びます。',
+    },
   ]
 
   const teamFields: DataControlField[] = [
@@ -242,6 +253,15 @@ export function createAdminResourceDefinitions(
       type: 'text',
       required: true,
       placeholder: '例: 第一体育館 Aコート',
+    },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'その会場を使う日程を選びます。',
     },
     {
       key: 'xRatio',
