@@ -26,6 +26,11 @@ export type DataControlOption = {
   value: string | number
 }
 
+export type DataControlPreset = {
+  label: string
+  value: DataControlValue
+}
+
 export type DataControlField = {
   key: string
   label: string
@@ -37,6 +42,7 @@ export type DataControlField = {
   placeholder?: string
   description?: string
   options?: DataControlOption[]
+  presets?: DataControlPreset[]
 }
 
 export type DataControlImportFormat = 'json' | 'csv'
