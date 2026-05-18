@@ -8,11 +8,13 @@ type HeaderEventCardListProps = {
     // 親コンポーネントから選択中の種目IDと、変更時のコールバックを受け取る
     activeEventId: number | "all";
     onEventChange: (eventId: number | "all") => void;
+    showAllOption?: boolean;
 };
 
 const HeaderEventCardList = ({
                                  activeEventId,
                                  onEventChange,
+                                 showAllOption = true,
                              }: HeaderEventCardListProps) => {
     const { events, isLoading } = useSportsFestData();
 
@@ -22,15 +24,17 @@ const HeaderEventCardList = ({
         <nav aria-label="種目">
             <ul className="flex w-full items-start gap-2 overflow-x-auto overflow-y-hidden scrollbar-none pb-2">
                 {/* 「すべて」の選択肢 */}
-                <li className="shrink-0 cursor-pointer" onClick={() => onEventChange("all")}>
-                    <div className="pointer-events-none">
-                        <HeaderEventCard
-                            eventId={"all" as any}
-                            label="すべて"
-                            isActive={activeEventId === "all"}
-                        />
-                    </div>
-                </li>
+                {showAllOption && (
+                    <li className="shrink-0 cursor-pointer" onClick={() => onEventChange("all")}>
+                        <div className="pointer-events-none">
+                            <HeaderEventCard
+                                eventId={"all" as any}
+                                label="すべて"
+                                isActive={activeEventId === "all"}
+                            />
+                        </div>
+                    </li>
+                )}
 
                 {/* 動的に取得した種目リスト */}
                 {events.map((event) => (
