@@ -1,8 +1,12 @@
 'use client'
 
 import { CreateHelperPage } from './CreateHelperPage'
+import { BracketReferencePreview } from './BracketReferencePreview'
 import { eventCreateFields } from './constants'
 import type { BuilderRow } from './helpers'
+import { fetchCreateHelperMasterData } from './masterData'
+import { useEffect, useState } from 'react'
+import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
 
 function EventsPreview({ rows }: { rows: BuilderRow[] }) {
   if (rows.length === 0) {
@@ -43,13 +47,29 @@ function EventsPreview({ rows }: { rows: BuilderRow[] }) {
 }
 
 export function EventsCreatePage() {
+  const [masterData, setMasterData] = useState<PublicMasterResponse | null>(null)
+  const [referenceLoadError, setReferenceLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchCreateHelperMasterData().then(({ masterData, referenceLoadError }) => {
+      setMasterData(masterData)
+      setReferenceLoadError(referenceLoadError)
+    })
+  }, [])
+
   return (
     <CreateHelperPage
       title="イベント入力補助"
       description="イベント定義を UI で積み上げ、Import した内容に追記しながら JSON / CSV を新規出力できます。"
       exportBaseName="events-helper"
       fields={eventCreateFields}
-      renderPreview={(rows) => <EventsPreview rows={rows} />}
+      referenceLoadError={referenceLoadError}
+      renderPreview={(rows) => (
+        <div className="space-y-4">
+          <EventsPreview rows={rows} />
+          <BracketReferencePreview masterData={masterData} />
+        </div>
+      )}
     />
   )
 }

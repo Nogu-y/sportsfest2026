@@ -226,6 +226,53 @@ export const eventCreateFields: DataControlField[] = [
   },
 ]
 
+export const teamCreateFields: DataControlField[] = [
+  {
+    key: 'name',
+    label: 'チーム名',
+    type: 'text',
+    required: true,
+    placeholder: '例: 1-1',
+  },
+]
+
+export function createLocationFields(mapOptions: DataControlOption[]): DataControlField[] {
+  return [
+    {
+      key: 'mapId',
+      label: 'マップ',
+      type: 'select',
+      required: true,
+      options: mapOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'マップIDを直接入力',
+      customValuePlaceholder: '例: 1',
+    },
+    {
+      key: 'name',
+      label: '会場名',
+      type: 'text',
+      required: true,
+      placeholder: '例: グラウンドA',
+    },
+    {
+      key: 'xRatio',
+      label: 'X座標比率',
+      type: 'number',
+      required: true,
+      placeholder: '0-100',
+    },
+    {
+      key: 'yRatio',
+      label: 'Y座標比率',
+      type: 'number',
+      required: true,
+      placeholder: '0-100',
+    },
+  ]
+}
+
 export function createMatchFields(
   eventBlockOptions: DataControlOption[],
   locationOptions: DataControlOption[],

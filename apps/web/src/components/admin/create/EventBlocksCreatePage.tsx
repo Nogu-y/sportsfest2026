@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
+import { BracketReferencePreview } from './BracketReferencePreview'
 import { createEventBlockFields } from './constants'
 import { CreateHelperPage } from './CreateHelperPage'
 import type { BuilderRow } from './helpers'
@@ -70,7 +71,12 @@ export function EventBlocksCreatePage() {
       exportBaseName="event-blocks-helper"
       fields={createEventBlockFields(eventOptions)}
       referenceLoadError={referenceLoadError}
-      renderPreview={(rows) => <EventBlocksPreview rows={rows} masterData={masterData} />}
+      renderPreview={(rows) => (
+        <div className="space-y-4">
+          <EventBlocksPreview rows={rows} masterData={masterData} />
+          <BracketReferencePreview masterData={masterData} />
+        </div>
+      )}
     />
   )
 }
