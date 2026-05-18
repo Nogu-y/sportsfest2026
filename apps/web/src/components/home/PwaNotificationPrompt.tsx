@@ -58,7 +58,7 @@ export const PwaNotificationPrompt = () => {
                         onClick={handleInstallPwa}
                         className="w-full rounded-lg bg-blue-600 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-95 shadow-sm"
                     >
-                        アプリをホーム画面に追加する（推奨）
+                        アプリをホーム画面に追加する
                     </button>
                 )}
 

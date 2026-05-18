@@ -1,198 +1,320 @@
+"use client";
+
+import React, {useMemo, useState} from "react";
 import Link from "next/link";
-import HeaderEventCardList from "src/components/common/HeaderEventCardList";
-import MatchCard from "src/components/common/MatchCard";
-import EventHero from "src/components/layouts/eventHero/EventHero";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
+import HeaderEventCardList from "src/components/common/HeaderEventCardList";
+// 以下のパスは実際の構造に合わせて調整してください
+import {useSportsFestData} from "../../../hooks/useSportsFestData";
+import {useMyTeam} from "../../../hooks/useMyTeam";
+import {MatchWithEventIdType} from "../../../types/SportsFestDataTypes";
 
-// ① import
-import React from 'react'
+// ==========================================
+// 1. 各種UIコンポーネント
+// ==========================================
 
-// ② 型定義
-type CourtCellProps = {
-  label: string
-  code: string
-  active: boolean
-}
-
-type TimeSlotProps = {
-  time: string
-  done?: boolean
-  courts: CourtCellProps[]
-}
-
-type SimpleSlotProps = {
-  time: string
-  label: string
-  done?: boolean
-}
-
-type VenueSection =
-  | { venue: string; simpleSlots: SimpleSlotProps[] }
-  | { venue: string; slots: TimeSlotProps[] }
-
-// ③ データ
-const SCHEDULE: VenueSection[] = [
-  {
-    venue: '陸上グラウンド',
-    simpleSlots: [
-      { time: '08:30 - 08:50', label: '集合・出席確認', done: true },
-      { time: '08:50 - 09:00', label: '開会式',         done: true },
-    ],
-  },
-  {
-    venue: '第一体育館',
-    slots: [
-      {
-        time: '09:10 - 09:40',
-        done: true,
-        courts: [
-          { label: 'A-1', code: '1–1\n1–2', active: false },
-          { label: 'B-1', code: '2M\n2E',   active: false },
-          { label: 'C-1', code: '3M\n3E',   active: false },
-          { label: 'D-1', code: '4M\n4E',   active: false },
-          { label: 'E-1', code: '5M\n5E',   active: false },
-        ],
-      },
-      {
-        time: '10:45 - 11:15',
-        done: true,
-        courts: [
-          { label: 'A-1', code: '1–1\n1–2', active: false },
-          { label: 'B-1', code: '2M\n2E',   active: false },
-          { label: 'C-1', code: '3M\n3E',   active: false },
-          { label: 'D-1', code: '4M\n4E',   active: false },
-          { label: 'E-1', code: '5M\n5E',   active: false },
-        ],
-      },
-      {
-        time: '11:20 - 11:50',
-        done: false,
-        courts: [
-          { label: 'A-1', code: '1–1\n1–2', active: true },
-          { label: 'B-1', code: '2M\n2E',   active: true },
-          { label: 'C-1', code: '3M\n3E',   active: true },
-          { label: 'D-1', code: '4M\n4E',   active: true },
-          { label: 'E-1', code: '5M\n5E',   active: true },
-        ],
-      },
-    ],
-  },
-  {
-    venue: '場所指定なし',
-    simpleSlots: [
-      { time: '12:00 - 13:05', label: '昼休憩', done: false },
-    ],
-  },
-  {
-    venue: '第一体育館',
-    slots: [
-      {
-        time: '10:45 - 11:15',
-        done: false,
-        courts: [
-          { label: 'A-1', code: '1–1\n1–2', active: true },
-          { label: 'B-1', code: '2M\n2E',   active: true },
-          { label: 'C-1', code: '3M\n3E',   active: true },
-          { label: 'D-1', code: '4M\n4E',   active: true },
-          { label: 'E-1', code: '5M\n5E',   active: true },
-        ],
-      },
-      {
-        time: '10:45 - 11:15',
-        done: false,
-        courts: [
-          { label: 'A-1', code: '1–1\n1–2', active: true },
-          { label: 'B-1', code: '2M\n2E',   active: true },
-          { label: 'C-1', code: '3M\n3E',   active: true },
-          { label: 'D-1', code: '4M\n4E',   active: true },
-          { label: 'E-1', code: '5M\n5E',   active: true },
-        ],
-      },
-      {
-        time: '10:45 - 11:15',
-        done: false,
-        courts: [
-          { label: 'A-1', code: '1–1\n1–2', active: true },
-          { label: 'B-1', code: '2M\n2E',   active: true },
-          { label: 'C-1', code: '3M\n3E',   active: true },
-          { label: 'D-1', code: '4M\n4E',   active: true },
-          { label: 'E-1', code: '5M\n5E',   active: true },
-        ],
-      },
-    ],
-  },
-]
-
-// ④ コートのマス1つ
-const CourtCell = ({ label, code, active }: CourtCellProps) => (
-  <div className={`rounded-lg p-2 text-center ${active ? 'bg-[#2d5a8e]' : 'bg-gray-200'}`}>
-    <p className={`text-[10px] mb-1 ${active ? 'text-blue-200' : 'text-gray-400'}`}>{label}</p>
-    <p className="text-sm font-semibold leading-tight whitespace-pre-line text-white">{code}</p>
-  </div>
-)
-
-// ⑤ コートがある時間帯
-const TimeSlot = ({ time, courts, done }: TimeSlotProps) => (
-  <div className="mb-6">
-    <div className="flex items-center gap-3 mb-2">
-      <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${done ? 'bg-gray-400 border-gray-400' : 'border-gray-400'}`} />
-      <span className="text-sm text-gray-700">{time}</span>
+// ① 会場名の区切り線
+const VenueDivider = ({name}: { name: string }) => (
+    <div className="flex items-center gap-3 my-6 pt-4">
+        <div className="flex-1 h-px bg-[#2d5a8e] opacity-30"/>
+        <span className="text-sm font-bold text-[#2d5a8e] whitespace-nowrap tracking-wider">{name}</span>
+        <div className="flex-1 h-px bg-[#2d5a8e] opacity-30"/>
     </div>
-    <div className="pl-8">
-      <div className="grid grid-cols-5 gap-2 mb-1">
-        {courts.map((c) => (
-          <p key={c.label} className="text-[10px] text-gray-400 text-center">{c.label}</p>
-        ))}
-      </div>
-      <div className="grid grid-cols-5 gap-2">
-        {courts.map((c, i) => <CourtCell key={i} {...c} />)}
-      </div>
+);
+
+// ② コートのマス1つ（試合カード）
+const CourtCell = ({
+                       label,
+                       teamsText,
+                       status,
+                       isMyTeam
+                   }: {
+    label: string,
+    teamsText: string,
+    status: string,
+    isMyTeam: boolean
+}) => {
+    const isPlaying = status === "Playing";
+    const isFinished = status === "Finished" || status === "Completed";
+
+    let bgColor = "bg-gray-100 hover:bg-gray-200";
+    let textColor = "text-dark";
+    let borderColor = "border-transparent";
+
+    if (isPlaying) {
+        bgColor = "bg-[#2d5a8e] shadow-md animate-pulse";
+        textColor = "text-white";
+    } else if (isFinished) {
+        bgColor = "bg-gray-200/50";
+        textColor = "text-gray-400";
+    }
+
+    // 自クラスのハイライト（進行中でなければオレンジ背景）
+    if (isMyTeam) {
+        borderColor = "border-amber-400 border-[2px]";
+        if (!isPlaying && !isFinished) bgColor = "bg-amber-50 hover:bg-amber-100";
+    }
+
+    return (
+        <div
+            className={`rounded-lg p-2 text-center h-full flex flex-col justify-center transition-transform active:scale-95 ${bgColor} ${borderColor}`}>
+            <p className={`text-[10px] mb-1 font-bold ${isPlaying ? "text-blue-200" : isFinished ? "text-gray-400" : "text-gray-500"}`}>
+                {label}
+            </p>
+            <p className={`text-sm font-semibold leading-tight whitespace-pre-line ${textColor}`}>
+                {teamsText}
+            </p>
+        </div>
+    );
+};
+
+// ③ 複数のコートが並ぶ時間帯コンポーネント
+const TimeSlot = ({
+                      time,
+                      matches,
+                      done,
+                      teamsMap,
+                      matchesMap,
+                      blocksMap,
+                      myTeamId
+                  }: {
+    time: string,
+    matches: MatchWithEventIdType[],
+    done: boolean,
+    teamsMap: Map<number, { name: string }>,
+    matchesMap: Map<number, MatchWithEventIdType>,
+    blocksMap: Map<number, any>,
+    myTeamId: number | null
+}) => (
+    <div className="mb-2 relative">
+        <div className="flex items-center gap-3 relative z-10">
+            <div
+                className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`}/>
+            <span
+                className={`text-sm font-bold tracking-wider ${done ? "text-gray-400" : "text-[#2d5a8e]"}`}>{time}</span>
+        </div>
+
+        <div className="pl-[30px] border-l-2 border-gray-100 ml-[7px] pb-8 -mt-2 pt-4">
+            <div className="flex flex-wrap gap-2">
+                {matches.map(m => {
+                    const isMyTeam = myTeamId ? m.participants.some(p => p.teamId === myTeamId) : false;
+
+                    const teamsText = m.participants.map(p => {
+                        if (p.teamId) return teamsMap.get(p.teamId)?.name ?? "未定";
+
+                        if (p.prereqMatchId) {
+                            const prereqMatch = matchesMap.get(p.prereqMatchId);
+                            return prereqMatch?.name ? `${prereqMatch.name} 勝者` : "未定の勝者";
+                        }
+
+                        if (p.prereqBlockId) {
+                            const prereqBlock = blocksMap.get(p.prereqBlockId);
+                            const rankText = p.prereqRank ? `${p.prereqRank}位` : "代表";
+                            return prereqBlock?.name ? `${prereqBlock.name} ${rankText}` : `未定の${rankText}`;
+                        }
+
+                        return "未定";
+                    }).join("\n");
+
+                    return (
+                        <Link
+                            href={`/match/${m.id}`}
+                            key={m.id}
+                            className="block flex-none min-w-[4.5rem] max-w-full"
+                        >
+                            <CourtCell
+                                label={m.name || "試合"}
+                                teamsText={teamsText}
+                                status={m.status}
+                                isMyTeam={isMyTeam}
+                            />
+                        </Link>
+                    );
+                })}
+            </div>
+        </div>
     </div>
-  </div>
-)
+);
 
-// ⑥ コートなしのシンプルな時間帯
-const SimpleSlot = ({ time, label, done }: SimpleSlotProps) => (
-  <div className="flex items-center gap-3 mb-3">
-    <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${done ? 'bg-gray-400 border-gray-400' : 'border-gray-400'}`} />
-    <span className="text-sm text-gray-600">{time}</span>
-    <span className="text-sm font-bold text-gray-800">{label}</span>
-  </div>
-)
+// ④ 昼休憩や開会式など、コート指定のない単一イベント
+const SimpleSlot = ({
+                        time,
+                        match,
+                        done,
+                        isMyTeam
+                    }: {
+    time: string,
+    match: MatchWithEventIdType,
+    done: boolean,
+    isMyTeam: boolean
+}) => (
+    <div className="mb-2 relative">
+        <Link href={`/match/${match.id}`}
+              className="flex items-center gap-3 relative z-10 py-2 active:scale-95 transition-transform">
+            <div
+                className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`}/>
+            <span
+                className={`text-sm tracking-wider ${done ? "text-gray-400" : "text-gray-600 font-bold"}`}>{time}</span>
+            <span
+                className={`text-sm font-bold ${done ? "text-gray-400" : "text-dark"} ${isMyTeam ? "text-amber-600" : ""}`}>
+        {match.name || match.description || "予定"}
+      </span>
+        </Link>
+        <div className="border-l-2 border-gray-100 ml-[7px] h-6"/>
+    </div>
+);
 
-// ⑦ 会場名の区切り線
-const VenueDivider = ({ name }: { name: string }) => (
-  <div className="flex items-center gap-3 my-6">
-    <div className="flex-1 h-px bg-[#2d5a8e] opacity-30" />
-    <span className="text-sm font-medium text-[#2d5a8e] whitespace-nowrap">{name}</span>
-    <div className="flex-1 h-px bg-[#2d5a8e] opacity-30" />
-  </div>
-)
 
-// ⑧ ページ全体
-export default function Schedule() {
-  return (
-    <>
-      {/* 種目セレクタ */}
-      <SubHeader>
-        <HeaderEventCardList />
-      </SubHeader>
+// ==========================================
+// 2. メインページコンポーネント
+// ==========================================
 
-      {/* スケジュール本体 */}
-      <div className="bg-white min-h-screen px-6 py-6">
-        {SCHEDULE.map((section, i) => (
-          <div key={i}>
-            <VenueDivider name={section.venue} />
-            {'simpleSlots' in section
-              ? section.simpleSlots.map((s, j) => <SimpleSlot key={j} {...s} />)
-              : section.slots.map((s, j) => <TimeSlot key={j} {...s} />)
+export default function SchedulePage() {
+    const {matches, teams, maps, locations, eventBlocks, isLoading, dayLabelConverter} = useSportsFestData();
+    const {myTeamId} = useMyTeam();
+
+    const [activeDay, setActiveDay] = useState<string>("Day1");
+    const [selectedEventId, setSelectedEventId] = useState<number | "all">("all");
+
+    // 検索を O(1) にするための Map 化
+    const teamsMap = useMemo(() => new Map(teams?.map(t => [t.id, t])), [teams]);
+    const matchesMap = useMemo(() => new Map(matches?.map(m => [m.id, m])), [matches]);
+    const blocksMap = useMemo(() => new Map(eventBlocks?.map(b => [b.id, b])), [eventBlocks]);
+
+    const formatTime = (isoString: string) => {
+        const d = new Date(isoString);
+        return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+    };
+
+    // 試合データを時間と会場でグループ化・ソート
+    const timelineItems = useMemo(() => {
+        if (!matches || matches.length === 0) return [];
+        type TimelineGroup = {
+            venueName: string;
+            timeLabel: string;
+            startTimeMs: number;
+            endTimeMs: number;
+            matches: MatchWithEventIdType[];
+        };
+
+        const groups: Record<string, TimelineGroup> = {};
+
+        matches.forEach(match => {
+            // 1. 曜日によるフィルタリング
+            const dayLabel = dayLabelConverter(new Date(match.scheduledStartTime));
+            if (dayLabel !== activeDay) return;
+
+            // 2. 種目によるフィルタリングを追加
+            if (selectedEventId !== "all" && match.eventId !== selectedEventId) {
+                return; // 選択された種目と異なる試合はタイムラインから除外
             }
-          </div>
-        ))}
-      </div>
-    </>
-  )
-}
-        
 
- 
+            const startMs = new Date(match.scheduledStartTime).getTime();
+            const endMs = new Date(match.scheduledEndTime).getTime();
+            const timeLabel = `${formatTime(match.scheduledStartTime)} - ${formatTime(match.scheduledEndTime)}`;
+
+            let venueName = "全体スケジュール / 場所指定なし";
+            if (match.locationId && locations && maps) {
+                const loc = locations.find(l => l.id === match.locationId);
+                if (loc) {
+                    const map = maps.find(m => m.id === loc.mapId);
+                    if (map) venueName = map.displayName;
+                }
+            }
+
+            const groupKey = `${startMs}-${endMs}-${venueName}`;
+            if (!groups[groupKey]) {
+                groups[groupKey] = {venueName, timeLabel, startTimeMs: startMs, endTimeMs: endMs, matches: []};
+            }
+            groups[groupKey].matches.push(match);
+        });
+
+        const items = Object.values(groups);
+        items.sort((a, b) => {
+            if (a.startTimeMs !== b.startTimeMs) return a.startTimeMs - b.startTimeMs;
+            return a.venueName.localeCompare(b.venueName);
+        });
+
+        return items;
+    }, [matches, activeDay, selectedEventId, dayLabelConverter, locations, maps]);
+
+    if (isLoading) {
+        return <div
+            className="flex h-screen items-center justify-center text-gray-500">スケジュールを読み込み中...</div>;
+    }
+
+    let currentVenue = "";
+
+    return (
+        <>
+            <SubHeader>
+                <HeaderEventCardList
+                    activeEventId={selectedEventId}
+                    onEventChange={setSelectedEventId}
+                />
+            </SubHeader>
+
+            <div className="bg-white min-h-screen flex flex-col">
+                {/* 日程（Day1 / Day2）切り替えタブ */}
+                <div className="flex border-b border-gray-200 sticky top-0 bg-white z-20">
+                    <button
+                        className={`flex-1 py-3 text-sm font-bold transition-colors ${activeDay === "Day1" ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]" : "text-gray-400 hover:bg-gray-50"}`}
+                        onClick={() => setActiveDay("Day1")}
+                    >
+                        1日目
+                    </button>
+                    <button
+                        className={`flex-1 py-3 text-sm font-bold transition-colors ${activeDay === "Day2" ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]" : "text-gray-400 hover:bg-gray-50"}`}
+                        onClick={() => setActiveDay("Day2")}
+                    >
+                        2日目
+                    </button>
+                </div>
+
+                {/* タイムライン本体 */}
+                <div className="px-5 py-4 pb-24">
+                    {timelineItems.length === 0 ? (
+                        <p className="text-center text-gray-400 mt-10">この日の予定はありません。</p>
+                    ) : (
+                        timelineItems.map((item, i) => {
+                            // 会場が変わったタイミングで VenueDivider を挿入
+                            const showVenueDivider = currentVenue !== item.venueName;
+                            if (showVenueDivider) currentVenue = item.venueName;
+
+                            // コート指定のない単独イベント（開会式など）かどうかの判定
+                            const isSimple = item.matches.length === 1 && !item.matches[0].locationId;
+
+                            // この時間帯の全試合が終了しているか
+                            const isDone = item.matches.every(m => m.status === "Finished" || m.status === "Completed");
+
+                            return (
+                                <React.Fragment key={i}>
+                                    {showVenueDivider && <VenueDivider name={item.venueName}/>}
+
+                                    {isSimple ? (
+                                        <SimpleSlot
+                                            time={item.timeLabel}
+                                            match={item.matches[0]}
+                                            done={isDone}
+                                            isMyTeam={myTeamId ? item.matches[0].participants.some(p => p.teamId === myTeamId) : false}
+                                        />
+                                    ) : (
+                                        <TimeSlot
+                                            time={item.timeLabel}
+                                            matches={item.matches}
+                                            done={isDone}
+                                            teamsMap={teamsMap}
+                                            myTeamId={myTeamId ?? null}
+                                            matchesMap={matchesMap}
+                                            blocksMap={blocksMap}
+                                        />
+                                    )}
+                                </React.Fragment>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}
