@@ -1,7 +1,5 @@
-export default  function Login() {
-    return (
-        <main>
-            WIP
-        </main>
-    )
+import { LoginPage } from '../../../components/auth/LoginPage'
+
+export default function Page() {
+  return <LoginPage />
 }

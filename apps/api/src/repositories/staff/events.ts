@@ -14,6 +14,7 @@ import type { FinalizeEventScoreResponse } from '../../schemas/staff/events'
 type FinalizeEventScoresError =
   | 'event_not_found'
   | 'incomplete_score_sources'
+  | 'invalid_point_allocation'
 
 type ScoreRecord = FinalizeEventScoreResponse['scores'][number]
 
@@ -37,6 +38,12 @@ const getRuleEntries = (rules: Partial<Record<string, Record<string, number>>> |
 }
 
 const getStageLabel = (stage: string) => stageLabelMap[stage] ?? stage
+
+const parseRankKey = (value: string) => {
+  const rank = Number(value)
+  if (!Number.isInteger(rank) || rank < 1) return null
+  return rank
+}
 
 // Score.reason は仕様上「競技名 + どの順位で加点されたか」が追える形にする
 const createReason = (eventName: string, stage: string, rank: number) => {
@@ -103,7 +110,10 @@ const buildMatchScores = ({
       // `rankPoints` は { "1": 30, "2": 20 } のような形なので、
       // キーを順位として participant を 1 件ずつ対応付ける
       for (const [rankKey, points] of Object.entries(rankPoints ?? {})) {
-        const rank = Number(rankKey)
+        const rank = parseRankKey(rankKey)
+        if (rank === null || !Number.isFinite(points)) {
+          return { error: 'invalid_point_allocation' as const }
+        }
         const participant = match.participants.find(
           (item) => item.rank === rank && item.teamId !== null
         )
@@ -161,7 +171,10 @@ const buildBlockScores = ({
       // `rankPoints` は { "1": 3, "2": 1 } のような形。
       // blockRankings から該当順位を探して加点する。
       for (const [rankKey, points] of Object.entries(rankPoints ?? {})) {
-        const rank = Number(rankKey)
+        const rank = parseRankKey(rankKey)
+        if (rank === null || !Number.isFinite(points)) {
+          return { error: 'invalid_point_allocation' as const }
+        }
         const ranking = rankings.find((item) => item.rank === rank)
 
         // 配点対象順位の blockRanking が無ければ、
@@ -302,7 +315,7 @@ export const finalizeEventScores = async (eventId: number) => {
     })
 
     if ('error' in matchScoreResult) {
-      return { error: 'incomplete_score_sources' as FinalizeEventScoresError }
+      return { error: matchScoreResult.error as FinalizeEventScoresError }
     }
 
     const blockScoreResult = buildBlockScores({
@@ -314,7 +327,7 @@ export const finalizeEventScores = async (eventId: number) => {
     })
 
     if ('error' in blockScoreResult) {
-      return { error: 'incomplete_score_sources' as FinalizeEventScoresError }
+      return { error: blockScoreResult.error as FinalizeEventScoresError }
     }
 
     // 当該競技の score は「差分更新」ではなく「再生成」で揃える。
