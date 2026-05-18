@@ -95,7 +95,6 @@ const TimeSlot = ({
         </div>
 
         <div className="pl-[30px] border-l-2 border-gray-100 ml-[7px] pb-8 -mt-2 pt-4">
-            {/* ★ 変更: grid を廃止し、折り返し可能な flex に変更 */}
             <div className="flex flex-wrap gap-2">
                 {matches.map(m => {
                     const isMyTeam = myTeamId ? m.participants.some(p => p.teamId === myTeamId) : false;
@@ -209,7 +208,7 @@ export default function SchedulePage() {
             if (selectedEventId !== "all" && match.eventId !== selectedEventId) {
                 return; // 選択された種目と異なる試合はタイムラインから除外
             }
-            
+
             const startMs = new Date(match.scheduledStartTime).getTime();
             const endMs = new Date(match.scheduledEndTime).getTime();
             const timeLabel = `${formatTime(match.scheduledStartTime)} - ${formatTime(match.scheduledEndTime)}`;
