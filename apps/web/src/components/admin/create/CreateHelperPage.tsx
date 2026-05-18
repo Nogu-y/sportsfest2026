@@ -33,6 +33,7 @@ type CreateHelperPageProps = {
   description: string
   exportBaseName: string
   fields: DataControlField[]
+  stickyFieldKeys?: string[]
   renderPreview?: (rows: BuilderRow[]) => React.ReactNode
   referenceLoadError?: string | null
 }
@@ -827,6 +828,7 @@ export function CreateHelperPage({
   description,
   exportBaseName,
   fields,
+  stickyFieldKeys = [],
   renderPreview,
   referenceLoadError,
 }: CreateHelperPageProps) {
@@ -877,9 +879,16 @@ export function CreateHelperPage({
         }
       }
       const nextLocalId = rows.reduce((max, current) => Math.max(max, current._localId), 0) + 1
+      const stickyValues = stickyFieldKeys.reduce<Record<string, DataControlValue>>((acc, key) => {
+        const value = draft[key]
+        if (value !== undefined) {
+          acc[key] = value
+        }
+        return acc
+      }, {})
 
       setRows((current) => [...current, { ...prepared, _localId: nextLocalId }])
-      setDraft(createInitialDraft(fields))
+      setDraft(createInitialDraft(fields, stickyValues))
       setMessage('行を追加しました')
       setErrorMessage(null)
     } catch (error) {

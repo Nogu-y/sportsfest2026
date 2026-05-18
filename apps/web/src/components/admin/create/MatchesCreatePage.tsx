@@ -209,6 +209,7 @@ export function MatchesCreatePage() {
       title="試合計画入力補助"
       description="試合計画を UI で積み上げ、Import した内容へ追記しながら JSON / CSV を出力できます。既存の対戦表コンポーネントによる視覚プレビュー付きです。"
       exportBaseName="matches-helper"
+      stickyFieldKeys={['eventBlockId', 'locationId']}
       fields={createMatchFields(
         eventBlockOptions,
         locationOptions,
