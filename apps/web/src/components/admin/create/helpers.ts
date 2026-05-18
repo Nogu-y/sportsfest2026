@@ -115,6 +115,54 @@ export function validateDraft(fields: DataControlField[], draft: Record<string, 
   }
 }
 
+export function validateParticipantsValue(value: DataControlValue) {
+  if (!Array.isArray(value)) {
+    throw new Error('参加枠は配列で指定してください')
+  }
+
+  value.forEach((item, index) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      throw new Error(`参加枠 ${index + 1} 行目: オブジェクト形式で指定してください`)
+    }
+
+    const record = item as Record<string, unknown>
+    const teamId = typeof record.teamId === 'number' ? record.teamId : null
+    const prereqMatchId = typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null
+    const prereqBlockId = typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null
+    const prereqRank = typeof record.prereqRank === 'number' ? record.prereqRank : null
+    const score = typeof record.score === 'number' ? record.score : null
+    const rank = typeof record.rank === 'number' ? record.rank : null
+    const rowNumber = index + 1
+
+    const sourceCount =
+      (teamId !== null ? 1 : 0) +
+      (prereqMatchId !== null ? 1 : 0) +
+      (prereqBlockId !== null ? 1 : 0)
+
+    if (sourceCount !== 1) {
+      throw new Error(
+        `参加枠 ${rowNumber} 行目: teamId / prereqMatchId / prereqBlockId は1つだけ指定してください`,
+      )
+    }
+
+    if (prereqBlockId !== null) {
+      if (prereqRank === null || !Number.isInteger(prereqRank) || prereqRank < 1) {
+        throw new Error(`参加枠 ${rowNumber} 行目: prereqBlockId を使う場合 prereqRank は1以上の整数が必須です`)
+      }
+    } else if (prereqRank !== null) {
+      throw new Error(`参加枠 ${rowNumber} 行目: prereqRank は prereqBlockId 指定時のみ設定できます`)
+    }
+
+    if (score !== null && (!Number.isInteger(score) || score < 0)) {
+      throw new Error(`参加枠 ${rowNumber} 行目: score は0以上の整数で指定してください`)
+    }
+
+    if (rank !== null && (!Number.isInteger(rank) || rank < 1)) {
+      throw new Error(`参加枠 ${rowNumber} 行目: rank は1以上の整数で指定してください`)
+    }
+  })
+}
+
 export function buildDraftFromRow(fields: DataControlField[], row: BuilderRow) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
     if (row[field.key] !== undefined) {
