@@ -303,3 +303,36 @@ export const staffSessions = pgTable(
     expiresIdx: index('staff_sessions_expires_idx').on(t.expiresAt)
   })
 )
+
+export const matchReminderLogs = pgTable(
+  "match_reminder_logs",
+  {
+    matchPlanId: integer("match_plan_id")
+      .notNull()
+      .references(() => matchPlans.id, {
+        onDelete: "cascade",
+      }),
+
+    userSubscriptionId: integer(
+      "user_subscription_id"
+    )
+      .notNull()
+      .references(() => userSubscriptions.id, {
+        onDelete: "cascade",
+      }),
+
+    sentAt: timestamp("sent_at", {
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uniqueReminder: unique(
+      "match_reminder_unique"
+    ).on(
+      t.matchPlanId,
+      t.userSubscriptionId
+    ),
+  })
+);
