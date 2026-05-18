@@ -276,6 +276,8 @@ export function createLocationFields(mapOptions: DataControlOption[]): DataContr
 export function createMatchFields(
   eventBlockOptions: DataControlOption[],
   locationOptions: DataControlOption[],
+  teamOptions: DataControlOption[],
+  prereqMatchOptions: DataControlOption[],
 ): DataControlField[] {
   return [
     {
@@ -339,22 +341,36 @@ export function createMatchFields(
       required: true,
     },
     {
-      key: 'startedAt',
-      label: '開始実績',
-      type: 'datetime',
-      nullable: true,
-    },
-    {
-      key: 'endedAt',
-      label: '終了実績',
-      type: 'datetime',
-      nullable: true,
-    },
-    {
       key: 'note',
       label: '備考',
       type: 'textarea',
       nullable: true,
+    },
+    {
+      key: 'participants',
+      label: '参加枠(GUI / JSON)',
+      type: 'json',
+      required: true,
+      presets: [
+        { label: '空', value: [] },
+        {
+          label: '2チーム直接指定',
+          value: [
+            { teamId: 1 },
+            { teamId: 2 },
+          ],
+        },
+        {
+          label: '勝ち上がり2枠',
+          value: [
+            { prereqMatchId: 1 },
+            { prereqMatchId: 2 },
+          ],
+        },
+      ],
+      participantTeamOptions: teamOptions,
+      participantPrereqMatchOptions: prereqMatchOptions,
+      participantPrereqBlockOptions: eventBlockOptions,
     },
   ]
 }

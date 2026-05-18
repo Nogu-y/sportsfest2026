@@ -8,6 +8,29 @@ import type { BuilderRow } from './helpers'
 import { fetchCreateHelperMasterData } from './masterData'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
 
+function normalizeParticipants(
+  value: unknown,
+): PublicMasterResponse['matches'][number]['participants'] {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .filter((item) => item && typeof item === 'object')
+    .map((item, index) => {
+      const record = item as Record<string, unknown>
+
+      return {
+        id: typeof record.id === 'number' ? record.id : index + 1,
+        teamId: typeof record.teamId === 'number' ? record.teamId : null,
+        prereqMatchId: typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null,
+        prereqBlockId: typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null,
+        prereqRank: typeof record.prereqRank === 'number' ? record.prereqRank : null,
+        score: typeof record.score === 'number' ? record.score : null,
+        rank: typeof record.rank === 'number' ? record.rank : null,
+        isDisqualified: Boolean(record.isDisqualified),
+      }
+    })
+}
+
 function MatchesPreview({
   rows,
   masterData,
@@ -33,7 +56,7 @@ function MatchesPreview({
       startedAt: typeof row.startedAt === 'string' ? row.startedAt : null,
       endedAt: typeof row.endedAt === 'string' ? row.endedAt : null,
       note: typeof row.note === 'string' && row.note ? row.note : null,
-      participants: [],
+      participants: normalizeParticipants(row.participants),
     }))
   }, [masterData.matches, rows])
 
@@ -135,6 +158,9 @@ function MatchesPreview({
                   {' '}
                   {new Date(match.scheduledEndTime).toLocaleString('ja-JP')}
                 </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  参加枠: {match.participants.length} 件
+                </p>
               </article>
             )
           })}
@@ -169,13 +195,26 @@ export function MatchesCreatePage() {
     label: `${location.id}: ${location.name}`,
     value: location.id,
   })) ?? []
+  const teamOptions = masterData?.teams.map((team) => ({
+    label: `${team.id}: ${team.name}`,
+    value: team.id,
+  })) ?? []
+  const prereqMatchOptions = masterData?.matches.map((match) => ({
+    label: `${match.id}: ${match.name ?? '名称未設定'}`,
+    value: match.id,
+  })) ?? []
 
   return (
     <CreateHelperPage
       title="試合計画入力補助"
       description="試合計画を UI で積み上げ、Import した内容へ追記しながら JSON / CSV を出力できます。既存の対戦表コンポーネントによる視覚プレビュー付きです。"
       exportBaseName="matches-helper"
-      fields={createMatchFields(eventBlockOptions, locationOptions)}
+      fields={createMatchFields(
+        eventBlockOptions,
+        locationOptions,
+        teamOptions,
+        prereqMatchOptions,
+      )}
       referenceLoadError={referenceLoadError}
       renderPreview={
         masterData

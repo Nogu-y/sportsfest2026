@@ -47,6 +47,9 @@ export type DataControlField = {
   customValueType?: 'text' | 'number'
   customValueLabel?: string
   customValuePlaceholder?: string
+  participantTeamOptions?: DataControlOption[]
+  participantPrereqMatchOptions?: DataControlOption[]
+  participantPrereqBlockOptions?: DataControlOption[]
 }
 
 export type DataControlImportFormat = 'json' | 'csv'
