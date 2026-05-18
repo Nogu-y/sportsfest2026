@@ -530,88 +530,89 @@ export function DataControlPage() {
           </div>
         ) : null}
 
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="flex flex-col gap-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold">一覧</h2>
-                  <p className="text-sm text-slate-500">{records.length} 件</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => loadActiveResource(activeResource).catch((error) => {
-                    setErrorMessage(error instanceof Error ? error.message : '再読込に失敗しました')
-                  })}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
-                >
-                  再読込
-                </button>
+        <section className="flex flex-col gap-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">一覧</h2>
+                <p className="text-sm text-slate-500">{records.length} 件</p>
               </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-separate border-spacing-0 text-sm">
-                  <thead>
-                    <tr>
-                      {tableFields.map((field) => (
-                        <th
-                          key={field.key}
-                          className="border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600"
-                        >
-                          {field.label}
-                        </th>
-                      ))}
-                      <th className="border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600">
-                        操作
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {records.map((record) => (
-                      <tr key={String(record.id ?? JSON.stringify(record))} className="align-top">
-                        {tableFields.map((field) => (
-                          <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
-                            {toDisplayValue(record[field.key] ?? null)}
-                          </td>
-                        ))}
-                        <td className="border-b border-slate-100 px-3 py-3">
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => startEdit(record)}
-                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700"
-                            >
-                              編集
-                            </button>
-                            {typeof record.id === 'number' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(record.id as number)}
-                                className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700"
-                              >
-                                削除
-                              </button>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {records.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={tableFields.length + 1}
-                          className="px-3 py-6 text-center text-sm text-slate-500"
-                        >
-                          データがありません
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
+              <button
+                type="button"
+                onClick={() => loadActiveResource(activeResource).catch((error) => {
+                  setErrorMessage(error instanceof Error ? error.message : '再読込に失敗しました')
+                })}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+              >
+                再読込
+              </button>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-max border-separate border-spacing-0 text-sm">
+                <thead>
+                  <tr>
+                    {tableFields.map((field) => (
+                      <th
+                        key={field.key}
+                        className="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600"
+                      >
+                        {field.label}
+                      </th>
+                    ))}
+                    <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600">
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((record) => (
+                    <tr key={String(record.id ?? JSON.stringify(record))} className="align-top">
+                      {tableFields.map((field) => (
+                        <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
+                          <div className="min-w-24 whitespace-pre-wrap break-words">
+                            {toDisplayValue(record[field.key] ?? null)}
+                          </div>
+                        </td>
+                      ))}
+                      <td className="border-b border-slate-100 px-3 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(record)}
+                            className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700"
+                          >
+                            編集
+                          </button>
+                          {typeof record.id === 'number' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(record.id as number)}
+                              className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700"
+                            >
+                              削除
+                            </button>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {records.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={tableFields.length + 1}
+                        className="px-3 py-6 text-center text-sm text-slate-500"
+                      >
+                        データがありません
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-4">
                 <h2 className="text-lg font-semibold">入出力</h2>
                 <p className="text-sm text-slate-500">
@@ -682,50 +683,47 @@ export function DataControlPage() {
                 </button>
                 {importResult ? <span className="text-sm text-emerald-700">{importResult}</span> : null}
               </div>
+          </div>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">新規作成</h2>
             </div>
-          </div>
+            <RecordForm
+              fields={activeResource.fields.filter((field) => !field.readOnly)}
+              value={createDraft}
+              submitLabel="作成"
+              onChange={updateCreateDraft}
+              onSubmit={handleCreate}
+            />
+          </section>
 
-          <div className="flex flex-col gap-6">
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold">新規作成</h2>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">個別編集</h2>
+              <p className="text-sm text-slate-500">
+                一覧から編集を押すと対象レコードをここで更新できます。
+              </p>
+            </div>
+
+            {editingRecordId === null ? (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                まだ編集中のレコードはありません
               </div>
+            ) : (
               <RecordForm
-                fields={activeResource.fields.filter((field) => !field.readOnly)}
-                value={createDraft}
-                submitLabel="作成"
-                onChange={updateCreateDraft}
-                onSubmit={handleCreate}
+                fields={activeResource.fields}
+                value={editDraft}
+                submitLabel="更新"
+                onChange={updateEditDraft}
+                onSubmit={handleUpdate}
+                onCancel={() => {
+                  setEditingRecordId(null)
+                  setEditDraft({})
+                }}
               />
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold">個別編集</h2>
-                <p className="text-sm text-slate-500">
-                  一覧から編集を押すと対象レコードをここで更新できます。
-                </p>
-              </div>
-
-              {editingRecordId === null ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                  まだ編集中のレコードはありません
-                </div>
-              ) : (
-                <RecordForm
-                  fields={activeResource.fields}
-                  value={editDraft}
-                  submitLabel="更新"
-                  onChange={updateEditDraft}
-                  onSubmit={handleUpdate}
-                  onCancel={() => {
-                    setEditingRecordId(null)
-                    setEditDraft({})
-                  }}
-                />
-              )}
-            </section>
-          </div>
+            )}
+          </section>
         </section>
 
         {isPending ? <div className="text-sm text-slate-500">データを更新中です...</div> : null}
