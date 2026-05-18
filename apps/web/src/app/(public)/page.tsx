@@ -1,14 +1,16 @@
 "use client";
 
-import MatchCard from "src/components/common/MatchCard";
 import RadioGroup from "src/components/common/RadioGroup";
 import RectButtonList from "src/components/common/RectButtonList";
-import {useCallback, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import {useSportsFestData} from "../../hooks/useSportsFestData";
 import {MatchCardList} from "../../components/common/MatchCardList";
 import {matchStatusEnumType} from "../../../../api/src/schemas/sportsData";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
+import {PwaNotificationPrompt} from "../../components/home/PwaNotificationPrompt";
+import {MyTeamSelector} from "../../components/common/MyTeamSelector";
+import {EventBracket} from "../../components/bracket/EventBracket";
 
 const eventStatusOptions = [
     {label: "開催予定", value: "upcoming"},
@@ -63,7 +65,7 @@ export default function HomePage() {
 
     const sportsFestData = useSportsFestData()
     const [displayMatches, setDisplayMatches] = useState<MatchWithEventIdType[]>(filterMatches(sportsFestData.matches, eventStatus, sortOrder));
-    
+
     useEffect(() => {
         setDisplayMatches(filterMatches(sportsFestData.matches, eventStatus, sortOrder))
     }, [eventStatus, sortOrder, sportsFestData.matches])
@@ -98,10 +100,13 @@ export default function HomePage() {
                 </div>
             </SubHeader>
 
-            <main className="space-y-4 p-6">
-                <h2 className="text-primary font-bold text-lg">{eventStatusOptions.find(o => o.value === eventStatus)?.label}の試合 ({displayMatches.length})</h2>
-                <MatchCardList  matches={displayMatches} key={sortOrder+eventStatus}/>
+            <main className="space-y-4 p-6 scrollbar-none overflow-y-visible min-h-[60dvh] border-b-2 border-gray-200 mb-4">
+                <h2 className="text-primary font-bold text-lg">{eventStatusOptions.find(o => o.value === eventStatus)?.label}の試合
+                    ({displayMatches.length})</h2>
+                <MatchCardList matches={displayMatches} key={sortOrder + eventStatus}/>
             </main>
+            <PwaNotificationPrompt />
+            <MyTeamSelector />
         </>
     );
 }
