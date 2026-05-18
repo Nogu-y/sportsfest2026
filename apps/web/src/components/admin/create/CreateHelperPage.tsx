@@ -61,307 +61,6 @@ type MatchParticipantRow = {
   prereqMatchId: number | null
   prereqBlockId: number | null
   prereqRank: number | null
-  score: number | null
-  rank: number | null
-}
-
-function parseParticipants(value: DataControlValue): MatchParticipantRow[] {
-  let source = value
-
-  if (typeof value === 'string') {
-    try {
-      source = JSON.parse(value) as DataControlValue
-    } catch {
-      return []
-    }
-  }
-
-  if (!Array.isArray(source)) return []
-
-  return source
-    .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
-    .map((item, index) => {
-      const record = item as Record<string, unknown>
-
-      return {
-      id: index + 1,
-      teamId: typeof record.teamId === 'number' ? record.teamId : null,
-      prereqMatchId: typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null,
-      prereqBlockId: typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null,
-      prereqRank: typeof record.prereqRank === 'number' ? record.prereqRank : null,
-      score: typeof record.score === 'number' ? record.score : null,
-      rank: typeof record.rank === 'number' ? record.rank : null,
-      }
-    })
-}
-
-function buildParticipantsValue(rows: MatchParticipantRow[]) {
-  return rows.map((row) => ({
-    teamId: row.teamId,
-    prereqMatchId: row.prereqMatchId,
-    prereqBlockId: row.prereqBlockId,
-    prereqRank: row.prereqRank,
-    score: row.score,
-    rank: row.rank,
-  }))
-}
-
-function toNullableNumber(rawValue: string) {
-  if (rawValue === '') return null
-  const value = Number(rawValue)
-  return Number.isNaN(value) ? null : value
-}
-
-function ParticipantsEditor({
-  field,
-  value,
-  onChange,
-}: {
-  field: DataControlField
-  value: DataControlValue
-  onChange: (value: DataControlValue) => void
-}) {
-  const rows = useMemo(() => parseParticipants(value), [value])
-  const [draft, setDraft] = useState<Omit<MatchParticipantRow, 'id'>>({
-    teamId: null,
-    prereqMatchId: null,
-    prereqBlockId: null,
-    prereqRank: null,
-    score: null,
-    rank: null,
-  })
-
-  const isJsonInvalid = typeof value === 'string' && rows.length === 0 && value.trim() !== ''
-
-  function updateRows(nextRows: MatchParticipantRow[]) {
-    onChange(buildParticipantsValue(nextRows))
-  }
-
-  function addRow() {
-    const hasSource =
-      draft.teamId !== null || draft.prereqMatchId !== null || draft.prereqBlockId !== null
-
-    if (!hasSource) {
-      return
-    }
-
-    if (draft.prereqBlockId !== null && (draft.prereqRank === null || draft.prereqRank < 1)) {
-      return
-    }
-
-    const nextId = rows.reduce((max, row) => Math.max(max, row.id), 0) + 1
-    updateRows([...rows, { id: nextId, ...draft }])
-    setDraft({
-      teamId: null,
-      prereqMatchId: null,
-      prereqBlockId: null,
-      prereqRank: null,
-      score: null,
-      rank: null,
-    })
-  }
-
-  function removeRow(id: number) {
-    updateRows(rows.filter((row) => row.id !== id))
-  }
-
-  const hasSource =
-    draft.teamId !== null || draft.prereqMatchId !== null || draft.prereqBlockId !== null
-  const isPrereqBlockMode = draft.prereqBlockId !== null
-  const isReadyToAdd =
-    hasSource && (!isPrereqBlockMode || (draft.prereqRank !== null && draft.prereqRank >= 1))
-
-  return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <div className="grid gap-2 md:grid-cols-4">
-        <select
-          value={draft.teamId ?? ''}
-          onChange={(event) =>
-            setDraft((current) => {
-              const teamId = toNullableNumber(event.target.value)
-              if (teamId === null) {
-                return {
-                  ...current,
-                  teamId: null,
-                }
-              }
-
-              return {
-                ...current,
-                teamId,
-                prereqMatchId: null,
-                prereqBlockId: null,
-                prereqRank: null,
-              }
-            })
-          }
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-        >
-          <option value="">teamId(未設定)</option>
-          {field.participantTeamOptions?.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={draft.prereqMatchId ?? ''}
-          onChange={(event) =>
-            setDraft((current) => {
-              const prereqMatchId = toNullableNumber(event.target.value)
-              if (prereqMatchId === null) {
-                return {
-                  ...current,
-                  prereqMatchId: null,
-                }
-              }
-
-              return {
-                ...current,
-                teamId: null,
-                prereqMatchId,
-                prereqBlockId: null,
-                prereqRank: null,
-              }
-            })
-          }
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-        >
-          <option value="">prereqMatchId(未設定)</option>
-          {field.participantPrereqMatchOptions?.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={draft.prereqBlockId ?? ''}
-          onChange={(event) =>
-            setDraft((current) => {
-              const prereqBlockId = toNullableNumber(event.target.value)
-              if (prereqBlockId === null) {
-                return {
-                  ...current,
-                  prereqBlockId: null,
-                  prereqRank: null,
-                }
-              }
-
-              return {
-                ...current,
-                teamId: null,
-                prereqMatchId: null,
-                prereqBlockId,
-                prereqRank: current.prereqRank !== null && current.prereqRank >= 1 ? current.prereqRank : 1,
-              }
-            })
-          }
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-        >
-          <option value="">prereqBlockId(未設定)</option>
-          {field.participantPrereqBlockOptions?.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          value={draft.prereqRank ?? ''}
-          placeholder="prereqRank"
-          onChange={(event) =>
-            setDraft((current) => {
-              const value = toNullableNumber(event.target.value)
-              return {
-                ...current,
-                prereqRank: value !== null && value >= 1 ? value : null,
-              }
-            })
-          }
-          disabled={!isPrereqBlockMode}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-        />
-      </div>
-      <div className="mt-2 grid gap-2 md:grid-cols-3">
-        <input
-          type="number"
-          value={draft.score ?? ''}
-          placeholder="score"
-          onChange={(event) => setDraft((current) => ({ ...current, score: toNullableNumber(event.target.value) }))}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          value={draft.rank ?? ''}
-          placeholder="rank"
-          onChange={(event) => setDraft((current) => ({ ...current, rank: toNullableNumber(event.target.value) }))}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-        />
-        <button
-          type="button"
-          onClick={addRow}
-          disabled={!isReadyToAdd}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          参加枠を追加
-        </button>
-      </div>
-      {!isReadyToAdd ? (
-        <p className="mt-2 text-xs text-rose-700">
-          参加元は `teamId` / `prereqMatchId` / `prereqBlockId` のいずれか1つを選択してください。`prereqBlockId` の場合は `prereqRank(1以上)` が必要です。
-        </p>
-      ) : null}
-
-      {rows.length > 0 ? (
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-slate-600">
-                <th className="border-b border-slate-200 px-2 py-2">teamId</th>
-                <th className="border-b border-slate-200 px-2 py-2">prereqMatchId</th>
-                <th className="border-b border-slate-200 px-2 py-2">prereqBlockId</th>
-                <th className="border-b border-slate-200 px-2 py-2">prereqRank</th>
-                <th className="border-b border-slate-200 px-2 py-2">score</th>
-                <th className="border-b border-slate-200 px-2 py-2">rank</th>
-                <th className="border-b border-slate-200 px-2 py-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="border-b border-slate-200 px-2 py-2">{row.teamId ?? '-'}</td>
-                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqMatchId ?? '-'}</td>
-                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqBlockId ?? '-'}</td>
-                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqRank ?? '-'}</td>
-                  <td className="border-b border-slate-200 px-2 py-2">{row.score ?? '-'}</td>
-                  <td className="border-b border-slate-200 px-2 py-2">{row.rank ?? '-'}</td>
-                  <td className="border-b border-slate-200 px-2 py-2">
-                    <button
-                      type="button"
-                      onClick={() => removeRow(row.id)}
-                      className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700"
-                    >
-                      削除
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
-          まだ参加枠がありません
-        </div>
-      )}
-
-      {isJsonInvalid ? (
-        <p className="mt-3 text-sm text-rose-700">
-          JSON が壊れているため GUI に展開できません。JSON を修正するか、GUI で新しく追加してください。
-        </p>
-      ) : null}
-    </div>
-  )
 }
 
 function parsePointAllocationRows(value: DataControlValue): PointAllocationRow[] {
@@ -566,6 +265,281 @@ function PointAllocationEditor({
       <p className="mt-3 text-xs text-slate-500">
         API 仕様上、得点配分は「ステージ × 数値順位」で保存されます。例: `決勝1位` は `MATCH / FINAL / 1`
       </p>
+    </div>
+  )
+}
+
+function parseParticipants(value: DataControlValue): MatchParticipantRow[] {
+  let source = value
+
+  if (typeof value === 'string') {
+    try {
+      source = JSON.parse(value) as DataControlValue
+    } catch {
+      return []
+    }
+  }
+
+  if (!Array.isArray(source)) return []
+
+  return source
+    .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    .map((item, index) => {
+      const record = item as Record<string, unknown>
+
+      return {
+        id: index + 1,
+        teamId: typeof record.teamId === 'number' ? record.teamId : null,
+        prereqMatchId: typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null,
+        prereqBlockId: typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null,
+        prereqRank: typeof record.prereqRank === 'number' ? record.prereqRank : null,
+      }
+    })
+}
+
+function buildParticipantsValue(rows: MatchParticipantRow[]) {
+  return rows.map((row) => ({
+    teamId: row.teamId,
+    prereqMatchId: row.prereqMatchId,
+    prereqBlockId: row.prereqBlockId,
+    prereqRank: row.prereqRank,
+  }))
+}
+
+function toNullableNumber(rawValue: string) {
+  if (rawValue === '') return null
+  const value = Number(rawValue)
+  return Number.isNaN(value) ? null : value
+}
+
+function ParticipantsEditor({
+  field,
+  value,
+  onChange,
+}: {
+  field: DataControlField
+  value: DataControlValue
+  onChange: (value: DataControlValue) => void
+}) {
+  const rows = useMemo(() => parseParticipants(value), [value])
+  const [draft, setDraft] = useState<Omit<MatchParticipantRow, 'id'>>({
+    teamId: null,
+    prereqMatchId: null,
+    prereqBlockId: null,
+    prereqRank: null,
+  })
+
+  const isJsonInvalid = typeof value === 'string' && rows.length === 0 && value.trim() !== ''
+
+  function updateRows(nextRows: MatchParticipantRow[]) {
+    onChange(buildParticipantsValue(nextRows))
+  }
+
+  function addRow() {
+    const hasSource =
+      draft.teamId !== null || draft.prereqMatchId !== null || draft.prereqBlockId !== null
+
+    if (!hasSource) {
+      return
+    }
+
+    if (draft.prereqBlockId !== null && (draft.prereqRank === null || draft.prereqRank < 1)) {
+      return
+    }
+
+    const nextId = rows.reduce((max, row) => Math.max(max, row.id), 0) + 1
+    updateRows([...rows, { id: nextId, ...draft }])
+    setDraft({
+      teamId: null,
+      prereqMatchId: null,
+      prereqBlockId: null,
+      prereqRank: null,
+    })
+  }
+
+  function removeRow(id: number) {
+    updateRows(rows.filter((row) => row.id !== id))
+  }
+
+  const hasSource =
+    draft.teamId !== null || draft.prereqMatchId !== null || draft.prereqBlockId !== null
+  const isPrereqBlockMode = draft.prereqBlockId !== null
+  const isReadyToAdd =
+    hasSource && (!isPrereqBlockMode || (draft.prereqRank !== null && draft.prereqRank >= 1))
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="grid gap-2 md:grid-cols-4">
+        <select
+          value={draft.teamId ?? ''}
+          onChange={(event) =>
+            setDraft((current) => {
+              const teamId = toNullableNumber(event.target.value)
+              if (teamId === null) {
+                return {
+                  ...current,
+                  teamId: null,
+                }
+              }
+
+              return {
+                ...current,
+                teamId,
+                prereqMatchId: null,
+                prereqBlockId: null,
+                prereqRank: null,
+              }
+            })
+          }
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">teamId(未設定)</option>
+          {field.participantTeamOptions?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={draft.prereqMatchId ?? ''}
+          onChange={(event) =>
+            setDraft((current) => {
+              const prereqMatchId = toNullableNumber(event.target.value)
+              if (prereqMatchId === null) {
+                return {
+                  ...current,
+                  prereqMatchId: null,
+                }
+              }
+
+              return {
+                ...current,
+                teamId: null,
+                prereqMatchId,
+                prereqBlockId: null,
+                prereqRank: null,
+              }
+            })
+          }
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">prereqMatchId(未設定)</option>
+          {field.participantPrereqMatchOptions?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={draft.prereqBlockId ?? ''}
+          onChange={(event) =>
+            setDraft((current) => {
+              const prereqBlockId = toNullableNumber(event.target.value)
+              if (prereqBlockId === null) {
+                return {
+                  ...current,
+                  prereqBlockId: null,
+                  prereqRank: null,
+                }
+              }
+
+              return {
+                ...current,
+                teamId: null,
+                prereqMatchId: null,
+                prereqBlockId,
+                prereqRank:
+                  current.prereqRank !== null && current.prereqRank >= 1 ? current.prereqRank : 1,
+              }
+            })
+          }
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">prereqBlockId(未設定)</option>
+          {field.participantPrereqBlockOptions?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          value={draft.prereqRank ?? ''}
+          placeholder="prereqRank"
+          onChange={(event) =>
+            setDraft((current) => {
+              const next = toNullableNumber(event.target.value)
+              return {
+                ...current,
+                prereqRank: next !== null && next >= 1 ? next : null,
+              }
+            })
+          }
+          disabled={!isPrereqBlockMode}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+      </div>
+
+      <div className="mt-2 grid gap-2 md:grid-cols-1">
+        <button
+          type="button"
+          onClick={addRow}
+          disabled={!isReadyToAdd}
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          参加枠を追加
+        </button>
+      </div>
+      {!isReadyToAdd ? (
+        <p className="mt-2 text-xs text-rose-700">
+          参加元は `teamId` / `prereqMatchId` / `prereqBlockId` のいずれか1つを選択してください。`prereqBlockId` の場合は `prereqRank(1以上)` が必要です。
+        </p>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <div className="mt-3 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-slate-600">
+                <th className="border-b border-slate-200 px-2 py-2">teamId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqMatchId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqBlockId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqRank</th>
+                <th className="border-b border-slate-200 px-2 py-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.teamId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqMatchId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqBlockId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqRank ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">
+                    <button
+                      type="button"
+                      onClick={() => removeRow(row.id)}
+                      className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700"
+                    >
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+          まだ参加枠がありません
+        </div>
+      )}
+
+      {isJsonInvalid ? (
+        <p className="mt-3 text-sm text-rose-700">
+          JSON が壊れているため GUI に展開できません。JSON を修正するか、GUI で新しく追加してください。
+        </p>
+      ) : null}
     </div>
   )
 }

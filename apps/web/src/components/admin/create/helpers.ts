@@ -130,8 +130,6 @@ export function validateParticipantsValue(value: DataControlValue) {
     const prereqMatchId = typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null
     const prereqBlockId = typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null
     const prereqRank = typeof record.prereqRank === 'number' ? record.prereqRank : null
-    const score = typeof record.score === 'number' ? record.score : null
-    const rank = typeof record.rank === 'number' ? record.rank : null
     const rowNumber = index + 1
 
     const sourceCount =
@@ -151,14 +149,6 @@ export function validateParticipantsValue(value: DataControlValue) {
       }
     } else if (prereqRank !== null) {
       throw new Error(`参加枠 ${rowNumber} 行目: prereqRank は prereqBlockId 指定時のみ設定できます`)
-    }
-
-    if (score !== null && (!Number.isInteger(score) || score < 0)) {
-      throw new Error(`参加枠 ${rowNumber} 行目: score は0以上の整数で指定してください`)
-    }
-
-    if (rank !== null && (!Number.isInteger(rank) || rank < 1)) {
-      throw new Error(`参加枠 ${rowNumber} 行目: rank は1以上の整数で指定してください`)
     }
   })
 }
