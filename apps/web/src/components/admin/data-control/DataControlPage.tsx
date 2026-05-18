@@ -154,6 +154,75 @@ function toDisplayValue(value: DataControlValue) {
   return String(value)
 }
 
+function resolveReferenceLabel(
+  field: DataControlField,
+  value: DataControlValue,
+  masterData: PublicMasterResponse | null,
+) {
+  if (typeof value !== 'string' && typeof value !== 'number') return null
+
+  const matchedOption = field.options?.find((option) => option.value === value)
+  if (matchedOption) {
+    return matchedOption.label
+  }
+
+  if (!masterData || typeof value !== 'number') return null
+
+  switch (field.key) {
+    case 'mapId':
+      return masterData.maps.find((item) => item.id === value)?.displayName ?? null
+    case 'eventId':
+      return masterData.events.find((item) => item.id === value)?.name ?? null
+    case 'locationId':
+      return masterData.locations.find((item) => item.id === value)?.name ?? null
+    case 'teamId':
+      return masterData.teams.find((item) => item.id === value)?.name ?? null
+    case 'eventBlockId': {
+      const block = masterData.blocks.find((item) => item.id === value)
+      if (!block) return null
+      const eventName = masterData.events.find((item) => item.id === block.eventId)?.name
+      return eventName ? `${eventName} / ${block.name}` : block.name
+    }
+    case 'prereqMatchId': {
+      const match = masterData.matches.find((item) => item.id === value)
+      if (!match) return null
+      return match.name ?? '名称未設定'
+    }
+    case 'prereqBlockId': {
+      const block = masterData.blocks.find((item) => item.id === value)
+      if (!block) return null
+      const eventName = masterData.events.find((item) => item.id === block.eventId)?.name
+      return eventName ? `${eventName} / ${block.name}` : block.name
+    }
+    default:
+      return null
+  }
+}
+
+function renderTableCellValue(
+  field: DataControlField,
+  value: DataControlValue,
+  masterData: PublicMasterResponse | null,
+) {
+  const referenceLabel = resolveReferenceLabel(field, value, masterData)
+  const rawValue = toDisplayValue(value ?? null)
+
+  if (!referenceLabel) {
+    return rawValue
+  }
+
+  if (referenceLabel === rawValue || referenceLabel.startsWith(`${rawValue}: `)) {
+    return referenceLabel
+  }
+
+  return (
+    <div className="flex flex-col">
+      <span>{rawValue}</span>
+      <span className="text-xs text-slate-500">{referenceLabel}</span>
+    </div>
+  )
+}
+
 function formatDateTimeLocalValue(value: DataControlValue) {
   if (typeof value !== 'string' || value === '') return ''
 
@@ -1608,7 +1677,7 @@ export function DataControlPage() {
                         {tableFields.map((field) => (
                           <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
                             <div className="min-w-24 whitespace-pre-wrap break-words">
-                              {toDisplayValue(record[field.key] ?? null)}
+                              {renderTableCellValue(field, record[field.key] ?? null, masterData)}
                             </div>
                           </td>
                         ))}
