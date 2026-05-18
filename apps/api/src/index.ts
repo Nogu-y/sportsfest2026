@@ -9,23 +9,9 @@ import { systemRoutes } from './routes/system'
 import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
-const allowedOrigins = Array.from(
-  new Set([
-    apiEnv.WEB_ORIGIN,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000'
-  ])
-)
-
 export const app = new OpenAPIHono()
   .use('/*', cors({
-    origin: (origin) => {
-      if (!origin) {
-        return apiEnv.WEB_ORIGIN
-      }
-
-      return allowedOrigins.includes(origin) ? origin : ''
-    },
+    origin: apiEnv.WEB_ORIGIN,
     credentials: true
   }))
   .route('/api/system', systemRoutes)
