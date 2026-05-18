@@ -5,6 +5,7 @@ import type { PublicMasterResponse } from '../../../../../api/src/schemas/public
 import { EventBracket } from '../../bracket/EventBracket'
 import { LeagueTable } from '../../bracket/LeagueTable'
 import { TournamentTable } from '../../bracket/TournamentTable'
+import { matchStageOptions } from '../create/constants'
 import {
   createAdminResourceDefinitions,
   fetchAdminMasterOptions,
@@ -13,6 +14,7 @@ import {
   downloadTextFile,
   exportRecordsAsCsv,
   exportRecordsAsJson,
+  inferImportFormatFromText,
   parseImportedRecords,
 } from './utils'
 import type {
@@ -30,6 +32,22 @@ type RecordFormProps = {
   onChange: (key: string, value: DataControlValue) => void
   onSubmit: () => void
   onCancel?: () => void
+}
+
+type PointAllocationRow = {
+  id: number
+  scope: 'MATCH' | 'BLOCK'
+  stage: string
+  rank: number
+  points: number
+}
+
+type MatchParticipantRow = {
+  id: number
+  teamId: number | null
+  prereqMatchId: number | null
+  prereqBlockId: number | null
+  prereqRank: number | null
 }
 
 function MatchesPreviewByEvent({
@@ -246,6 +264,423 @@ function sortRecords(records: DataControlRecord[], primaryKey: string) {
   })
 }
 
+function parsePointAllocationRows(value: DataControlValue): PointAllocationRow[] {
+  let source = value
+
+  if (typeof value === 'string') {
+    try {
+      source = JSON.parse(value) as DataControlValue
+    } catch {
+      return []
+    }
+  }
+
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return []
+
+  const rows: PointAllocationRow[] = []
+  let currentId = 1
+
+  for (const scope of ['MATCH', 'BLOCK'] as const) {
+    const stages = source[scope]
+    if (!stages || typeof stages !== 'object' || Array.isArray(stages)) continue
+
+    for (const [stage, allocations] of Object.entries(stages)) {
+      if (!allocations || typeof allocations !== 'object' || Array.isArray(allocations)) continue
+
+      for (const [label, points] of Object.entries(allocations)) {
+        const rank = Number(label)
+        if (!Number.isInteger(rank) || rank < 1) continue
+
+        rows.push({
+          id: currentId,
+          scope,
+          stage,
+          rank,
+          points: Number(points) || 0,
+        })
+        currentId += 1
+      }
+    }
+  }
+
+  return rows
+}
+
+function buildPointAllocationValue(rows: PointAllocationRow[]) {
+  return rows.reduce<Record<string, Record<string, Record<string, number>>>>((acc, row) => {
+    acc[row.scope] ??= {}
+    acc[row.scope][row.stage] ??= {}
+    acc[row.scope][row.stage][String(row.rank)] = row.points
+    return acc
+  }, {})
+}
+
+function PointAllocationEditor({
+  value,
+  onChange,
+}: {
+  value: DataControlValue
+  onChange: (value: DataControlValue) => void
+}) {
+  const rows = useMemo(() => parsePointAllocationRows(value), [value])
+  const [draft, setDraft] = useState<PointAllocationRow>({
+    id: 0,
+    scope: 'MATCH',
+    stage: 'FINAL',
+    rank: 1,
+    points: 0,
+  })
+
+  const isJsonInvalid = typeof value === 'string' && rows.length === 0 && value.trim() !== ''
+
+  function updateRows(nextRows: PointAllocationRow[]) {
+    onChange(buildPointAllocationValue(nextRows))
+  }
+
+  function addRow() {
+    if (!Number.isInteger(draft.rank) || draft.rank < 1) return
+    const nextId = rows.reduce((max, row) => Math.max(max, row.id), 0) + 1
+    updateRows([...rows, { ...draft, id: nextId }])
+    setDraft((current) => ({ ...current, rank: 1, points: 0 }))
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <select
+          value={draft.scope}
+          onChange={(event) => setDraft((current) => ({ ...current, scope: event.target.value as PointAllocationRow['scope'] }))}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="MATCH">MATCH</option>
+          <option value="BLOCK">BLOCK</option>
+        </select>
+        <select
+          value={draft.stage}
+          onChange={(event) => setDraft((current) => ({ ...current, stage: event.target.value }))}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          {resourceMatchStageOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={1}
+          value={draft.rank}
+          onChange={(event) => setDraft((current) => ({ ...current, rank: Number(event.target.value) || 1 }))}
+          className="w-32 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+        <input
+          type="number"
+          value={draft.points}
+          onChange={(event) => setDraft((current) => ({ ...current, points: Number(event.target.value) || 0 }))}
+          className="w-32 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+        <button type="button" onClick={addRow} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+          行追加
+        </button>
+      </div>
+
+      {rows.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-slate-600">
+                <th className="border-b border-slate-200 px-2 py-2">種別</th>
+                <th className="border-b border-slate-200 px-2 py-2">ステージ</th>
+                <th className="border-b border-slate-200 px-2 py-2">順位</th>
+                <th className="border-b border-slate-200 px-2 py-2">点数</th>
+                <th className="border-b border-slate-200 px-2 py-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.scope}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.stage}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.rank}位</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.points}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">
+                    <button type="button" onClick={() => updateRows(rows.filter((item) => item.id !== row.id))} className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700">
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+          まだ得点配分がありません
+        </div>
+      )}
+
+      {isJsonInvalid ? (
+        <p className="mt-3 text-sm text-rose-700">JSON が壊れているため GUI に展開できません。下の JSON を修正してください。</p>
+      ) : null}
+    </div>
+  )
+}
+
+function parseParticipants(value: DataControlValue): MatchParticipantRow[] {
+  let source = value
+
+  if (typeof value === 'string') {
+    try {
+      source = JSON.parse(value) as DataControlValue
+    } catch {
+      return []
+    }
+  }
+
+  if (!Array.isArray(source)) return []
+
+  return source
+    .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    .map((item, index) => {
+      const record = item as Record<string, unknown>
+      return {
+        id: index + 1,
+        teamId: typeof record.teamId === 'number' ? record.teamId : null,
+        prereqMatchId: typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null,
+        prereqBlockId: typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null,
+        prereqRank: typeof record.prereqRank === 'number' ? record.prereqRank : null,
+      }
+    })
+}
+
+function buildParticipantsValue(rows: MatchParticipantRow[]) {
+  return rows.map((row) => ({
+    teamId: row.teamId,
+    prereqMatchId: row.prereqMatchId,
+    prereqBlockId: row.prereqBlockId,
+    prereqRank: row.prereqRank,
+  }))
+}
+
+function toNullableNumber(rawValue: string) {
+  if (rawValue === '') return null
+  const value = Number(rawValue)
+  return Number.isNaN(value) ? null : value
+}
+
+function ParticipantsEditor({
+  field,
+  value,
+  onChange,
+}: {
+  field: DataControlField
+  value: DataControlValue
+  onChange: (value: DataControlValue) => void
+}) {
+  const rows = useMemo(() => parseParticipants(value), [value])
+  const [draft, setDraft] = useState<Omit<MatchParticipantRow, 'id'>>({
+    teamId: null,
+    prereqMatchId: null,
+    prereqBlockId: null,
+    prereqRank: null,
+  })
+  const isJsonInvalid = typeof value === 'string' && rows.length === 0 && value.trim() !== ''
+
+  function updateRows(nextRows: MatchParticipantRow[]) {
+    onChange(buildParticipantsValue(nextRows))
+  }
+
+  const hasSource = draft.teamId !== null || draft.prereqMatchId !== null || draft.prereqBlockId !== null
+  const isPrereqBlockMode = draft.prereqBlockId !== null
+  const isReadyToAdd = hasSource && (!isPrereqBlockMode || (draft.prereqRank !== null && draft.prereqRank >= 1))
+
+  function addRow() {
+    if (!isReadyToAdd) return
+    const nextId = rows.reduce((max, row) => Math.max(max, row.id), 0) + 1
+    updateRows([...rows, { id: nextId, ...draft }])
+    setDraft({ teamId: null, prereqMatchId: null, prereqBlockId: null, prereqRank: null })
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="grid gap-2 md:grid-cols-4">
+        <select
+          value={draft.teamId ?? ''}
+          onChange={(event) => setDraft((current) => {
+            const teamId = toNullableNumber(event.target.value)
+            return teamId === null
+              ? { ...current, teamId: null }
+              : { teamId, prereqMatchId: null, prereqBlockId: null, prereqRank: null }
+          })}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">teamId(未設定)</option>
+          {field.participantTeamOptions?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <select
+          value={draft.prereqMatchId ?? ''}
+          onChange={(event) => setDraft((current) => {
+            const prereqMatchId = toNullableNumber(event.target.value)
+            return prereqMatchId === null
+              ? { ...current, prereqMatchId: null }
+              : { teamId: null, prereqMatchId, prereqBlockId: null, prereqRank: null }
+          })}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">prereqMatchId(未設定)</option>
+          {field.participantPrereqMatchOptions?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <select
+          value={draft.prereqBlockId ?? ''}
+          onChange={(event) => setDraft((current) => {
+            const prereqBlockId = toNullableNumber(event.target.value)
+            return prereqBlockId === null
+              ? { ...current, prereqBlockId: null, prereqRank: null }
+              : { teamId: null, prereqMatchId: null, prereqBlockId, prereqRank: current.prereqRank && current.prereqRank >= 1 ? current.prereqRank : 1 }
+          })}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">prereqBlockId(未設定)</option>
+          {field.participantPrereqBlockOptions?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          value={draft.prereqRank ?? ''}
+          placeholder="prereqRank"
+          onChange={(event) => setDraft((current) => ({ ...current, prereqRank: (() => { const next = toNullableNumber(event.target.value); return next !== null && next >= 1 ? next : null })() }))}
+          disabled={!isPrereqBlockMode}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+      </div>
+      <div className="mt-2 grid gap-2">
+        <button type="button" onClick={addRow} disabled={!isReadyToAdd} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">
+          参加枠を追加
+        </button>
+      </div>
+      {rows.length > 0 ? (
+        <div className="mt-3 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-slate-600">
+                <th className="border-b border-slate-200 px-2 py-2">teamId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqMatchId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqBlockId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqRank</th>
+                <th className="border-b border-slate-200 px-2 py-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.teamId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqMatchId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqBlockId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqRank ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">
+                    <button type="button" onClick={() => updateRows(rows.filter((item) => item.id !== row.id))} className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700">
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+          まだ参加枠がありません
+        </div>
+      )}
+      {isJsonInvalid ? (
+        <p className="mt-3 text-sm text-rose-700">JSON が壊れているため GUI に展開できません。JSON を修正してください。</p>
+      ) : null}
+    </div>
+  )
+}
+
+const resourceMatchStageOptions = matchStageOptions
+
+function ReferenceSelectField({
+  field,
+  currentValue,
+  onChange,
+}: {
+  field: DataControlField
+  currentValue: DataControlValue
+  onChange: (key: string, value: DataControlValue) => void
+}) {
+  const hasOptions = Boolean(field.options?.length)
+  const matchesOption = field.options?.some((option) => option.value === currentValue) ?? false
+  const [inputMode, setInputMode] = useState<'preset' | 'manual'>(
+    hasOptions && matchesOption ? 'preset' : hasOptions ? 'preset' : 'manual',
+  )
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-slate-700">
+      <span className="font-medium">{field.label}</span>
+      {field.allowCustomValue ? (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" disabled={!hasOptions} onClick={() => setInputMode('preset')} className={inputMode === 'preset' ? 'rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-50' : 'rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50'}>
+            候補から選択
+          </button>
+          <button type="button" onClick={() => setInputMode('manual')} className={inputMode === 'manual' ? 'rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white' : 'rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700'}>
+            手入力
+          </button>
+        </div>
+      ) : null}
+
+      {field.allowCustomValue && inputMode === 'manual' ? (
+        <input
+          type={field.customValueType === 'number' ? 'number' : 'text'}
+          value={toDisplayValue(currentValue)}
+          placeholder={field.customValuePlaceholder}
+          onChange={(event) =>
+            onChange(
+              field.key,
+              normalizeDraftValue(
+                {
+                  ...field,
+                  type: field.customValueType === 'number' ? 'number' : 'text',
+                },
+                event.target.value,
+              ),
+            )
+          }
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+        />
+      ) : (
+        <select
+          value={toDisplayValue(currentValue)}
+          onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+          disabled={field.allowCustomValue ? !hasOptions : false}
+        >
+          <option value="">{hasOptions ? '選択してください' : '候補を取得できませんでした'}</option>
+          {field.options?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      )}
+
+      {field.allowCustomValue ? (
+        <p className="text-xs text-slate-500">
+          {inputMode === 'manual'
+            ? field.customValueLabel ?? 'IDを直接入力できます'
+            : hasOptions
+              ? 'DB から取得した候補を使えます'
+              : '候補の取得に失敗したため手入力を使ってください'}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function FieldDescription({ field }: { field: DataControlField }) {
   if (!field.description) return null
 
@@ -297,7 +732,16 @@ function RecordForm({
           }
 
           if (field.type === 'select') {
-            return (
+            return field.allowCustomValue ? (
+              <div key={field.key} className="flex flex-col gap-2">
+                <ReferenceSelectField
+                  field={field}
+                  currentValue={currentValue}
+                  onChange={onChange}
+                />
+                <FieldDescription field={field} />
+              </div>
+            ) : (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
                 <span className="font-medium">{field.label}</span>
                 <select
@@ -321,6 +765,40 @@ function RecordForm({
             return (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700 md:col-span-2">
                 <span className="font-medium">{field.label}</span>
+                {field.key === 'pointAllocation' ? (
+                  <PointAllocationEditor
+                    value={currentValue}
+                    onChange={(nextValue) => onChange(field.key, nextValue)}
+                  />
+                ) : null}
+                {field.key === 'participants' ? (
+                  <ParticipantsEditor
+                    field={field}
+                    value={currentValue}
+                    onChange={(nextValue) => onChange(field.key, nextValue)}
+                  />
+                ) : null}
+                {field.presets?.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {field.presets.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() =>
+                          onChange(
+                            field.key,
+                            field.type === 'json'
+                              ? JSON.stringify(preset.value, null, 2)
+                              : preset.value,
+                          )
+                        }
+                        className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 <textarea
                   value={
                     field.type === 'json'
@@ -519,11 +997,21 @@ export function DataControlPage() {
   }
 
   async function refreshMasterContext() {
-    const { masterData, mapOptions, locationOptions, eventOptions, eventBlockOptions } = await fetchAdminMasterOptions()
+    const {
+      masterData,
+      mapOptions,
+      locationOptions,
+      eventOptions,
+      teamOptions,
+      prereqMatchOptions,
+      eventBlockOptions,
+    } = await fetchAdminMasterOptions()
     const definitions = createAdminResourceDefinitions(
       mapOptions,
       locationOptions,
       eventOptions,
+      teamOptions,
+      prereqMatchOptions,
       eventBlockOptions,
     )
 
@@ -758,23 +1246,39 @@ export function DataControlPage() {
   }
 
   async function handleImportFile(file: File | null) {
-    if (!file) return
+    if (!file || !activeResource) return
 
     setErrorMessage(null)
     setImportResult(null)
 
-    const text = await file.text()
-    setImportText(text)
+    try {
+      const text = await file.text()
+      setImportText(text)
 
-    const lowerName = file.name.toLowerCase()
+      const lowerName = file.name.toLowerCase()
+      const inferredFormat =
+        lowerName.endsWith('.csv')
+          ? 'csv'
+          : lowerName.endsWith('.json')
+            ? 'json'
+            : inferImportFormatFromText(text)
 
-    if (lowerName.endsWith('.csv')) {
-      setImportFormat('csv')
-      return
-    }
+      if (inferredFormat) {
+        setImportFormat(inferredFormat)
+      }
 
-    if (lowerName.endsWith('.json')) {
-      setImportFormat('json')
+      try {
+        const targetFields =
+          activeResourceKey === 'matches'
+            ? activeResource.fields.filter((field) => field.key !== 'participants')
+            : activeResource.fields
+        parseImportedRecords(inferredFormat ?? importFormat, targetFields, text)
+        setImportResult('ファイルを読み込みました。内容を確認してから取込実行してください。')
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'ファイルの解析に失敗しました')
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'ファイルの読込に失敗しました')
     }
   }
 

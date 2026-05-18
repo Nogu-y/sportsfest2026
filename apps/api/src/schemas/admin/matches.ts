@@ -7,6 +7,29 @@ import { createReqBody, createResBody, createErrResBody } from '../../utils/sche
 const StageSchema = z.enum(stageEnum.enumValues)
 const StatusSchema = z.enum(matchStatusEnum.enumValues)
 
+export const MatchParticipantResponseSchema = z.object({
+  id: z.number().openapi({ example: 1 }),
+  teamId: z.number().nullable().openapi({ example: 1 }),
+  prereqMatchId: z.number().nullable().openapi({ example: null }),
+  prereqBlockId: z.number().nullable().openapi({ example: null }),
+  prereqRank: z.number().int().nullable().openapi({ example: null }),
+  score: z.number().int().nullable().openapi({ example: null }),
+  rank: z.number().int().nullable().openapi({ example: null }),
+  isDisqualified: z.boolean().openapi({ example: false }),
+})
+
+export const MatchParticipantRequestSchema = MatchParticipantResponseSchema.omit({
+  id: true,
+}).extend({
+  teamId: z.number().nullable().optional().default(null),
+  prereqMatchId: z.number().nullable().optional().default(null),
+  prereqBlockId: z.number().nullable().optional().default(null),
+  prereqRank: z.number().int().nullable().optional().default(null),
+  score: z.number().int().nullable().optional().default(null),
+  rank: z.number().int().nullable().optional().default(null),
+  isDisqualified: z.boolean().optional().default(false),
+})
+
 // MatchPlanのレスポンス用スキーマ
 // 仕様書と順番が異なるのに注意(まあ基本困ることないと思うが)
 export const MatchPlanSchema = z.object({
@@ -22,8 +45,7 @@ export const MatchPlanSchema = z.object({
   startedAt: z.coerce.date().nullable().openapi({ example: null }),
   endedAt: z.coerce.date().nullable().openapi({ example: null }),
   note: z.string().nullable().openapi({ example: '雨天時は体育館へ変更' }),
-  // todo: 今回の要件：Participantは一旦作らず、空配列を返す型として定義
-  participants: z.array(z.unknown()).openapi({ example: [] }),
+  participants: z.array(MatchParticipantResponseSchema).openapi({ example: [] }),
 })
 
 export const CreateMatchRequestSchema = MatchPlanSchema.omit({
@@ -31,6 +53,7 @@ export const CreateMatchRequestSchema = MatchPlanSchema.omit({
   participants: true
 }).extend({
   status: StatusSchema.optional().default('Waiting'),
+  participants: z.array(MatchParticipantRequestSchema).optional().default([]),
 })
 
 export const MatchIdParamSchema = z.object({
@@ -40,7 +63,12 @@ export const MatchIdParamSchema = z.object({
   }),
 })
 
-export const UpdateMatchRequestSchema = CreateMatchRequestSchema.partial()
+export const UpdateMatchRequestSchema = MatchPlanSchema.omit({
+  id: true,
+  participants: true,
+}).partial().extend({
+  participants: z.array(MatchParticipantRequestSchema).optional(),
+})
 
 const tags = ['admin']
 
@@ -60,6 +88,9 @@ export const createMatchRoute = createRoute({
   },
 })
 
+export type MatchParticipantRequest = z.infer<typeof MatchParticipantRequestSchema>
+export type CreateMatchRequest = z.infer<typeof CreateMatchRequestSchema>
+export type UpdateMatchRequest = z.infer<typeof UpdateMatchRequestSchema>
 // --- PUT ---
 export const updateMatchRoute = createRoute({
   method: 'put',
@@ -93,4 +124,3 @@ export const deleteMatchRoute = createRoute({
     500: createErrResBody('サーバーエラー'),
   },
 })
-

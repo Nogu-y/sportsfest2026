@@ -52,7 +52,7 @@ export const pointAllocationScopeOptions: DataControlOption[] = [
   { label: 'BLOCK', value: 'BLOCK' },
 ]
 
-const pointAllocationPresets: DataControlPreset[] = [
+export const pointAllocationPresets: DataControlPreset[] = [
   {
     label: '空',
     value: {},
