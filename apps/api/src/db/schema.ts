@@ -10,7 +10,7 @@ import {
   unique,
   index,
 } from "drizzle-orm/pg-core";
-import { 
+import {
   rankingOrderEnum,
   eventFormatEnum,
   PointAllocation,
@@ -18,7 +18,7 @@ import {
   stageEnum,
   matchStatusEnum,
   staffRoleEnum
- } from './enums'
+} from './enums'
 
 //=============Tables=============
 
@@ -42,16 +42,16 @@ export const maps = pgTable("maps", {
   height: integer("height").notNull(),
 });
 
-export const locations = pgTable("locations",{
-    id: serial("id").primaryKey(),
-    mapId: integer("map_id")
-      .notNull()
-      .references(() => maps.id, { onDelete: "cascade" }),
-    name: varchar("name", { length: 100 }).notNull(),
+export const locations = pgTable("locations", {
+  id: serial("id").primaryKey(),
+  mapId: integer("map_id")
+    .notNull()
+    .references(() => maps.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
 
-    xRatio: integer("x_ratio").notNull(),
-    yRatio: integer("y_ratio").notNull(),
-  },
+  xRatio: integer("x_ratio").notNull(),
+  yRatio: integer("y_ratio").notNull(),
+},
   (t) => ({
     mapIdx: index("locations_map_idx").on(t.mapId),
   })
@@ -69,58 +69,58 @@ export const events = pgTable("events", {
   isCompleted: boolean("is_completed").notNull().default(false),
 });
 
-export const eventBlocks = pgTable("event_blocks",{
-    id: serial("id").primaryKey(),
+export const eventBlocks = pgTable("event_blocks", {
+  id: serial("id").primaryKey(),
 
-    eventId: integer("event_id")
-      .notNull()
-      .references(() => events.id, { onDelete: "cascade" }),
+  eventId: integer("event_id")
+    .notNull()
+    .references(() => events.id, { onDelete: "cascade" }),
 
-    name: varchar("name", { length: 100 }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
 
-    type: blockTypeEnum("type").notNull(),
-    stage: stageEnum("stage").notNull(),
-  },
+  type: blockTypeEnum("type").notNull(),
+  stage: stageEnum("stage").notNull(),
+},
   (t) => ({
     eventIdx: index("event_blocks_event_idx").on(t.eventId),
   })
 );
 
-export const matchPlans = pgTable("match_plans",{
-    id: serial("id").primaryKey(),
+export const matchPlans = pgTable("match_plans", {
+  id: serial("id").primaryKey(),
 
-    eventBlockId: integer("event_block_id")
-      .notNull()
-      .references(() => eventBlocks.id, { onDelete: "cascade" }),
+  eventBlockId: integer("event_block_id")
+    .notNull()
+    .references(() => eventBlocks.id, { onDelete: "cascade" }),
 
-    locationId: integer("location_id").references(() => locations.id, {
-      onDelete: "set null",
-    }),
+  locationId: integer("location_id").references(() => locations.id, {
+    onDelete: "set null",
+  }),
 
-    name: varchar("name", { length: 100 }),
-    description: text("description"),
+  name: varchar("name", { length: 100 }),
+  description: text("description"),
 
-    stage: stageEnum("stage").notNull(),
-    status: matchStatusEnum("status").notNull().default("Waiting"),
+  stage: stageEnum("stage").notNull(),
+  status: matchStatusEnum("status").notNull().default("Waiting"),
 
-    scheduledStartTime: timestamp("scheduled_start_time", {
-      withTimezone: true,
-    }).notNull(),
+  scheduledStartTime: timestamp("scheduled_start_time", {
+    withTimezone: true,
+  }).notNull(),
 
-    scheduledEndTime: timestamp("scheduled_end_time", {
-      withTimezone: true,
-    }).notNull(),
+  scheduledEndTime: timestamp("scheduled_end_time", {
+    withTimezone: true,
+  }).notNull(),
 
-    startedAt: timestamp("started_at", {
-      withTimezone: true,
-    }),
+  startedAt: timestamp("started_at", {
+    withTimezone: true,
+  }),
 
-    endedAt: timestamp("ended_at", {
-      withTimezone: true,
-    }),
+  endedAt: timestamp("ended_at", {
+    withTimezone: true,
+  }),
 
-    note: text("note"),
-  },
+  note: text("note"),
+},
   (t) => ({
     blockIdx: index("match_plans_block_idx").on(t.eventBlockId),
     statusIdx: index("match_plans_status_idx").on(t.status),
@@ -128,32 +128,32 @@ export const matchPlans = pgTable("match_plans",{
   })
 );
 
-export const matchParticipants = pgTable("match_participants",{
-    id: serial("id").primaryKey(),
+export const matchParticipants = pgTable("match_participants", {
+  id: serial("id").primaryKey(),
 
-    matchPlanId: integer("match_plan_id")
-      .notNull()
-      .references(() => matchPlans.id, { onDelete: "cascade" }),
+  matchPlanId: integer("match_plan_id")
+    .notNull()
+    .references(() => matchPlans.id, { onDelete: "cascade" }),
 
-    teamId: integer("team_id").references(() => teams.id, {
-      onDelete: "set null",
-    }),
+  teamId: integer("team_id").references(() => teams.id, {
+    onDelete: "set null",
+  }),
 
-    prereqMatchId: integer("prereq_match_id").references(() => matchPlans.id, {
-      onDelete: "set null",
-    }),
+  prereqMatchId: integer("prereq_match_id").references(() => matchPlans.id, {
+    onDelete: "set null",
+  }),
 
-    prereqBlockId: integer("prereq_block_id").references(() => eventBlocks.id, {
-      onDelete: "set null",
-    }),
+  prereqBlockId: integer("prereq_block_id").references(() => eventBlocks.id, {
+    onDelete: "set null",
+  }),
 
-    prereqRank: integer("prereq_rank"),
+  prereqRank: integer("prereq_rank"),
 
-    score: integer("score"),
-    rank: integer("rank"),
+  score: integer("score"),
+  rank: integer("rank"),
 
-    isDisqualified: boolean("is_disqualified").notNull().default(false),
-  },
+  isDisqualified: boolean("is_disqualified").notNull().default(false),
+},
   (t) => ({
     matchIdx: index("participants_match_idx").on(t.matchPlanId),
   })
@@ -182,20 +182,20 @@ export const blockRankings = pgTable(
   })
 );
 
-export const scores = pgTable("scores",{
-    id: serial("id").primaryKey(),
+export const scores = pgTable("scores", {
+  id: serial("id").primaryKey(),
 
-    eventId: integer("event_id")
-      .notNull()
-      .references(() => events.id, { onDelete: "cascade" }),
+  eventId: integer("event_id")
+    .notNull()
+    .references(() => events.id, { onDelete: "cascade" }),
 
-    teamId: integer("team_id")
-      .notNull()
-      .references(() => teams.id, { onDelete: "cascade" }),
+  teamId: integer("team_id")
+    .notNull()
+    .references(() => teams.id, { onDelete: "cascade" }),
 
-    points: integer("points").notNull(),
-    reason: text("reason"),
-  },
+  points: integer("points").notNull(),
+  reason: text("reason"),
+},
   (t) => ({
     teamIdx: index("scores_team_idx").on(t.teamId),
   })
@@ -225,23 +225,23 @@ export const userSubscriptions = pgTable("user_subscriptions", {
     .defaultNow(),
 });
 
-export const watchlists = pgTable("watchlists",{
-    id: serial("id").primaryKey(),
+export const watchlists = pgTable("watchlists", {
+  id: serial("id").primaryKey(),
 
-    userSubscriptionId: integer("user_subscription_id")
-      .notNull()
-      .references(() => userSubscriptions.id, { onDelete: "cascade" }),
+  userSubscriptionId: integer("user_subscription_id")
+    .notNull()
+    .references(() => userSubscriptions.id, { onDelete: "cascade" }),
 
-    matchPlanId: integer("match_plan_id")
-      .notNull()
-      .references(() => matchPlans.id, { onDelete: "cascade" }),
+  matchPlanId: integer("match_plan_id")
+    .notNull()
+    .references(() => matchPlans.id, { onDelete: "cascade" }),
 
-    createdAt: timestamp("created_at", {
-      withTimezone: true,
-    })
-      .notNull()
-      .defaultNow(),
-  },
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+},
   (t) => ({
     uniqueWatch: unique("watch_unique").on(
       t.userSubscriptionId,
