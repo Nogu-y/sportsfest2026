@@ -15,6 +15,12 @@ function LocationsPreview({
   rows: BuilderRow[]
   masterData: PublicMasterResponse | null
 }) {
+  const dayLabelMap: Record<string, string> = {
+    day1: '1日目',
+    day2: '2日目',
+    both: '両日',
+  }
+
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-sm text-slate-500">
@@ -42,6 +48,9 @@ function LocationsPreview({
               </h3>
               <p className="mt-2 text-sm text-slate-600">
                 マップ: {mapName ?? `ID ${String(row.mapId ?? '未設定')}`}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                対象日: {dayLabelMap[String(row.day ?? 'both')] ?? String(row.day ?? 'both')}
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 座標: ({String(row.xRatio ?? '-')}, {String(row.yRatio ?? '-')})

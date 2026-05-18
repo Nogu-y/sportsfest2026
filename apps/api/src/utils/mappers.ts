@@ -82,7 +82,8 @@ export const mapMap = (
     filePath: m.filePath,
     displayName: m.displayName,
     width: m.width,
-    height: m.height
+    height: m.height,
+    day: m.day
 });
 
 export const mapLocation = (
@@ -92,7 +93,8 @@ export const mapLocation = (
     mapId: l.mapId,
     name: l.name,
     xRatio: l.xRatio,
-    yRatio: l.yRatio
+    yRatio: l.yRatio,
+    day: l.day
 });
 
 export const mapTeam = (
