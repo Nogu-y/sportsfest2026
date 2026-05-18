@@ -41,6 +41,11 @@ function getInitialDraft(fields: DataControlField[]) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
     if (field.readOnly) return acc
 
+    if (field.defaultValue !== undefined) {
+      acc[field.key] = field.defaultValue
+      return acc
+    }
+
     if (field.type === 'boolean') {
       acc[field.key] = false
       return acc
@@ -87,7 +92,17 @@ function normalizeDraftValue(field: DataControlField, rawValue: string) {
 
 function buildRecordDraft(fields: DataControlField[], record: DataControlRecord) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
-    acc[field.key] = record[field.key] ?? (field.type === 'boolean' ? false : '')
+    if (record[field.key] !== undefined) {
+      acc[field.key] = record[field.key]
+      return acc
+    }
+
+    if (field.defaultValue !== undefined) {
+      acc[field.key] = field.defaultValue
+      return acc
+    }
+
+    acc[field.key] = field.type === 'boolean' ? false : ''
     return acc
   }, {})
 }

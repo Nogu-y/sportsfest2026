@@ -2,6 +2,7 @@
 
 import { api } from '../../../lib/api/client'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
+import { matchStageOptions } from '../create/constants'
 import type {
   DataControlField,
   DataControlOption,
@@ -350,16 +351,7 @@ export function createAdminResourceDefinitions(
       label: 'ステージ',
       type: 'select',
       required: true,
-      options: [
-        'FINAL',
-        'THIRD_PLACE',
-        'SEMIFINAL',
-        'QUARTERFINAL',
-        'ROUND_2',
-        'ROUND_1',
-        'QUALIFIER',
-        'CONSOLATION',
-      ].map((value) => ({ label: value, value })),
+      options: matchStageOptions,
     },
   ]
 
@@ -402,16 +394,8 @@ export function createAdminResourceDefinitions(
       label: 'ステージ',
       type: 'select',
       required: true,
-      options: [
-        'FINAL',
-        'THIRD_PLACE',
-        'SEMIFINAL',
-        'QUARTERFINAL',
-        'ROUND_2',
-        'ROUND_1',
-        'QUALIFIER',
-        'CONSOLATION',
-      ].map((value) => ({ label: value, value })),
+      options: matchStageOptions,
+      description: '同一ブロック内で、その試合が何回戦・決勝・予選に当たるかを表します。',
     },
     {
       key: 'status',
@@ -426,6 +410,7 @@ export function createAdminResourceDefinitions(
         'Completed',
         'Cancelled',
       ].map((value) => ({ label: value, value })),
+      defaultValue: 'Waiting',
     },
     {
       key: 'scheduledStartTime',
