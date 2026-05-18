@@ -23,6 +23,22 @@ type TeamResponse = {
   name: string
 }
 
+type EventBlockResponse = {
+  id: number
+  eventId: number
+  name: string
+  type: 'LEAGUE' | 'TOURNAMENT' | 'CUMULATIVE' | 'SINGLE'
+  stage:
+    | 'FINAL'
+    | 'THIRD_PLACE'
+    | 'SEMIFINAL'
+    | 'QUARTERFINAL'
+    | 'ROUND_2'
+    | 'ROUND_1'
+    | 'QUALIFIER'
+    | 'CONSOLATION'
+}
+
 type EventResponse = {
   id: number
   name: string
@@ -104,6 +120,10 @@ export async function fetchAdminMasterOptions() {
       label: `${location.id}: ${location.name}`,
       value: location.id,
     })),
+    eventOptions: master.events.map((event) => ({
+      label: `${event.id}: ${event.name}`,
+      value: event.id,
+    })),
     eventBlockOptions: master.blocks.map((block) => ({
       label: `${block.id}: ${block.name}`,
       value: block.id,
@@ -114,6 +134,7 @@ export async function fetchAdminMasterOptions() {
 export function createAdminResourceDefinitions(
   mapOptions: DataControlOption[],
   locationOptions: DataControlOption[],
+  eventOptions: DataControlOption[],
   eventBlockOptions: DataControlOption[],
 ) {
   const teamFields: DataControlField[] = [
@@ -237,6 +258,56 @@ export function createAdminResourceDefinitions(
       label: '完了済み',
       type: 'boolean',
       required: true,
+    },
+  ]
+
+  const eventBlockFields: DataControlField[] = [
+    {
+      key: 'id',
+      label: 'ID',
+      type: 'number',
+      readOnly: true,
+      widthClassName: 'w-24',
+    },
+    {
+      key: 'eventId',
+      label: 'イベント',
+      type: 'select',
+      required: true,
+      options: eventOptions,
+    },
+    {
+      key: 'name',
+      label: 'ブロック名',
+      type: 'text',
+      required: true,
+      placeholder: '例: Aブロック',
+    },
+    {
+      key: 'type',
+      label: 'ブロック種別',
+      type: 'select',
+      required: true,
+      options: ['LEAGUE', 'TOURNAMENT', 'CUMULATIVE', 'SINGLE'].map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+    {
+      key: 'stage',
+      label: 'ステージ',
+      type: 'select',
+      required: true,
+      options: [
+        'FINAL',
+        'THIRD_PLACE',
+        'SEMIFINAL',
+        'QUARTERFINAL',
+        'ROUND_2',
+        'ROUND_1',
+        'QUALIFIER',
+        'CONSOLATION',
+      ].map((value) => ({ label: value, value })),
     },
   ]
 
@@ -444,6 +515,40 @@ export function createAdminResourceDefinitions(
     },
   }
 
+  const eventBlocks: DataControlResourceDefinition = {
+    key: 'eventBlocks',
+    label: 'イベントブロック',
+    description: 'イベント配下のブロックを編集し、既存イベントへ紐づけられます',
+    fields: eventBlockFields,
+    primaryKey: 'id',
+    async fetchRecords() {
+      const response = await api.api.admin['event-blocks'].$get()
+      await ensureSuccess(response, 'イベントブロック一覧の取得に失敗しました')
+      return await response.json() as EventBlockResponse[]
+    },
+    async createRecord(input) {
+      const response = await api.api.admin['event-blocks'].$post({
+        json: omitReadonlyFields(eventBlockFields, input) as Omit<EventBlockResponse, 'id'>,
+      })
+      await ensureSuccess(response, 'イベントブロックの作成に失敗しました')
+      return await response.json() as EventBlockResponse
+    },
+    async updateRecord(id, input) {
+      const response = await api.api.admin['event-blocks'][':id'].$put({
+        param: { id: String(id) },
+        json: omitReadonlyFields(eventBlockFields, input) as Partial<Omit<EventBlockResponse, 'id'>>,
+      })
+      await ensureSuccess(response, 'イベントブロックの更新に失敗しました')
+      return await response.json() as EventBlockResponse
+    },
+    async deleteRecord(id) {
+      const response = await api.api.admin['event-blocks'][':id'].$delete({
+        param: { id: String(id) },
+      })
+      await ensureSuccess(response, 'イベントブロックの削除に失敗しました')
+    },
+  }
+
   const matches: DataControlResourceDefinition = {
     key: 'matches',
     label: '試合',
@@ -477,5 +582,5 @@ export function createAdminResourceDefinitions(
     },
   }
 
-  return [teams, locations, events, matches]
+  return [teams, locations, eventBlocks, events, matches]
 }
