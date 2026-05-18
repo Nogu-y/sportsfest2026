@@ -11,6 +11,22 @@ export const rankingOrderOptions: DataControlOption[] = [
   { label: '得点系なら DESC', value: 'DESC' },
 ]
 
+const matchStageLabelMap: Record<string, string> = {
+  FINAL: '決勝',
+  THIRD_PLACE: '3位決定戦',
+  SEMIFINAL: '準決勝',
+  QUARTERFINAL: '準々決勝',
+  ROUND_2: '2回戦',
+  ROUND_1: '1回戦',
+  QUALIFIER: '予選',
+  CONSOLATION: '敗者戦',
+}
+
+export function getMatchStageLabel(stage: string) {
+  const translated = matchStageLabelMap[stage]
+  return translated ? `${translated} (${stage})` : stage
+}
+
 export const matchStageOptions: DataControlOption[] = [
   'FINAL',
   'THIRD_PLACE',
@@ -20,7 +36,7 @@ export const matchStageOptions: DataControlOption[] = [
   'ROUND_1',
   'QUALIFIER',
   'CONSOLATION',
-].map((value) => ({ label: value, value }))
+].map((value) => ({ label: getMatchStageLabel(value), value }))
 
 export const matchStatusOptions: DataControlOption[] = [
   'Waiting',
@@ -321,6 +337,7 @@ export function createMatchFields(
       type: 'select',
       required: true,
       options: matchStageOptions,
+      description: '同一ブロック内で、その試合が何回戦・決勝・予選に当たるかを表します。',
     },
     {
       key: 'status',
@@ -328,6 +345,7 @@ export function createMatchFields(
       type: 'select',
       required: true,
       options: matchStatusOptions,
+      defaultValue: 'Waiting',
     },
     {
       key: 'scheduledStartTime',
