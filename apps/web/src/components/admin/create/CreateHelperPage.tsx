@@ -653,25 +653,25 @@ export function CreateHelperPage({
           <p className="mt-2 text-sm text-slate-600">{description}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
-              href="/system/admin/create"
+              href="/system/create"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
             >
               一覧へ戻る
             </Link>
             <Link
-              href="/system/admin/create/events"
+              href="/system/create/events"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
             >
               イベント入力補助
             </Link>
             <Link
-              href="/system/admin/create/matches"
+              href="/system/create/matches"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
             >
               試合計画入力補助
             </Link>
             <Link
-              href="/system/admin/create/event-blocks"
+              href="/system/create/event-blocks"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
             >
               ブロック入力補助
