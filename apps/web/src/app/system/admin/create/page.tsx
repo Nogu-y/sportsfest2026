@@ -11,6 +11,11 @@ const links = [
     title: '試合計画入力補助',
     description: '試合計画を UI で積み上げ、Import / 編集 / プレビュー / 出力を行います。',
   },
+  {
+    href: '/system/admin/create/event-blocks',
+    title: 'ブロック入力補助',
+    description: 'イベントブロックを UI で積み上げ、参照候補選択または手入力で出力します。',
+  },
 ]
 
 export default function Page() {
@@ -25,7 +30,7 @@ export default function Page() {
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {links.map((link) => (
             <Link
               key={link.href}

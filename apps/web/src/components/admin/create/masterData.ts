@@ -19,23 +19,45 @@ async function ensureSuccess(response: Response, fallbackMessage: string) {
 }
 
 export async function fetchCreateHelperMasterData() {
-  const response = await api.api.public.master.$get()
-  await ensureSuccess(response, 'マスタ情報の取得に失敗しました')
-  const masterData = await response.json() as PublicMasterResponse
+  try {
+    const response = await api.api.public.master.$get()
+    await ensureSuccess(response, 'マスタ情報の取得に失敗しました')
+    const masterData = await response.json() as PublicMasterResponse
 
-  const eventBlockOptions: DataControlOption[] = masterData.blocks.map((block) => ({
-    label: `${block.id}: ${block.name}`,
-    value: block.id,
-  }))
+    const eventOptions: DataControlOption[] = masterData.events.map((event) => ({
+      label: `${event.id}: ${event.name}`,
+      value: event.id,
+    }))
 
-  const locationOptions: DataControlOption[] = masterData.locations.map((location) => ({
-    label: `${location.id}: ${location.name}`,
-    value: location.id,
-  }))
+    const eventBlockOptions: DataControlOption[] = masterData.blocks.map((block) => {
+      const eventName =
+        masterData.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
 
-  return {
-    masterData,
-    eventBlockOptions,
-    locationOptions,
+      return {
+        label: `${block.id}: ${eventName} / ${block.name}`,
+        value: block.id,
+      }
+    })
+
+    const locationOptions: DataControlOption[] = masterData.locations.map((location) => ({
+      label: `${location.id}: ${location.name}`,
+      value: location.id,
+    }))
+
+    return {
+      masterData,
+      eventOptions,
+      eventBlockOptions,
+      locationOptions,
+      referenceLoadError: null,
+    }
+  } catch (error) {
+    return {
+      masterData: null,
+      eventOptions: [],
+      eventBlockOptions: [],
+      locationOptions: [],
+      referenceLoadError: error instanceof Error ? error.message : '参照データの取得に失敗しました',
+    }
   }
 }

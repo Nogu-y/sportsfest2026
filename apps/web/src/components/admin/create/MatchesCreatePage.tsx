@@ -146,35 +146,29 @@ function MatchesPreview({
 
 export function MatchesCreatePage() {
   const [masterData, setMasterData] = useState<PublicMasterResponse | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [referenceLoadError, setReferenceLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCreateHelperMasterData()
-      .then(({ masterData }) => {
+      .then(({ masterData, referenceLoadError }) => {
         setMasterData(masterData)
-        setErrorMessage(null)
-      })
-      .catch((error) => {
-        setErrorMessage(error instanceof Error ? error.message : '初期化に失敗しました')
+        setReferenceLoadError(referenceLoadError)
       })
   }, [])
 
-  if (errorMessage) {
-    return <div className="p-6 text-sm text-rose-700">{errorMessage}</div>
-  }
+  const eventBlockOptions = masterData?.blocks.map((block) => {
+    const eventName =
+      masterData.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
 
-  if (!masterData) {
-    return <div className="p-6 text-sm text-slate-600">初期化中です...</div>
-  }
-
-  const eventBlockOptions = masterData.blocks.map((block) => ({
-    label: `${block.id}: ${block.name}`,
-    value: block.id,
-  }))
-  const locationOptions = masterData.locations.map((location) => ({
+    return {
+      label: `${block.id}: ${eventName} / ${block.name}`,
+      value: block.id,
+    }
+  }) ?? []
+  const locationOptions = masterData?.locations.map((location) => ({
     label: `${location.id}: ${location.name}`,
     value: location.id,
-  }))
+  })) ?? []
 
   return (
     <CreateHelperPage
@@ -182,7 +176,12 @@ export function MatchesCreatePage() {
       description="試合計画を UI で積み上げ、Import した内容へ追記しながら JSON / CSV を出力できます。既存の対戦表コンポーネントによる視覚プレビュー付きです。"
       exportBaseName="matches-helper"
       fields={createMatchFields(eventBlockOptions, locationOptions)}
-      renderPreview={(rows) => <MatchesPreview rows={rows} masterData={masterData} />}
+      referenceLoadError={referenceLoadError}
+      renderPreview={
+        masterData
+          ? (rows) => <MatchesPreview rows={rows} masterData={masterData} />
+          : undefined
+      }
     />
   )
 }
