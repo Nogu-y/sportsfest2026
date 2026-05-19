@@ -1110,7 +1110,9 @@ export function DataControlPage() {
   const [importFormat, setImportFormat] = useState<DataControlImportFormat>('json')
   const [importText, setImportText] = useState('')
   const [importResult, setImportResult] = useState<string | null>(null)
+  const [activeMatchEventId, setActiveMatchEventId] = useState<number | null>(null)
   const [activeMatchBlockId, setActiveMatchBlockId] = useState<number | null>(null)
+  const [matchSortOrder, setMatchSortOrder] = useState<'timeAsc' | 'timeDesc'>('timeAsc')
 
   const activeResource = useMemo(
     () => resourceDefinitions.find((definition) => definition.key === activeResourceKey) ?? null,
@@ -1118,12 +1120,37 @@ export function DataControlPage() {
   )
 
   const filteredRecords = useMemo(() => {
-    if (activeResourceKey !== 'matches' || activeMatchBlockId === null) {
-      return records
+    if (activeResourceKey !== 'matches') return records
+
+    const blockById = new Map(masterData?.blocks.map((block) => [block.id, block]) ?? [])
+
+    let nextRecords = [...records]
+
+    if (activeMatchEventId !== null) {
+      nextRecords = nextRecords.filter((record) => {
+        const blockId = typeof record.eventBlockId === 'number' ? record.eventBlockId : null
+        if (blockId === null) return false
+        return blockById.get(blockId)?.eventId === activeMatchEventId
+      })
     }
 
-    return records.filter((record) => record.eventBlockId === activeMatchBlockId)
-  }, [activeMatchBlockId, activeResourceKey, records])
+    if (activeMatchBlockId !== null) {
+      nextRecords = nextRecords.filter((record) => record.eventBlockId === activeMatchBlockId)
+    }
+
+    return nextRecords.sort((left, right) => {
+      const leftTime = typeof left.scheduledStartTime === 'string' ? new Date(left.scheduledStartTime).getTime() : NaN
+      const rightTime = typeof right.scheduledStartTime === 'string' ? new Date(right.scheduledStartTime).getTime() : NaN
+      const leftId = typeof left.id === 'number' ? left.id : Number.MAX_SAFE_INTEGER
+      const rightId = typeof right.id === 'number' ? right.id : Number.MAX_SAFE_INTEGER
+
+      if (!Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime !== rightTime) {
+        return matchSortOrder === 'timeAsc' ? leftTime - rightTime : rightTime - leftTime
+      }
+
+      return leftId - rightId
+    })
+  }, [activeMatchBlockId, activeMatchEventId, activeResourceKey, matchSortOrder, masterData?.blocks, records])
 
   const previewEventId = useMemo(() => {
     if (!masterData) return null
@@ -1173,6 +1200,27 @@ export function DataControlPage() {
   const resolvedPreviewEventId = canShowPreview ? previewEventId : null
   const resolvedPreviewData = canShowPreview ? previewData : null
 
+  const matchEventOptions = useMemo(() => {
+    if (!masterData) return []
+
+    const eventIds = new Set(
+      records
+        .map((record) => {
+          const blockId = typeof record.eventBlockId === 'number' ? record.eventBlockId : null
+          if (blockId === null) return null
+          return masterData.blocks.find((block) => block.id === blockId)?.eventId ?? null
+        })
+        .filter((value): value is number => typeof value === 'number'),
+    )
+
+    return masterData.events
+      .filter((event) => eventIds.has(event.id))
+      .map((event) => ({
+        value: event.id,
+        label: event.name,
+      }))
+  }, [masterData, records])
+
   const matchBlockOptions = useMemo(() => {
     if (!masterData) return []
 
@@ -1183,7 +1231,11 @@ export function DataControlPage() {
     )
 
     return masterData.blocks
-      .filter((block) => blockIds.has(block.id))
+      .filter((block) => {
+        if (!blockIds.has(block.id)) return false
+        if (activeMatchEventId === null) return true
+        return block.eventId === activeMatchEventId
+      })
       .map((block) => {
         const eventName =
           masterData.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
@@ -1193,7 +1245,7 @@ export function DataControlPage() {
           label: `${eventName} / ${block.name}`,
         }
       })
-  }, [masterData, records])
+  }, [activeMatchEventId, masterData, records])
 
   const tableFields = useMemo(() => {
     if (!activeResource) return []
@@ -1262,7 +1314,9 @@ export function DataControlPage() {
     setCreateDraft(getInitialDraft(activeResource.fields))
     setEditDraft({})
     setEditingRecordId(null)
+    setActiveMatchEventId(null)
     setActiveMatchBlockId(null)
+    setMatchSortOrder('timeAsc')
     setActiveMainView('table')
     setCreateSuccessMessage(null)
 
@@ -1287,23 +1341,29 @@ export function DataControlPage() {
   useEffect(() => {
     if (activeResourceKey !== 'matches') return
 
-    const availableBlockIds = Array.from(
-      new Set(
-        records
-          .map((record) => record.eventBlockId)
-          .filter((value): value is number => typeof value === 'number'),
-      ),
+    if (activeMatchEventId === null || !masterData) return
+
+    const eventIdSet = new Set(
+      records
+        .map((record) => {
+          const blockId = typeof record.eventBlockId === 'number' ? record.eventBlockId : null
+          if (blockId === null) return null
+          return masterData.blocks.find((block) => block.id === blockId)?.eventId ?? null
+        })
+        .filter((value): value is number => typeof value === 'number'),
     )
 
-    if (availableBlockIds.length === 0) {
-      setActiveMatchBlockId(null)
-      return
+    if (!eventIdSet.has(activeMatchEventId)) {
+      setActiveMatchEventId(null)
     }
+  }, [activeMatchEventId, activeResourceKey, masterData, records])
 
-    if (activeMatchBlockId === null || !availableBlockIds.includes(activeMatchBlockId)) {
-      setActiveMatchBlockId(availableBlockIds[0])
-    }
-  }, [activeMatchBlockId, activeResourceKey, records])
+  useEffect(() => {
+    if (activeResourceKey !== 'matches') return
+    if (activeMatchBlockId === null) return
+    if (matchBlockOptions.some((option) => option.value === activeMatchBlockId)) return
+    setActiveMatchBlockId(null)
+  }, [activeMatchBlockId, activeResourceKey, matchBlockOptions])
 
   useEffect(() => {
     if (activeResourceKey !== 'matches' || activeMatchBlockId === null) return
@@ -1402,6 +1462,47 @@ export function DataControlPage() {
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '削除に失敗しました')
+    }
+  }
+
+  async function handleBulkDeleteMatches(scope: 'all' | 'block') {
+    if (!activeResource || activeResource.key !== 'matches') return
+
+    const targetRecords =
+      scope === 'all'
+        ? records
+        : activeMatchBlockId === null
+          ? []
+          : records.filter((record) => record.eventBlockId === activeMatchBlockId)
+
+    const targetIds = targetRecords
+      .map((record) => record.id)
+      .filter((value): value is number => typeof value === 'number')
+
+    if (targetIds.length === 0) {
+      setErrorMessage('削除対象の試合がありません')
+      return
+    }
+
+    const label = scope === 'all' ? '全試合' : '選択中EventBlockの全試合'
+    if (!window.confirm(`${label} ${targetIds.length} 件を削除しますか？`)) return
+
+    try {
+      setErrorMessage(null)
+      for (const id of targetIds) {
+        await activeResource.deleteRecord(id)
+      }
+
+      const nextDefinitions = await refreshMasterContext()
+      const nextActiveResource =
+        nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
+      if (nextActiveResource) {
+        await loadActiveResource(nextActiveResource)
+      }
+      setEditingRecordId(null)
+      setEditDraft({})
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '一括削除に失敗しました')
     }
   }
 
@@ -1619,25 +1720,64 @@ export function DataControlPage() {
               </div>
             </div>
 
-            {activeResourceKey === 'matches' && matchBlockOptions.length > 0 ? (
+            {activeResourceKey === 'matches' ? (
               <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <label className="flex flex-col gap-2 text-sm text-slate-700 md:max-w-xl">
-                  <span className="font-medium">編集対象イベントブロック</span>
-                  <select
-                    value={activeMatchBlockId ?? ''}
-                    onChange={(event) => setActiveMatchBlockId(Number(event.target.value) || null)}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                  <label className="flex flex-col gap-2 text-sm text-slate-700">
+                    <span className="font-medium">Eventフィルター</span>
+                    <select
+                      value={activeMatchEventId ?? ''}
+                      onChange={(event) => setActiveMatchEventId(Number(event.target.value) || null)}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    >
+                      <option value="">すべて</option>
+                      {matchEventOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm text-slate-700">
+                    <span className="font-medium">EventBlockフィルター</span>
+                    <select
+                      value={activeMatchBlockId ?? ''}
+                      onChange={(event) => setActiveMatchBlockId(Number(event.target.value) || null)}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    >
+                      <option value="">すべて</option>
+                      {matchBlockOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm text-slate-700">
+                    <span className="font-medium">時刻ソート</span>
+                    <select
+                      value={matchSortOrder}
+                      onChange={(event) => setMatchSortOrder(event.target.value as 'timeAsc' | 'timeDesc')}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    >
+                      <option value="timeAsc">開始時刻 昇順</option>
+                      <option value="timeDesc">開始時刻 降順</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleBulkDeleteMatches('all')}
+                    className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700"
                   >
-                    {matchBlockOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-xs text-slate-500">
-                    一覧・作成・取込は選択中ブロック単位で扱います。プレビューは同一イベント内のブロックをまとめて表示します。
-                  </span>
-                </label>
+                    試合計画を全件削除
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleBulkDeleteMatches('block')}
+                    disabled={activeMatchBlockId === null}
+                    className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    選択EventBlock内を全件削除
+                  </button>
+                </div>
               </div>
             ) : null}
 
