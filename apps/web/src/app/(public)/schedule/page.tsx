@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import HeaderEventCardList from "src/components/common/HeaderEventCardList";
@@ -193,6 +193,45 @@ export default function SchedulePage() {
         return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
     };
 
+    const dayAvailability = useMemo(() => {
+        const availability = {
+            Day1: false,
+            Day2: false,
+        };
+
+        if (!matches || matches.length === 0) {
+            return availability;
+        }
+
+        matches.forEach((match) => {
+            if (selectedEventId !== "all" && match.eventId !== selectedEventId) {
+                return;
+            }
+
+            const dayLabel = dayLabelConverter(new Date(match.scheduledStartTime));
+            if (dayLabel === "Day1" || dayLabel === "Day2") {
+                availability[dayLabel] = true;
+            }
+        });
+
+        return availability;
+    }, [matches, selectedEventId, dayLabelConverter]);
+
+    useEffect(() => {
+        if (dayAvailability[activeDay as "Day1" | "Day2"]) {
+            return;
+        }
+
+        if (dayAvailability.Day1) {
+            setActiveDay("Day1");
+            return;
+        }
+
+        if (dayAvailability.Day2) {
+            setActiveDay("Day2");
+        }
+    }, [activeDay, dayAvailability]);
+
     const timelineItems = useMemo(() => {
         if (!matches || matches.length === 0) return [];
         type TimelineGroup = {
@@ -261,13 +300,27 @@ export default function SchedulePage() {
             <div className="bg-white min-h-screen flex flex-col">
                 <div className="flex border-b border-gray-200 sticky top-0 bg-white z-20">
                     <button
-                        className={`flex-1 py-3 text-sm font-bold transition-colors ${activeDay === "Day1" ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]" : "text-gray-400 hover:bg-gray-50"}`}
+                        disabled={!dayAvailability.Day1}
+                        className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                            !dayAvailability.Day1
+                                ? "cursor-not-allowed text-gray-300 bg-gray-50"
+                                : activeDay === "Day1"
+                                    ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]"
+                                    : "text-gray-400 hover:bg-gray-50"
+                        }`}
                         onClick={() => setActiveDay("Day1")}
                     >
                         1日目
                     </button>
                     <button
-                        className={`flex-1 py-3 text-sm font-bold transition-colors ${activeDay === "Day2" ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]" : "text-gray-400 hover:bg-gray-50"}`}
+                        disabled={!dayAvailability.Day2}
+                        className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                            !dayAvailability.Day2
+                                ? "cursor-not-allowed text-gray-300 bg-gray-50"
+                                : activeDay === "Day2"
+                                    ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]"
+                                    : "text-gray-400 hover:bg-gray-50"
+                        }`}
                         onClick={() => setActiveDay("Day2")}
                     >
                         2日目
