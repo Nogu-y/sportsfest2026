@@ -129,6 +129,11 @@ function normalizeBooleanValue(value: string) {
   return null
 }
 
+function shouldParseSelectAsNumber(field: DataControlField) {
+  if (field.customValueType === 'number') return true
+  return field.options?.some((option) => typeof option.value === 'number') ?? false
+}
+
 export function convertImportedValue(field: DataControlField, value: unknown): DataControlValue {
   if (value === null || value === undefined || value === '') {
     return field.nullable || !field.required ? null : ''
@@ -144,6 +149,17 @@ export function convertImportedValue(field: DataControlField, value: unknown): D
 
     const parsed = normalizeBooleanValue(String(value))
     return parsed ?? false
+  }
+
+  if (field.type === 'select') {
+    if (!shouldParseSelectAsNumber(field)) {
+      return String(value)
+    }
+
+    if (typeof value === 'number') return value
+
+    const numericValue = Number(value)
+    return Number.isFinite(numericValue) ? numericValue : String(value)
   }
 
   if (field.type === 'json') {
