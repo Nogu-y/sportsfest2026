@@ -48,13 +48,14 @@ const EventRuleMarkdown = ({ content, basePath }: EventRuleMarkdownProps) => {
       const imageSrc = resolveRuleAssetPath(src, basePath);
 
       return (
-        <span className="relative mt-4 block aspect-video w-full overflow-hidden rounded bg-primary-lite2">
+        <span className="mt-4 block w-full rounded bg-primary-lite2 p-2">
           <Image
             src={imageSrc}
             alt={alt}
-            fill
+            width={1200}
+            height={800}
             sizes="(max-width: 768px) 90vw, 640px"
-            className="object-cover"
+            className="h-auto w-full object-contain"
           />
         </span>
       );
