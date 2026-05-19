@@ -26,15 +26,28 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     const eventBlocks = previewData?.eventBlocks ?? sportsFestData.eventBlocks;
     const activeMyTeamId = previewData?.myTeamId ?? myTeamId;
 
-    // トーナメントのレイアウト計算（再帰処理）
-    const layout = useMemo(() => {
-        const blockMatches = matches.filter((m: any) => m.eventBlockId === block.id);
-        const roots = blockMatches.filter((m: any) =>
-            !blockMatches.some((other: any) => other.participants.some((p: any) => p.prereqMatchId === m.id))
-        );
+    const blockMatches = useMemo(
+        () => matches.filter((m: any) => m.eventBlockId === block.id),
+        [matches, block.id]
+    )
+
+    const mainBracketMatches = useMemo(
+        () => blockMatches.filter((m: any) => m.stage !== "THIRD_PLACE"),
+        [blockMatches]
+    )
+
+    const thirdPlaceMatches = useMemo(
+        () => blockMatches.filter((m: any) => m.stage === "THIRD_PLACE"),
+        [blockMatches]
+    )
+
+    const buildLayout = (targetMatches: any[]) => {
+        const roots = targetMatches.filter((m: any) =>
+            !targetMatches.some((other: any) => other.participants.some((p: any) => p.prereqMatchId === m.id))
+        )
 
         const getDepth = (matchId: number): number => {
-            const match = blockMatches.find((m: any) => m.id === matchId);
+            const match = targetMatches.find((m: any) => m.id === matchId);
             if (!match) return 0;
             const d0 = match.participants[0]?.prereqMatchId ? getDepth(match.participants[0].prereqMatchId) : 0;
             const d1 = match.participants[1]?.prereqMatchId ? getDepth(match.participants[1].prereqMatchId) : 0;
@@ -47,7 +60,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
         let globalRow = 0;
 
         const traverse = (matchId: number, col: number) => {
-            const match = blockMatches.find((m: any) => m.id === matchId);
+            const match = targetMatches.find((m: any) => m.id === matchId);
             if (!match) return null;
 
             const p0 = match.participants[0];
@@ -87,8 +100,11 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
             links,
             width: maxCols * BOX_W + (maxCols - 1) * GAP_X,
             height: globalRow * (BOX_H + GAP_Y)
-        };
-    }, [matches, block.id]);
+        }
+    }
+
+    // 本線トーナメントのレイアウト計算（再帰処理）
+    const layout = useMemo(() => buildLayout(mainBracketMatches), [mainBracketMatches])
 
     const getTeamLabel = (p: any) => {
         if (p.teamId) return teams.find((t: any) => t.id === p.teamId)?.name ?? "未定";
@@ -98,6 +114,100 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
         }
         return "未定";
     };
+
+    const renderMatchCard = ({ match, x, y }: { match: any; x: number; y: number }) => {
+        const isMyMatch = match.participants?.some((p: any) => p.teamId === activeMyTeamId);
+        const isPlaying = match.status === "Playing";
+
+        let boxBorderClass = "border-gray-300 shadow-sm";
+        if (isPlaying) {
+            boxBorderClass = "border-green-500 ring-2 ring-green-400 shadow-md animate-pulse";
+        } else if (isMyMatch) {
+            boxBorderClass = "border-amber-400 ring-2 ring-amber-300 shadow-md transform scale-[1.01]";
+        }
+
+        return (
+            <Link
+                key={match.id}
+                href={`/match/${match.id}`}
+                className={`absolute z-10 flex flex-col rounded bg-white border transition-all hover:border-primary hover:shadow-md ${boxBorderClass}`}
+                style={{ left: x, top: y, width: BOX_W, height: BOX_H }}
+            >
+                {match.participants.map((p: any, i: number) => {
+                    return (
+                        <div
+                            key={i}
+                            className={`flex flex-1 items-center justify-between px-3 text-[12px] transition-colors ${
+                                i === 0 ? 'border-b border-gray-100' : ''
+                            } ${
+                                p.rank === 1 ? 'font-bold text-dark' : 'text-gray-500'
+                            }`}
+                        >
+                            <span className="truncate flex items-center gap-1">
+                                {getTeamLabel(p)}
+                            </span>
+                            <span className={`font-mono text-xs ${p.rank === 1 ? 'text-red-500 font-bold' : ''}`}>
+                                {p.score ?? "-"}
+                            </span>
+                        </div>
+                    );
+                })}
+
+                {match.name && (
+                    <div className={`absolute -top-4.5 left-0.5 text-[10px] font-bold tracking-wide ${isMyMatch ? 'text-amber-600 font-black' : 'text-gray-400'}`}>
+                        {match.name} {isMyMatch && "⭐"}
+                    </div>
+                )}
+            </Link>
+        )
+    }
+
+    const renderStandaloneMatchCard = (match: any) => {
+        const isMyMatch = match.participants?.some((p: any) => p.teamId === activeMyTeamId);
+        const isPlaying = match.status === "Playing";
+
+        let boxBorderClass = "border-gray-300 shadow-sm";
+        if (isPlaying) {
+            boxBorderClass = "border-green-500 ring-2 ring-green-400 shadow-md animate-pulse";
+        } else if (isMyMatch) {
+            boxBorderClass = "border-amber-400 ring-2 ring-amber-300 shadow-md transform scale-[1.01]";
+        }
+
+        return (
+            <Link
+                key={`third-${match.id}`}
+                href={`/match/${match.id}`}
+                className={`relative z-10 flex flex-col rounded bg-white border transition-all hover:border-primary hover:shadow-md ${boxBorderClass}`}
+                style={{ width: BOX_W, height: BOX_H }}
+            >
+                {match.participants.map((p: any, i: number) => {
+                    return (
+                        <div
+                            key={i}
+                            className={`flex flex-1 items-center justify-between px-3 text-[12px] transition-colors ${
+                                i === 0 ? 'border-b border-gray-100' : ''
+                            } ${
+                                p.rank === 1 ? 'font-bold text-dark' : 'text-gray-500'
+                            }`}
+                        >
+                            <span className="truncate flex items-center gap-1">
+                                {getTeamLabel(p)}
+                            </span>
+                            <span className={`font-mono text-xs ${p.rank === 1 ? 'text-red-500 font-bold' : ''}`}>
+                                {p.score ?? "-"}
+                            </span>
+                        </div>
+                    );
+                })}
+
+                {match.name && (
+                    <div className={`absolute -top-4.5 left-0.5 text-[10px] font-bold tracking-wide ${isMyMatch ? 'text-amber-600 font-black' : 'text-gray-400'}`}>
+                        {match.name} {isMyMatch && "⭐"}
+                    </div>
+                )}
+            </Link>
+        )
+    }
 
     return (
         <div className="relative overflow-auto p-4 min-h-[350px] scrollbar-thin">
@@ -120,55 +230,17 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
                 </svg>
 
                 {/* 2. 試合ボックスの配置 */}
-                {layout.nodes.map(({ match, x, y }) => {
-                    const isMyMatch = match.participants?.some((p: any) => p.teamId === activeMyTeamId);
-                    const isPlaying = match.status === "Playing";
-
-                    let boxBorderClass = "border-gray-300 shadow-sm";
-                    if (isPlaying) {
-                        boxBorderClass = "border-green-500 ring-2 ring-green-400 shadow-md animate-pulse";
-                    } else if (isMyMatch) {
-                        boxBorderClass = "border-amber-400 ring-2 ring-amber-300 shadow-md transform scale-[1.01]";
-                    }
-
-                    return (
-                        <Link
-                            key={match.id}
-                            href={`/match/${match.id}`}
-                            className={`absolute z-10 flex flex-col rounded bg-white border transition-all hover:border-primary hover:shadow-md ${boxBorderClass}`}
-                            style={{ left: x, top: y, width: BOX_W, height: BOX_H }}
-                        >
-                            {match.participants.map((p: any, i: number) => {
-
-                                return (
-                                    <div
-                                        key={i}
-                                        className={`flex flex-1 items-center justify-between px-3 text-[12px] transition-colors ${
-                                            i === 0 ? 'border-b border-gray-100' : ''
-                                        } ${
-                                            p.rank === 1 ? 'font-bold text-dark' : 'text-gray-500'
-                                        }`}
-                                    >
-                                        <span className="truncate flex items-center gap-1">
-                                            {getTeamLabel(p)}
-                                        </span>
-                                        <span className={`font-mono text-xs ${p.rank === 1 ? 'text-red-500 font-bold' : ''}`}>
-                                            {p.score ?? "-"}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-
-                            {/* 試合名ラベル (例: "決勝", "A-1") */}
-                            {match.name && (
-                                <div className={`absolute -top-4.5 left-0.5 text-[10px] font-bold tracking-wide ${isMyMatch ? 'text-amber-600 font-black' : 'text-gray-400'}`}>
-                                    {match.name} {isMyMatch && "⭐"}
-                                </div>
-                            )}
-                        </Link>
-                    );
-                })}
+                {layout.nodes.map((node) => renderMatchCard(node))}
             </div>
+
+            {thirdPlaceMatches.length > 0 && (
+                <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <p className="mb-2 text-xs font-bold tracking-wide text-gray-500">3位決定戦</p>
+                    <div className="flex flex-col gap-7 pt-4 pb-2 px-2">
+                        {thirdPlaceMatches.map((match: any) => renderStandaloneMatchCard(match))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
