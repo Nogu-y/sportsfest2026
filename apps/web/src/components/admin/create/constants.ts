@@ -7,9 +7,25 @@ export const eventFormatOptions: DataControlOption[] = [
 ]
 
 export const rankingOrderOptions: DataControlOption[] = [
-  { label: 'ASC', value: 'ASC' },
-  { label: 'DESC', value: 'DESC' },
+  { label: 'タイム系なら ASC', value: 'ASC' },
+  { label: '得点系なら DESC', value: 'DESC' },
 ]
+
+const matchStageLabelMap: Record<string, string> = {
+  FINAL: '決勝',
+  THIRD_PLACE: '3位決定戦',
+  SEMIFINAL: '準決勝',
+  QUARTERFINAL: '準々決勝',
+  ROUND_2: '2回戦',
+  ROUND_1: '1回戦',
+  QUALIFIER: '予選',
+  CONSOLATION: '敗者戦',
+}
+
+export function getMatchStageLabel(stage: string) {
+  const translated = matchStageLabelMap[stage]
+  return translated ? `${translated} (${stage})` : stage
+}
 
 export const matchStageOptions: DataControlOption[] = [
   'FINAL',
@@ -20,7 +36,7 @@ export const matchStageOptions: DataControlOption[] = [
   'ROUND_1',
   'QUALIFIER',
   'CONSOLATION',
-].map((value) => ({ label: value, value }))
+].map((value) => ({ label: getMatchStageLabel(value), value }))
 
 export const matchStatusOptions: DataControlOption[] = [
   'Waiting',
@@ -31,12 +47,18 @@ export const matchStatusOptions: DataControlOption[] = [
   'Cancelled',
 ].map((value) => ({ label: value, value }))
 
+export const dayOptions: DataControlOption[] = [
+  { label: '1日目 (day1)', value: 'day1' },
+  { label: '2日目 (day2)', value: 'day2' },
+  { label: '両日 (both)', value: 'both' },
+]
+
 export const pointAllocationScopeOptions: DataControlOption[] = [
   { label: 'MATCH', value: 'MATCH' },
   { label: 'BLOCK', value: 'BLOCK' },
 ]
 
-const pointAllocationPresets: DataControlPreset[] = [
+export const pointAllocationPresets: DataControlPreset[] = [
   {
     label: '空',
     value: {},
@@ -203,6 +225,7 @@ export const eventCreateFields: DataControlField[] = [
     type: 'select',
     required: true,
     options: rankingOrderOptions,
+    description: 'タイム・秒数のように小さい値が勝ちなら ASC、得点のように大きい値が勝ちなら DESC を選びます。',
   },
   {
     key: 'format',
@@ -255,6 +278,15 @@ export function createLocationFields(mapOptions: DataControlOption[]): DataContr
       type: 'text',
       required: true,
       placeholder: '例: グラウンドA',
+    },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'その会場を使う日程を選びます。',
     },
     {
       key: 'xRatio',
@@ -320,6 +352,7 @@ export function createMatchFields(
       type: 'select',
       required: true,
       options: matchStageOptions,
+      description: '同一ブロック内で、その試合が何回戦・決勝・予選に当たるかを表します。',
     },
     {
       key: 'status',
@@ -327,6 +360,7 @@ export function createMatchFields(
       type: 'select',
       required: true,
       options: matchStatusOptions,
+      defaultValue: 'Waiting',
     },
     {
       key: 'scheduledStartTime',

@@ -4,16 +4,16 @@ import React, {useMemo, useState} from "react";
 import Link from "next/link";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import HeaderEventCardList from "src/components/common/HeaderEventCardList";
-// 以下のパスは実際の構造に合わせて調整してください
 import {useSportsFestData} from "../../../hooks/useSportsFestData";
 import {useMyTeam} from "../../../hooks/useMyTeam";
 import {MatchWithEventIdType} from "../../../types/SportsFestDataTypes";
+import {useWeather} from "../../../hooks/useWeather";
+import {WeatherBadge} from "../../../components/common/WeatherBadge";
 
 // ==========================================
 // 1. 各種UIコンポーネント
 // ==========================================
 
-// ① 会場名の区切り線
 const VenueDivider = ({name}: { name: string }) => (
     <div className="flex items-center gap-3 my-6 pt-4">
         <div className="flex-1 h-px bg-[#2d5a8e] opacity-30"/>
@@ -22,7 +22,6 @@ const VenueDivider = ({name}: { name: string }) => (
     </div>
 );
 
-// ② コートのマス1つ（試合カード）
 const CourtCell = ({
                        label,
                        teamsText,
@@ -49,7 +48,6 @@ const CourtCell = ({
         textColor = "text-gray-400";
     }
 
-    // 自クラスのハイライト（進行中でなければオレンジ背景）
     if (isMyTeam) {
         borderColor = "border-amber-400 border-[2px]";
         if (!isPlaying && !isFinished) bgColor = "bg-amber-50 hover:bg-amber-100";
@@ -68,7 +66,6 @@ const CourtCell = ({
     );
 };
 
-// ③ 複数のコートが並ぶ時間帯コンポーネント
 const TimeSlot = ({
                       time,
                       matches,
@@ -76,7 +73,8 @@ const TimeSlot = ({
                       teamsMap,
                       matchesMap,
                       blocksMap,
-                      myTeamId
+                      myTeamId,
+                      weather
                   }: {
     time: string,
     matches: MatchWithEventIdType[],
@@ -84,7 +82,8 @@ const TimeSlot = ({
     teamsMap: Map<number, { name: string }>,
     matchesMap: Map<number, MatchWithEventIdType>,
     blocksMap: Map<number, any>,
-    myTeamId: number | null
+    myTeamId: number | null,
+    weather?: { code: number; prob: number } | null
 }) => (
     <div className="mb-2 relative">
         <div className="flex items-center gap-3 relative z-10">
@@ -92,6 +91,8 @@ const TimeSlot = ({
                 className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`}/>
             <span
                 className={`text-sm font-bold tracking-wider ${done ? "text-gray-400" : "text-[#2d5a8e]"}`}>{time}</span>
+            {/* 天気 */}
+            <WeatherBadge weather={weather} done={done} variant="full" />
         </div>
 
         <div className="pl-[30px] border-l-2 border-gray-100 ml-[7px] pb-8 -mt-2 pt-4">
@@ -136,17 +137,18 @@ const TimeSlot = ({
     </div>
 );
 
-// ④ 昼休憩や開会式など、コート指定のない単一イベント
 const SimpleSlot = ({
                         time,
                         match,
                         done,
-                        isMyTeam
+                        isMyTeam,
+                        weather
                     }: {
     time: string,
     match: MatchWithEventIdType,
     done: boolean,
-    isMyTeam: boolean
+    isMyTeam: boolean,
+    weather?: { code: number; prob: number } | null
 }) => (
     <div className="mb-2 relative">
         <Link href={`/match/${match.id}`}
@@ -155,6 +157,10 @@ const SimpleSlot = ({
                 className={`w-4 h-4 rounded-full border-[3px] flex-shrink-0 bg-white ${done ? "border-gray-300" : "border-[#2d5a8e]"}`}/>
             <span
                 className={`text-sm tracking-wider ${done ? "text-gray-400" : "text-gray-600 font-bold"}`}>{time}</span>
+
+            {/* 共通コンポーネントを呼び出し (simpleバリアント) */}
+            <WeatherBadge weather={weather} done={done} variant="simple" />
+
             <span
                 className={`text-sm font-bold ${done ? "text-gray-400" : "text-dark"} ${isMyTeam ? "text-amber-600" : ""}`}>
         {match.name || match.description || "予定"}
@@ -164,7 +170,6 @@ const SimpleSlot = ({
     </div>
 );
 
-
 // ==========================================
 // 2. メインページコンポーネント
 // ==========================================
@@ -173,10 +178,12 @@ export default function SchedulePage() {
     const {matches, teams, maps, locations, eventBlocks, isLoading, dayLabelConverter} = useSportsFestData();
     const {myTeamId} = useMyTeam();
 
+    // カスタムフックから関数を展開
+    const { getWeatherForTime } = useWeather();
+
     const [activeDay, setActiveDay] = useState<string>("Day1");
     const [selectedEventId, setSelectedEventId] = useState<number | "all">("all");
 
-    // 検索を O(1) にするための Map 化
     const teamsMap = useMemo(() => new Map(teams?.map(t => [t.id, t])), [teams]);
     const matchesMap = useMemo(() => new Map(matches?.map(m => [m.id, m])), [matches]);
     const blocksMap = useMemo(() => new Map(eventBlocks?.map(b => [b.id, b])), [eventBlocks]);
@@ -186,7 +193,6 @@ export default function SchedulePage() {
         return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
     };
 
-    // 試合データを時間と会場でグループ化・ソート
     const timelineItems = useMemo(() => {
         if (!matches || matches.length === 0) return [];
         type TimelineGroup = {
@@ -200,13 +206,11 @@ export default function SchedulePage() {
         const groups: Record<string, TimelineGroup> = {};
 
         matches.forEach(match => {
-            // 1. 曜日によるフィルタリング
             const dayLabel = dayLabelConverter(new Date(match.scheduledStartTime));
             if (dayLabel !== activeDay) return;
 
-            // 2. 種目によるフィルタリングを追加
             if (selectedEventId !== "all" && match.eventId !== selectedEventId) {
-                return; // 選択された種目と異なる試合はタイムラインから除外
+                return;
             }
 
             const startMs = new Date(match.scheduledStartTime).getTime();
@@ -255,7 +259,6 @@ export default function SchedulePage() {
             </SubHeader>
 
             <div className="bg-white min-h-screen flex flex-col">
-                {/* 日程（Day1 / Day2）切り替えタブ */}
                 <div className="flex border-b border-gray-200 sticky top-0 bg-white z-20">
                     <button
                         className={`flex-1 py-3 text-sm font-bold transition-colors ${activeDay === "Day1" ? "border-b-[3px] border-[#2d5a8e] text-[#2d5a8e]" : "text-gray-400 hover:bg-gray-50"}`}
@@ -271,21 +274,19 @@ export default function SchedulePage() {
                     </button>
                 </div>
 
-                {/* タイムライン本体 */}
                 <div className="px-5 py-4 pb-24">
                     {timelineItems.length === 0 ? (
                         <p className="text-center text-gray-400 mt-10">この日の予定はありません。</p>
                     ) : (
                         timelineItems.map((item, i) => {
-                            // 会場が変わったタイミングで VenueDivider を挿入
                             const showVenueDivider = currentVenue !== item.venueName;
                             if (showVenueDivider) currentVenue = item.venueName;
 
-                            // コート指定のない単独イベント（開会式など）かどうかの判定
                             const isSimple = item.matches.length === 1 && !item.matches[0].locationId;
-
-                            // この時間帯の全試合が終了しているか
                             const isDone = item.matches.every(m => m.status === "Finished" || m.status === "Completed");
+
+                            // カスタムフックの関数を使って天気を取得
+                            const weather = getWeatherForTime(item.startTimeMs);
 
                             return (
                                 <React.Fragment key={i}>
@@ -297,6 +298,7 @@ export default function SchedulePage() {
                                             match={item.matches[0]}
                                             done={isDone}
                                             isMyTeam={myTeamId ? item.matches[0].participants.some(p => p.teamId === myTeamId) : false}
+                                            weather={weather}
                                         />
                                     ) : (
                                         <TimeSlot
@@ -307,6 +309,7 @@ export default function SchedulePage() {
                                             myTeamId={myTeamId ?? null}
                                             matchesMap={matchesMap}
                                             blocksMap={blocksMap}
+                                            weather={weather}
                                         />
                                     )}
                                 </React.Fragment>

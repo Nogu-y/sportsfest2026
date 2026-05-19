@@ -44,3 +44,5 @@ export type PointAllocation = {
   MATCH?: Partial<Record<string, Record<string, number>>>;
   BLOCK?: Partial<Record<string, Record<string, number>>>;
 };
+
+export const dayEnum = pgEnum('day', ['day1', 'day2', 'both']);

@@ -8,6 +8,12 @@ import { fetchCreateHelperMasterData } from './masterData'
 import { useEffect, useState } from 'react'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
 
+function formatRankingOrderLabel(value: unknown) {
+  if (value === 'ASC') return '小さい順が上位 (ASC)'
+  if (value === 'DESC') return '大きい順が上位 (DESC)'
+  return String(value ?? '-')
+}
+
 function EventsPreview({ rows }: { rows: BuilderRow[] }) {
   if (rows.length === 0) {
     return (
@@ -34,7 +40,7 @@ function EventsPreview({ rows }: { rows: BuilderRow[] }) {
           </p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-white/20 px-2 py-1">
-              順位方向: {String(row.rankingOrder ?? '-')}
+              順位方向: {formatRankingOrderLabel(row.rankingOrder)}
             </span>
             <span className="rounded-full bg-white/20 px-2 py-1">
               完了: {row.isCompleted ? 'true' : 'false'}

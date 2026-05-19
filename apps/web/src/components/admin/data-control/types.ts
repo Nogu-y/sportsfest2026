@@ -35,6 +35,7 @@ export type DataControlField = {
   key: string
   label: string
   type: DataControlFieldType
+  defaultValue?: DataControlValue
   required?: boolean
   nullable?: boolean
   readOnly?: boolean
