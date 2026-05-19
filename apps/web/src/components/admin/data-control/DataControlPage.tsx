@@ -186,7 +186,11 @@ function resolveReferenceLabel(
     case 'prereqMatchId': {
       const match = masterData.matches.find((item) => item.id === value)
       if (!match) return null
-      return match.name ?? '名称未設定'
+      const block = masterData.blocks.find((item) => item.id === match.eventBlockId)
+      if (!block) return match.name ?? '名称未設定'
+      const eventName = masterData.events.find((item) => item.id === block.eventId)?.name
+      const blockLabel = eventName ? `${eventName} / ${block.name}` : block.name
+      return `${blockLabel} / ${match.name ?? '名称未設定'}`
     }
     case 'prereqBlockId': {
       const block = masterData.blocks.find((item) => item.id === value)
