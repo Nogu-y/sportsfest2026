@@ -120,8 +120,8 @@ export const sampleData = {
       description: 'バスケットボール決勝',
       stage: 'FINAL',
       status: 'Waiting',
-      scheduledStartTime: at('2026-09-10T10:00:00+09:00'),
-      scheduledEndTime: at('2026-09-10T10:40:00+09:00')
+      scheduledStartTime: at('2026-05-19T13:05:00+09:00'),
+      scheduledEndTime: at('2026-06-10T10:40:00+09:00')
     },
     {
       id: 2,
