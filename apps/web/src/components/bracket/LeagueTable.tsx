@@ -22,9 +22,27 @@ export const LeagueTable = ({ block, previewData }: { block: any; previewData?: 
     const blockMatches = useMemo(() => matches.filter((m: any) => m.eventBlockId === block.id), [matches, block.id]);
 
     const participatingTeams = useMemo(() => {
-        if (!block.rankings) return [];
-        return [...block.rankings].sort((a, b) => a.rank - b.rank);
-    }, [block.rankings]);
+        // ランキングがあればそれを優先し、無ければ参加者から暫定的にチーム一覧を構成する
+        if (block.rankings && block.rankings.length > 0) {
+            return [...block.rankings].sort((a, b) => a.rank - b.rank);
+        }
+
+        const teamIds = new Set<number>();
+        for (const match of blockMatches) {
+            for (const participant of match.participants ?? []) {
+                if (participant.teamId) {
+                    teamIds.add(participant.teamId);
+                }
+            }
+        }
+
+        return Array.from(teamIds)
+            .sort((a, b) => a - b)
+            .map((teamId, index) => ({
+                teamId,
+                rank: index + 1
+            }));
+    }, [block.rankings, blockMatches]);
 
     if (participatingTeams.length === 0) return <div className="text-gray-500">リーグ参加チームが未確定です。</div>;
 
