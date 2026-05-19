@@ -32,24 +32,35 @@ export function toDisplayValue(value: DataControlValue) {
   return String(value)
 }
 
-export function createInitialDraft(fields: DataControlField[]) {
+function resolveDefaultValue(field: DataControlField) {
+  if (field.defaultValue !== undefined) return field.defaultValue
+
+  if (field.type === 'boolean') {
+    return false
+  }
+
+  if (field.type === 'json') {
+    return {}
+  }
+
+  if (field.type === 'datetime') {
+    return createDefaultDateTimeValue(field.key)
+  }
+
+  return field.nullable ? null : ''
+}
+
+export function createInitialDraft(
+  fields: DataControlField[],
+  overrides: Record<string, DataControlValue> = {},
+) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
-    if (field.type === 'boolean') {
-      acc[field.key] = false
+    if (field.key in overrides) {
+      acc[field.key] = overrides[field.key]
       return acc
     }
 
-    if (field.type === 'json') {
-      acc[field.key] = {}
-      return acc
-    }
-
-    if (field.type === 'datetime') {
-      acc[field.key] = createDefaultDateTimeValue(field.key)
-      return acc
-    }
-
-    acc[field.key] = field.nullable ? null : ''
+    acc[field.key] = resolveDefaultValue(field)
     return acc
   }, {})
 }
@@ -160,22 +171,7 @@ export function buildDraftFromRow(fields: DataControlField[], row: BuilderRow) {
       return acc
     }
 
-    if (field.type === 'boolean') {
-      acc[field.key] = false
-      return acc
-    }
-
-    if (field.type === 'json') {
-      acc[field.key] = {}
-      return acc
-    }
-
-    if (field.type === 'datetime') {
-      acc[field.key] = createDefaultDateTimeValue(field.key)
-      return acc
-    }
-
-    acc[field.key] = ''
+    acc[field.key] = resolveDefaultValue(field)
     return acc
   }, {})
 }

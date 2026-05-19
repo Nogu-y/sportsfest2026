@@ -2,6 +2,7 @@
 
 import { api } from '../../../lib/api/client'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
+import { dayOptions, matchStageOptions, pointAllocationPresets } from '../create/constants'
 import type {
   DataControlField,
   DataControlOption,
@@ -16,6 +17,16 @@ type LocationResponse = {
   name: string
   xRatio: number
   yRatio: number
+  day: 'day1' | 'day2' | 'both'
+}
+
+type MapResponse = {
+  id: number
+  filePath: string
+  displayName: string
+  width: number
+  height: number
+  day: 'day1' | 'day2' | 'both'
 }
 
 type TeamResponse = {
@@ -124,6 +135,14 @@ export async function fetchAdminMasterOptions() {
       label: `${event.id}: ${event.name}`,
       value: event.id,
     })),
+    teamOptions: master.teams.map((team) => ({
+      label: `${team.id}: ${team.name}`,
+      value: team.id,
+    })),
+    prereqMatchOptions: master.matches.map((match) => ({
+      label: `${match.id}: ${match.name ?? '名称未設定'}`,
+      value: match.id,
+    })),
     eventBlockOptions: master.blocks.map((block) => {
       const eventName =
         master.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
@@ -140,8 +159,57 @@ export function createAdminResourceDefinitions(
   mapOptions: DataControlOption[],
   locationOptions: DataControlOption[],
   eventOptions: DataControlOption[],
+  teamOptions: DataControlOption[],
+  prereqMatchOptions: DataControlOption[],
   eventBlockOptions: DataControlOption[],
 ) {
+  const mapFields: DataControlField[] = [
+    {
+      key: 'id',
+      label: 'ID',
+      type: 'number',
+      readOnly: true,
+      widthClassName: 'w-24',
+    },
+    {
+      key: 'filePath',
+      label: 'ファイルパス',
+      type: 'text',
+      required: true,
+      placeholder: '/img/map/campus.svg',
+    },
+    {
+      key: 'displayName',
+      label: '表示名',
+      type: 'text',
+      required: true,
+      placeholder: '例: 校内マップ',
+    },
+    {
+      key: 'width',
+      label: '幅',
+      type: 'number',
+      required: true,
+      widthClassName: 'w-32',
+    },
+    {
+      key: 'height',
+      label: '高さ',
+      type: 'number',
+      required: true,
+      widthClassName: 'w-32',
+    },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'そのマップを使う日程を選びます。',
+    },
+  ]
+
   const teamFields: DataControlField[] = [
     {
       key: 'id',
@@ -173,6 +241,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: mapOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'マップIDを直接入力',
+      customValuePlaceholder: '例: 1',
       widthClassName: 'w-40',
     },
     {
@@ -181,6 +253,15 @@ export function createAdminResourceDefinitions(
       type: 'text',
       required: true,
       placeholder: '例: 第一体育館 Aコート',
+    },
+    {
+      key: 'day',
+      label: '対象日',
+      type: 'select',
+      required: true,
+      options: dayOptions,
+      defaultValue: 'both',
+      description: 'その会場を使う日程を選びます。',
     },
     {
       key: 'xRatio',
@@ -237,9 +318,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: [
-        { label: 'ASC', value: 'ASC' },
-        { label: 'DESC', value: 'DESC' },
+        { label: 'タイム系なら ASC', value: 'ASC' },
+        { label: '得点系なら DESC', value: 'DESC' },
       ],
+      description: 'タイム・秒数のように小さい値が勝ちなら ASC、得点のように大きい値が勝ちなら DESC を選びます。',
     },
     {
       key: 'format',
@@ -257,6 +339,7 @@ export function createAdminResourceDefinitions(
       label: '得点配分(JSON)',
       type: 'json',
       required: true,
+      presets: pointAllocationPresets,
     },
     {
       key: 'isCompleted',
@@ -280,6 +363,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: eventOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'イベントIDを直接入力',
+      customValuePlaceholder: '例: 8',
     },
     {
       key: 'name',
@@ -303,16 +390,7 @@ export function createAdminResourceDefinitions(
       label: 'ステージ',
       type: 'select',
       required: true,
-      options: [
-        'FINAL',
-        'THIRD_PLACE',
-        'SEMIFINAL',
-        'QUARTERFINAL',
-        'ROUND_2',
-        'ROUND_1',
-        'QUALIFIER',
-        'CONSOLATION',
-      ].map((value) => ({ label: value, value })),
+      options: matchStageOptions,
     },
   ]
 
@@ -330,6 +408,10 @@ export function createAdminResourceDefinitions(
       type: 'select',
       required: true,
       options: eventBlockOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: 'ブロックIDを直接入力',
+      customValuePlaceholder: '例: 12',
     },
     {
       key: 'locationId',
@@ -337,12 +419,18 @@ export function createAdminResourceDefinitions(
       type: 'select',
       nullable: true,
       options: locationOptions,
+      allowCustomValue: true,
+      customValueType: 'number',
+      customValueLabel: '会場IDを直接入力',
+      customValuePlaceholder: '例: 5',
     },
     {
       key: 'name',
       label: '試合名',
       type: 'text',
       nullable: true,
+      placeholder: '例: 準決勝①',
+      description: '必要なら下の補助欄で 1〜20 の数字を丸数字にして試合名の末尾へ追加できます。',
     },
     {
       key: 'description',
@@ -355,16 +443,8 @@ export function createAdminResourceDefinitions(
       label: 'ステージ',
       type: 'select',
       required: true,
-      options: [
-        'FINAL',
-        'THIRD_PLACE',
-        'SEMIFINAL',
-        'QUARTERFINAL',
-        'ROUND_2',
-        'ROUND_1',
-        'QUALIFIER',
-        'CONSOLATION',
-      ].map((value) => ({ label: value, value })),
+      options: matchStageOptions,
+      description: '同一ブロック内で、その試合が何回戦・決勝・予選に当たるかを表します。',
     },
     {
       key: 'status',
@@ -379,30 +459,21 @@ export function createAdminResourceDefinitions(
         'Completed',
         'Cancelled',
       ].map((value) => ({ label: value, value })),
+      defaultValue: 'Waiting',
     },
     {
       key: 'scheduledStartTime',
       label: '開始予定',
       type: 'datetime',
       required: true,
+      defaultValue: '2026-05-21T00:00:00+09:00',
     },
     {
       key: 'scheduledEndTime',
       label: '終了予定',
       type: 'datetime',
       required: true,
-    },
-    {
-      key: 'startedAt',
-      label: '開始実績',
-      type: 'datetime',
-      nullable: true,
-    },
-    {
-      key: 'endedAt',
-      label: '終了実績',
-      type: 'datetime',
-      nullable: true,
+      defaultValue: '2026-05-21T00:00:00+09:00',
     },
     {
       key: 'note',
@@ -412,11 +483,65 @@ export function createAdminResourceDefinitions(
     },
     {
       key: 'participants',
-      label: '参加枠(JSON)',
+      label: '参加枠(GUI / JSON)',
       type: 'json',
-      readOnly: true,
+      required: true,
+      presets: [
+        { label: '空', value: [] },
+        {
+          label: '2チーム直接指定',
+          value: [
+            { teamId: 1 },
+            { teamId: 2 },
+          ],
+        },
+        {
+          label: '勝ち上がり2枠',
+          value: [
+            { prereqMatchId: 1 },
+            { prereqMatchId: 2 },
+          ],
+        },
+      ],
+      participantTeamOptions: teamOptions,
+      participantPrereqMatchOptions: prereqMatchOptions,
+      participantPrereqBlockOptions: eventBlockOptions,
     },
   ]
+
+  const maps: DataControlResourceDefinition = {
+    key: 'maps',
+    label: 'マップ',
+    description: '地図画像マスタを編集し、会場が参照するベースマップを管理します',
+    fields: mapFields,
+    primaryKey: 'id',
+    async fetchRecords() {
+      const response = await api.api.admin.maps.$get()
+      await ensureSuccess(response, 'マップ一覧の取得に失敗しました')
+      return await response.json() as MapResponse[]
+    },
+    async createRecord(input) {
+      const response = await api.api.admin.maps.$post({
+        json: omitReadonlyFields(mapFields, input) as Omit<MapResponse, 'id'>,
+      })
+      await ensureSuccess(response, 'マップの作成に失敗しました')
+      return await response.json() as MapResponse
+    },
+    async updateRecord(id, input) {
+      const response = await api.api.admin.maps[':id'].$put({
+        param: { id: String(id) },
+        json: omitReadonlyFields(mapFields, input) as Partial<Omit<MapResponse, 'id'>>,
+      })
+      await ensureSuccess(response, 'マップの更新に失敗しました')
+      return await response.json() as MapResponse
+    },
+    async deleteRecord(id) {
+      const response = await api.api.admin.maps[':id'].$delete({
+        param: { id: String(id) },
+      })
+      await ensureSuccess(response, 'マップの削除に失敗しました')
+    },
+  }
 
   const teams: DataControlResourceDefinition = {
     key: 'teams',
@@ -587,5 +712,5 @@ export function createAdminResourceDefinitions(
     },
   }
 
-  return [teams, locations, eventBlocks, events, matches]
+  return [maps, teams, locations, eventBlocks, events, matches]
 }

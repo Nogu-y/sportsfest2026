@@ -6,6 +6,7 @@ import type {
 } from './types'
 
 const CSV_LINE_BREAK = /\r?\n/
+const UTF8_BOM = '\uFEFF'
 
 function escapeCsvValue(value: DataControlValue) {
   if (value === null || value === undefined) return ''
@@ -64,11 +65,73 @@ function parseCsvLine(line: string) {
   return values
 }
 
+function stripBom(value: string) {
+  return value.startsWith(UTF8_BOM) ? value.slice(1) : value
+}
+
+function parseCsvRecords(rawText: string) {
+  const rows: string[][] = []
+  let currentRow: string[] = []
+  let currentValue = ''
+  let inQuotes = false
+  const text = stripBom(rawText)
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]
+    const next = text[index + 1]
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        currentValue += '"'
+        index += 1
+        continue
+      }
+
+      inQuotes = !inQuotes
+      continue
+    }
+
+    if (char === ',' && !inQuotes) {
+      currentRow.push(currentValue)
+      currentValue = ''
+      continue
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') {
+        index += 1
+      }
+
+      currentRow.push(currentValue)
+      if (currentRow.some((value) => value !== '')) {
+        rows.push(currentRow)
+      }
+      currentRow = []
+      currentValue = ''
+      continue
+    }
+
+    currentValue += char
+  }
+
+  currentRow.push(currentValue)
+  if (currentRow.some((value) => value !== '')) {
+    rows.push(currentRow)
+  }
+
+  return rows
+}
+
 function normalizeBooleanValue(value: string) {
   const normalized = value.trim().toLowerCase()
   if (normalized === 'true' || normalized === '1') return true
   if (normalized === 'false' || normalized === '0') return false
   return null
+}
+
+function shouldParseSelectAsNumber(field: DataControlField) {
+  if (field.customValueType === 'number') return true
+  return field.options?.some((option) => typeof option.value === 'number') ?? false
 }
 
 export function convertImportedValue(field: DataControlField, value: unknown): DataControlValue {
@@ -88,6 +151,17 @@ export function convertImportedValue(field: DataControlField, value: unknown): D
     return parsed ?? false
   }
 
+  if (field.type === 'select') {
+    if (!shouldParseSelectAsNumber(field)) {
+      return String(value)
+    }
+
+    if (typeof value === 'number') return value
+
+    const numericValue = Number(value)
+    return Number.isFinite(numericValue) ? numericValue : String(value)
+  }
+
   if (field.type === 'json') {
     if (typeof value === 'object') return value as DataControlValue
     return JSON.parse(String(value)) as DataControlValue
@@ -102,7 +176,7 @@ export function parseImportedRecords(
   rawText: string,
 ) {
   if (format === 'json') {
-    const parsed = JSON.parse(rawText)
+    const parsed = JSON.parse(stripBom(rawText))
     if (!Array.isArray(parsed)) {
       throw new Error('JSON は配列形式で指定してください')
     }
@@ -110,17 +184,22 @@ export function parseImportedRecords(
     return parsed.map((record) => normalizeImportedRecord(record, fields))
   }
 
-  const lines = rawText.trim().split(CSV_LINE_BREAK).filter(Boolean)
-  if (lines.length === 0) return []
+  const rows = parseCsvRecords(rawText)
+  if (rows.length === 0) return []
 
-  const [headerLine, ...dataLines] = lines
-  const headers = parseCsvLine(headerLine)
+  const [headers, ...dataRows] = rows
 
-  return dataLines.map((line) => {
-    const columns = parseCsvLine(line)
+  return dataRows.map((columns) => {
     const rawRecord = Object.fromEntries(headers.map((header, index) => [header, columns[index] ?? '']))
     return normalizeImportedRecord(rawRecord, fields)
   })
+}
+
+export function inferImportFormatFromText(rawText: string): DataControlImportFormat | null {
+  const normalized = stripBom(rawText).trimStart()
+  if (normalized.startsWith('[') || normalized.startsWith('{')) return 'json'
+  if (normalized.includes(',') || CSV_LINE_BREAK.test(normalized)) return 'csv'
+  return null
 }
 
 export function normalizeImportedRecord(

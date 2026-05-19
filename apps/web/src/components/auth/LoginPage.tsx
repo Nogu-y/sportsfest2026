@@ -1,23 +1,26 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { loginWithPassword, useAuthSession } from '../../hooks/useAuthSession'
 import {
   normalizeReturnTo,
   resolveAuthorizedPath
 } from '../../lib/auth/access'
 
-export function LoginPage() {
+type LoginPageProps = {
+  initialReturnTo?: string | null
+}
+
+export function LoginPage({ initialReturnTo }: LoginPageProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { session, isLoading } = useAuthSession()
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const returnTo = normalizeReturnTo(searchParams.get('returnTo'))
+  const returnTo = normalizeReturnTo(initialReturnTo)
 
   useEffect(() => {
     if (isLoading || !session) {

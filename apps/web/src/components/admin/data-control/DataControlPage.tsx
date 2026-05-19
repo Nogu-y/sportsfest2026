@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import type { PublicMasterResponse } from '../../../../../api/src/schemas/public/master'
 import { EventBracket } from '../../bracket/EventBracket'
+import { LeagueTable } from '../../bracket/LeagueTable'
+import { TournamentTable } from '../../bracket/TournamentTable'
+import { matchStageOptions } from '../create/constants'
 import {
   createAdminResourceDefinitions,
   fetchAdminMasterOptions,
@@ -11,6 +14,7 @@ import {
   downloadTextFile,
   exportRecordsAsCsv,
   exportRecordsAsJson,
+  inferImportFormatFromText,
   parseImportedRecords,
 } from './utils'
 import type {
@@ -22,12 +26,125 @@ import type {
 } from './types'
 
 type RecordFormProps = {
+  resourceKey: string
   fields: DataControlField[]
   value: Record<string, DataControlValue>
   submitLabel: string
   onChange: (key: string, value: DataControlValue) => void
   onSubmit: () => void
   onCancel?: () => void
+  successMessage?: string | null
+}
+
+type PointAllocationRow = {
+  id: number
+  scope: 'MATCH' | 'BLOCK'
+  stage: string
+  rank: number
+  points: number
+}
+
+type MatchParticipantRow = {
+  id: number
+  teamId: number | null
+  prereqMatchId: number | null
+  prereqBlockId: number | null
+  prereqRank: number | null
+}
+
+function MatchesPreviewByEvent({
+  eventId,
+  activeBlockId,
+  previewData,
+}: {
+  eventId: number
+  activeBlockId: number | null
+  previewData: {
+    events: PublicMasterResponse['events']
+    eventBlocks: PublicMasterResponse['blocks']
+    matches: PublicMasterResponse['matches']
+    teams: PublicMasterResponse['teams']
+  }
+}) {
+  const event = previewData.events.find((item) => item.id === eventId) ?? null
+  const blocks = previewData.eventBlocks.filter((block) => block.eventId === eventId)
+
+  if (!event || blocks.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-sm text-slate-500">
+        このイベントには表示できる対戦表がありません
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-medium text-slate-600">イベント全体プレビュー</p>
+        <p className="mt-1 text-sm text-slate-500">
+          {event.name} / {blocks.length} ブロック
+        </p>
+      </div>
+
+      <div className="grid gap-6">
+        {blocks.map((block) => {
+          const isActiveBlock = activeBlockId === block.id
+
+          return (
+            <section
+              key={block.id}
+              className={
+                isActiveBlock
+                  ? 'rounded-2xl border-2 border-slate-900 bg-white p-4 shadow-sm'
+                  : 'rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'
+              }
+            >
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">{block.name}</h3>
+                  <p className="text-sm text-slate-500">
+                    {block.type} / {block.stage}
+                  </p>
+                </div>
+                {isActiveBlock ? (
+                  <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
+                    編集対象ブロック
+                  </span>
+                ) : null}
+              </div>
+
+              {block.type === 'LEAGUE' ? (
+                <LeagueTable
+                  block={block}
+                  previewData={{
+                    matches: previewData.matches,
+                    teams: previewData.teams,
+                  }}
+                />
+              ) : null}
+
+              {block.type === 'TOURNAMENT' ? (
+                <TournamentTable
+                  block={block}
+                  previewData={{
+                    matches: previewData.matches,
+                    teams: previewData.teams,
+                    eventBlocks: previewData.eventBlocks,
+                  }}
+                />
+              ) : null}
+
+              {block.type === 'CUMULATIVE' || block.type === 'SINGLE' ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                  このブロック種別の対戦表プレビューは未対応です
+                </div>
+              ) : null}
+            </section>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function toDisplayValue(value: DataControlValue) {
@@ -37,9 +154,98 @@ function toDisplayValue(value: DataControlValue) {
   return String(value)
 }
 
+function resolveReferenceLabel(
+  field: DataControlField,
+  value: DataControlValue,
+  masterData: PublicMasterResponse | null,
+) {
+  if (typeof value !== 'string' && typeof value !== 'number') return null
+
+  const matchedOption = field.options?.find((option) => option.value === value)
+  if (matchedOption) {
+    return matchedOption.label
+  }
+
+  if (!masterData || typeof value !== 'number') return null
+
+  switch (field.key) {
+    case 'mapId':
+      return masterData.maps.find((item) => item.id === value)?.displayName ?? null
+    case 'eventId':
+      return masterData.events.find((item) => item.id === value)?.name ?? null
+    case 'locationId':
+      return masterData.locations.find((item) => item.id === value)?.name ?? null
+    case 'teamId':
+      return masterData.teams.find((item) => item.id === value)?.name ?? null
+    case 'eventBlockId': {
+      const block = masterData.blocks.find((item) => item.id === value)
+      if (!block) return null
+      const eventName = masterData.events.find((item) => item.id === block.eventId)?.name
+      return eventName ? `${eventName} / ${block.name}` : block.name
+    }
+    case 'prereqMatchId': {
+      const match = masterData.matches.find((item) => item.id === value)
+      if (!match) return null
+      return match.name ?? '名称未設定'
+    }
+    case 'prereqBlockId': {
+      const block = masterData.blocks.find((item) => item.id === value)
+      if (!block) return null
+      const eventName = masterData.events.find((item) => item.id === block.eventId)?.name
+      return eventName ? `${eventName} / ${block.name}` : block.name
+    }
+    default:
+      return null
+  }
+}
+
+function renderTableCellValue(
+  field: DataControlField,
+  value: DataControlValue,
+  masterData: PublicMasterResponse | null,
+) {
+  const referenceLabel = resolveReferenceLabel(field, value, masterData)
+  const rawValue = toDisplayValue(value ?? null)
+
+  if (!referenceLabel) {
+    return rawValue
+  }
+
+  if (referenceLabel === rawValue || referenceLabel.startsWith(`${rawValue}: `)) {
+    return referenceLabel
+  }
+
+  return (
+    <div className="flex flex-col">
+      <span>{rawValue}</span>
+      <span className="text-xs text-slate-500">{referenceLabel}</span>
+    </div>
+  )
+}
+
+function formatDateTimeLocalValue(value: DataControlValue) {
+  if (typeof value !== 'string' || value === '') return ''
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 function getInitialDraft(fields: DataControlField[]) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
     if (field.readOnly) return acc
+
+    if (field.defaultValue !== undefined) {
+      acc[field.key] = field.defaultValue
+      return acc
+    }
 
     if (field.type === 'boolean') {
       acc[field.key] = false
@@ -87,7 +293,17 @@ function normalizeDraftValue(field: DataControlField, rawValue: string) {
 
 function buildRecordDraft(fields: DataControlField[], record: DataControlRecord) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
-    acc[field.key] = record[field.key] ?? (field.type === 'boolean' ? false : '')
+    if (record[field.key] !== undefined) {
+      acc[field.key] = record[field.key]
+      return acc
+    }
+
+    if (field.defaultValue !== undefined) {
+      acc[field.key] = field.defaultValue
+      return acc
+    }
+
+    acc[field.key] = field.type === 'boolean' ? false : ''
     return acc
   }, {})
 }
@@ -104,21 +320,79 @@ function validateDraft(fields: DataControlField[], draft: Record<string, DataCon
   }
 }
 
+const circledNumberLabels = [
+  '',
+  '①',
+  '②',
+  '③',
+  '④',
+  '⑤',
+  '⑥',
+  '⑦',
+  '⑧',
+  '⑨',
+  '⑩',
+  '⑪',
+  '⑫',
+  '⑬',
+  '⑭',
+  '⑮',
+  '⑯',
+  '⑰',
+  '⑱',
+  '⑲',
+  '⑳',
+]
+
+function convertToCircledNumber(rawValue: string) {
+  const normalized = rawValue.trim()
+  if (!/^[0-9]+$/.test(normalized)) return null
+
+  const numericValue = Number(normalized)
+  if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue >= circledNumberLabels.length) {
+    return null
+  }
+
+  return circledNumberLabels[numericValue]
+}
+
 function prepareDraftForSubmit(fields: DataControlField[], draft: Record<string, DataControlValue>) {
   return fields.reduce<Record<string, DataControlValue>>((acc, field) => {
-    const value = draft[field.key]
+    const rawValue = draft[field.key]
 
-    if (value === undefined) return acc
+    if (rawValue === undefined) return acc
 
-    if (field.type === 'json' && typeof value === 'string') {
-      const normalized = value.trim()
+    if (field.type === 'json' && typeof rawValue === 'string') {
+      const normalized = rawValue.trim()
       acc[field.key] = normalized === '' ? (field.nullable ? null : {}) : JSON.parse(normalized)
       return acc
     }
 
-    acc[field.key] = value
+    acc[field.key] = rawValue
     return acc
   }, {})
+}
+
+function buildCreateDraftAfterSubmit(
+  resourceKey: string,
+  fields: DataControlField[],
+  currentDraft: Record<string, DataControlValue>,
+) {
+  if (resourceKey !== 'matches') {
+    return currentDraft
+  }
+
+  const nextDraft = { ...currentDraft }
+  const locationField = fields.find((field) => field.key === 'locationId')
+  const participantsField = fields.find((field) => field.key === 'participants')
+
+  nextDraft.locationId = locationField?.nullable ? null : ''
+  nextDraft.participants =
+    participantsField?.defaultValue !== undefined
+      ? participantsField.defaultValue
+      : []
+
+  return nextDraft
 }
 
 function sortRecords(records: DataControlRecord[], primaryKey: string) {
@@ -134,13 +408,499 @@ function sortRecords(records: DataControlRecord[], primaryKey: string) {
   })
 }
 
+function parsePointAllocationRows(value: DataControlValue): PointAllocationRow[] {
+  let source = value
+
+  if (typeof value === 'string') {
+    try {
+      source = JSON.parse(value) as DataControlValue
+    } catch {
+      return []
+    }
+  }
+
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return []
+
+  const rows: PointAllocationRow[] = []
+  let currentId = 1
+
+  for (const scope of ['MATCH', 'BLOCK'] as const) {
+    const stages = source[scope]
+    if (!stages || typeof stages !== 'object' || Array.isArray(stages)) continue
+
+    for (const [stage, allocations] of Object.entries(stages)) {
+      if (!allocations || typeof allocations !== 'object' || Array.isArray(allocations)) continue
+
+      for (const [label, points] of Object.entries(allocations)) {
+        const rank = Number(label)
+        if (!Number.isInteger(rank) || rank < 1) continue
+
+        rows.push({
+          id: currentId,
+          scope,
+          stage,
+          rank,
+          points: Number(points) || 0,
+        })
+        currentId += 1
+      }
+    }
+  }
+
+  return rows
+}
+
+function buildPointAllocationValue(rows: PointAllocationRow[]) {
+  return rows.reduce<Record<string, Record<string, Record<string, number>>>>((acc, row) => {
+    acc[row.scope] ??= {}
+    acc[row.scope][row.stage] ??= {}
+    acc[row.scope][row.stage][String(row.rank)] = row.points
+    return acc
+  }, {})
+}
+
+function PointAllocationEditor({
+  value,
+  onChange,
+}: {
+  value: DataControlValue
+  onChange: (value: DataControlValue) => void
+}) {
+  const rows = useMemo(() => parsePointAllocationRows(value), [value])
+  const [draft, setDraft] = useState<PointAllocationRow>({
+    id: 0,
+    scope: 'MATCH',
+    stage: 'FINAL',
+    rank: 1,
+    points: 0,
+  })
+
+  const isJsonInvalid = typeof value === 'string' && rows.length === 0 && value.trim() !== ''
+
+  function updateRows(nextRows: PointAllocationRow[]) {
+    onChange(buildPointAllocationValue(nextRows))
+  }
+
+  function addRow() {
+    if (!Number.isInteger(draft.rank) || draft.rank < 1) return
+    const nextId = rows.reduce((max, row) => Math.max(max, row.id), 0) + 1
+    updateRows([...rows, { ...draft, id: nextId }])
+    setDraft((current) => ({ ...current, rank: 1, points: 0 }))
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <select
+          value={draft.scope}
+          onChange={(event) => setDraft((current) => ({ ...current, scope: event.target.value as PointAllocationRow['scope'] }))}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="MATCH">MATCH</option>
+          <option value="BLOCK">BLOCK</option>
+        </select>
+        <select
+          value={draft.stage}
+          onChange={(event) => setDraft((current) => ({ ...current, stage: event.target.value }))}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          {resourceMatchStageOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={1}
+          value={draft.rank}
+          onChange={(event) => setDraft((current) => ({ ...current, rank: Number(event.target.value) || 1 }))}
+          className="w-32 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+        <input
+          type="number"
+          value={draft.points}
+          onChange={(event) => setDraft((current) => ({ ...current, points: Number(event.target.value) || 0 }))}
+          className="w-32 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+        <button type="button" onClick={addRow} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+          行追加
+        </button>
+      </div>
+
+      {rows.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-slate-600">
+                <th className="border-b border-slate-200 px-2 py-2">種別</th>
+                <th className="border-b border-slate-200 px-2 py-2">ステージ</th>
+                <th className="border-b border-slate-200 px-2 py-2">順位</th>
+                <th className="border-b border-slate-200 px-2 py-2">点数</th>
+                <th className="border-b border-slate-200 px-2 py-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.scope}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.stage}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.rank}位</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.points}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">
+                    <button type="button" onClick={() => updateRows(rows.filter((item) => item.id !== row.id))} className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700">
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+          まだ得点配分がありません
+        </div>
+      )}
+
+      {isJsonInvalid ? (
+        <p className="mt-3 text-sm text-rose-700">JSON が壊れているため GUI に展開できません。下の JSON を修正してください。</p>
+      ) : null}
+    </div>
+  )
+}
+
+function parseParticipants(value: DataControlValue): MatchParticipantRow[] {
+  let source = value
+
+  if (typeof value === 'string') {
+    try {
+      source = JSON.parse(value) as DataControlValue
+    } catch {
+      return []
+    }
+  }
+
+  if (!Array.isArray(source)) return []
+
+  return source
+    .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    .map((item, index) => {
+      const record = item as Record<string, unknown>
+      return {
+        id: index + 1,
+        teamId: typeof record.teamId === 'number' ? record.teamId : null,
+        prereqMatchId: typeof record.prereqMatchId === 'number' ? record.prereqMatchId : null,
+        prereqBlockId: typeof record.prereqBlockId === 'number' ? record.prereqBlockId : null,
+        prereqRank: typeof record.prereqRank === 'number' ? record.prereqRank : null,
+      }
+    })
+}
+
+function buildParticipantsValue(rows: MatchParticipantRow[]) {
+  return rows.map((row) => ({
+    teamId: row.teamId,
+    prereqMatchId: row.prereqMatchId,
+    prereqBlockId: row.prereqBlockId,
+    prereqRank: row.prereqRank,
+  }))
+}
+
+function toNullableNumber(rawValue: string) {
+  if (rawValue === '') return null
+  const value = Number(rawValue)
+  return Number.isNaN(value) ? null : value
+}
+
+function ParticipantsEditor({
+  field,
+  value,
+  onChange,
+}: {
+  field: DataControlField
+  value: DataControlValue
+  onChange: (value: DataControlValue) => void
+}) {
+  const rows = useMemo(() => parseParticipants(value), [value])
+  const [draft, setDraft] = useState<Omit<MatchParticipantRow, 'id'>>({
+    teamId: null,
+    prereqMatchId: null,
+    prereqBlockId: null,
+    prereqRank: null,
+  })
+  const isJsonInvalid = typeof value === 'string' && rows.length === 0 && value.trim() !== ''
+
+  function updateRows(nextRows: MatchParticipantRow[]) {
+    onChange(buildParticipantsValue(nextRows))
+  }
+
+  const hasSource = draft.teamId !== null || draft.prereqMatchId !== null || draft.prereqBlockId !== null
+  const isPrereqBlockMode = draft.prereqBlockId !== null
+  const isReadyToAdd = hasSource && (!isPrereqBlockMode || (draft.prereqRank !== null && draft.prereqRank >= 1))
+
+  function addRow() {
+    if (!isReadyToAdd) return
+    const nextId = rows.reduce((max, row) => Math.max(max, row.id), 0) + 1
+    updateRows([...rows, { id: nextId, ...draft }])
+    setDraft({ teamId: null, prereqMatchId: null, prereqBlockId: null, prereqRank: null })
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="grid gap-2 md:grid-cols-4">
+        <select
+          value={draft.teamId ?? ''}
+          onChange={(event) => setDraft((current) => {
+            const teamId = toNullableNumber(event.target.value)
+            return teamId === null
+              ? { ...current, teamId: null }
+              : { teamId, prereqMatchId: null, prereqBlockId: null, prereqRank: null }
+          })}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">teamId(未設定)</option>
+          {field.participantTeamOptions?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <select
+          value={draft.prereqMatchId ?? ''}
+          onChange={(event) => setDraft((current) => {
+            const prereqMatchId = toNullableNumber(event.target.value)
+            return prereqMatchId === null
+              ? { ...current, prereqMatchId: null }
+              : { teamId: null, prereqMatchId, prereqBlockId: null, prereqRank: null }
+          })}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">prereqMatchId(未設定)</option>
+          {field.participantPrereqMatchOptions?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <select
+          value={draft.prereqBlockId ?? ''}
+          onChange={(event) => setDraft((current) => {
+            const prereqBlockId = toNullableNumber(event.target.value)
+            return prereqBlockId === null
+              ? { ...current, prereqBlockId: null, prereqRank: null }
+              : { teamId: null, prereqMatchId: null, prereqBlockId, prereqRank: current.prereqRank && current.prereqRank >= 1 ? current.prereqRank : 1 }
+          })}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">prereqBlockId(未設定)</option>
+          {field.participantPrereqBlockOptions?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          value={draft.prereqRank ?? ''}
+          placeholder="prereqRank"
+          onChange={(event) => setDraft((current) => ({ ...current, prereqRank: (() => { const next = toNullableNumber(event.target.value); return next !== null && next >= 1 ? next : null })() }))}
+          disabled={!isPrereqBlockMode}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
+      </div>
+      <div className="mt-2 grid gap-2">
+        <button type="button" onClick={addRow} disabled={!isReadyToAdd} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">
+          参加枠を追加
+        </button>
+      </div>
+      {rows.length > 0 ? (
+        <div className="mt-3 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-slate-600">
+                <th className="border-b border-slate-200 px-2 py-2">teamId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqMatchId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqBlockId</th>
+                <th className="border-b border-slate-200 px-2 py-2">prereqRank</th>
+                <th className="border-b border-slate-200 px-2 py-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.teamId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqMatchId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqBlockId ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">{row.prereqRank ?? '-'}</td>
+                  <td className="border-b border-slate-200 px-2 py-2">
+                    <button type="button" onClick={() => updateRows(rows.filter((item) => item.id !== row.id))} className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700">
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+          まだ参加枠がありません
+        </div>
+      )}
+      {isJsonInvalid ? (
+        <p className="mt-3 text-sm text-rose-700">JSON が壊れているため GUI に展開できません。JSON を修正してください。</p>
+      ) : null}
+    </div>
+  )
+}
+
+const resourceMatchStageOptions = matchStageOptions
+
+function ReferenceSelectField({
+  field,
+  currentValue,
+  onChange,
+}: {
+  field: DataControlField
+  currentValue: DataControlValue
+  onChange: (key: string, value: DataControlValue) => void
+}) {
+  const hasOptions = Boolean(field.options?.length)
+  const matchesOption = field.options?.some((option) => option.value === currentValue) ?? false
+  const [inputMode, setInputMode] = useState<'preset' | 'manual'>(
+    hasOptions && matchesOption ? 'preset' : hasOptions ? 'preset' : 'manual',
+  )
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-slate-700">
+      <span className="font-medium">{field.label}</span>
+      {field.allowCustomValue ? (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" disabled={!hasOptions} onClick={() => setInputMode('preset')} className={inputMode === 'preset' ? 'rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-50' : 'rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50'}>
+            候補から選択
+          </button>
+          <button type="button" onClick={() => setInputMode('manual')} className={inputMode === 'manual' ? 'rounded-md bg-slate-900 px-3 py-1 text-xs font-medium text-white' : 'rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700'}>
+            手入力
+          </button>
+        </div>
+      ) : null}
+
+      {field.allowCustomValue && inputMode === 'manual' ? (
+        <input
+          type={field.customValueType === 'number' ? 'number' : 'text'}
+          value={toDisplayValue(currentValue)}
+          placeholder={field.customValuePlaceholder}
+          onChange={(event) =>
+            onChange(
+              field.key,
+              normalizeDraftValue(
+                {
+                  ...field,
+                  type: field.customValueType === 'number' ? 'number' : 'text',
+                },
+                event.target.value,
+              ),
+            )
+          }
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+        />
+      ) : (
+        <select
+          value={toDisplayValue(currentValue)}
+          onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+          disabled={field.allowCustomValue ? !hasOptions : false}
+        >
+          <option value="">{hasOptions ? '選択してください' : '候補を取得できませんでした'}</option>
+          {field.options?.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      )}
+
+      {field.allowCustomValue ? (
+        <p className="text-xs text-slate-500">
+          {inputMode === 'manual'
+            ? field.customValueLabel ?? 'IDを直接入力できます'
+            : hasOptions
+              ? 'DB から取得した候補を使えます'
+              : '候補の取得に失敗したため手入力を使ってください'}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function FieldDescription({ field }: { field: DataControlField }) {
+  if (!field.description) return null
+
+  return <p className="text-xs text-slate-500">{field.description}</p>
+}
+
+function MatchNameField({
+  field,
+  currentValue,
+  onChange,
+}: {
+  field: DataControlField
+  currentValue: DataControlValue
+  onChange: (key: string, value: DataControlValue) => void
+}) {
+  const [circledInput, setCircledInput] = useState('')
+  const circledNumber = convertToCircledNumber(circledInput)
+
+  function handleInsert() {
+    if (!circledNumber) return
+
+    const baseName = typeof currentValue === 'string' ? currentValue : ''
+    onChange(field.key, `${baseName}${circledNumber}`)
+    setCircledInput('')
+  }
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-slate-700">
+      <span className="font-medium">{field.label}</span>
+      <div className="flex flex-col gap-2">
+        <input
+          type="text"
+          value={toDisplayValue(currentValue)}
+          placeholder={field.placeholder}
+          onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+        />
+        <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs text-slate-600">
+            番号を入れて右のボタンを押すと、丸数字を試合名の末尾に追加します。
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={circledInput}
+              placeholder="例: 1"
+              onChange={(event) => setCircledInput(event.target.value)}
+              className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2"
+            />
+            <button
+              type="button"
+              onClick={handleInsert}
+              disabled={!circledNumber}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {circledNumber ? `${circledNumber} を追加` : '丸数字を追加'}
+            </button>
+          </div>
+        </div>
+      </div>
+      <FieldDescription field={field} />
+    </div>
+  )
+}
+
 function RecordForm({
+  resourceKey,
   fields,
   value,
   submitLabel,
   onChange,
   onSubmit,
   onCancel,
+  successMessage,
 }: RecordFormProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -173,12 +933,22 @@ function RecordForm({
                   <option value="false">false</option>
                   <option value="true">true</option>
                 </select>
+                <FieldDescription field={field} />
               </label>
             )
           }
 
           if (field.type === 'select') {
-            return (
+            return field.allowCustomValue ? (
+              <div key={field.key} className="flex flex-col gap-2">
+                <ReferenceSelectField
+                  field={field}
+                  currentValue={currentValue}
+                  onChange={onChange}
+                />
+                <FieldDescription field={field} />
+              </div>
+            ) : (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
                 <span className="font-medium">{field.label}</span>
                 <select
@@ -193,6 +963,7 @@ function RecordForm({
                     </option>
                   ))}
                 </select>
+                <FieldDescription field={field} />
               </label>
             )
           }
@@ -201,6 +972,40 @@ function RecordForm({
             return (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700 md:col-span-2">
                 <span className="font-medium">{field.label}</span>
+                {field.key === 'pointAllocation' ? (
+                  <PointAllocationEditor
+                    value={currentValue}
+                    onChange={(nextValue) => onChange(field.key, nextValue)}
+                  />
+                ) : null}
+                {field.key === 'participants' ? (
+                  <ParticipantsEditor
+                    field={field}
+                    value={currentValue}
+                    onChange={(nextValue) => onChange(field.key, nextValue)}
+                  />
+                ) : null}
+                {field.presets?.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {field.presets.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() =>
+                          onChange(
+                            field.key,
+                            field.type === 'json'
+                              ? JSON.stringify(preset.value, null, 2)
+                              : preset.value,
+                          )
+                        }
+                        className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 <textarea
                   value={
                     field.type === 'json'
@@ -213,15 +1018,13 @@ function RecordForm({
                   onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                   className="min-h-32 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm"
                 />
+                <FieldDescription field={field} />
               </label>
             )
           }
 
           if (field.type === 'datetime') {
-            const inputValue =
-              typeof currentValue === 'string' && currentValue
-                ? new Date(currentValue).toISOString().slice(0, 16)
-                : ''
+            const inputValue = formatDateTimeLocalValue(currentValue)
 
             return (
               <label key={field.key} className="flex flex-col gap-2 text-sm text-slate-700">
@@ -232,7 +1035,19 @@ function RecordForm({
                   onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2"
                 />
+                <FieldDescription field={field} />
               </label>
+            )
+          }
+
+          if (resourceKey === 'matches' && field.key === 'name' && field.type === 'text') {
+            return (
+              <MatchNameField
+                key={field.key}
+                field={field}
+                currentValue={currentValue}
+                onChange={onChange}
+              />
             )
           }
 
@@ -246,6 +1061,7 @@ function RecordForm({
                 onChange={(event) => onChange(field.key, normalizeDraftValue(field, event.target.value))}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2"
               />
+              <FieldDescription field={field} />
             </label>
           )
         })}
@@ -268,6 +1084,11 @@ function RecordForm({
             キャンセル
           </button>
         ) : null}
+        {successMessage ? (
+          <span className="rounded-full bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+            {successMessage}
+          </span>
+        ) : null}
       </div>
     </div>
   )
@@ -282,17 +1103,27 @@ export function DataControlPage() {
   const [isBootstrapping, setIsBootstrapping] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [createSuccessMessage, setCreateSuccessMessage] = useState<string | null>(null)
   const [editingRecordId, setEditingRecordId] = useState<number | null>(null)
   const [createDraft, setCreateDraft] = useState<Record<string, DataControlValue>>({})
   const [editDraft, setEditDraft] = useState<Record<string, DataControlValue>>({})
   const [importFormat, setImportFormat] = useState<DataControlImportFormat>('json')
   const [importText, setImportText] = useState('')
   const [importResult, setImportResult] = useState<string | null>(null)
+  const [activeMatchBlockId, setActiveMatchBlockId] = useState<number | null>(null)
 
   const activeResource = useMemo(
     () => resourceDefinitions.find((definition) => definition.key === activeResourceKey) ?? null,
     [activeResourceKey, resourceDefinitions],
   )
+
+  const filteredRecords = useMemo(() => {
+    if (activeResourceKey !== 'matches' || activeMatchBlockId === null) {
+      return records
+    }
+
+    return records.filter((record) => record.eventBlockId === activeMatchBlockId)
+  }, [activeMatchBlockId, activeResourceKey, records])
 
   const previewEventId = useMemo(() => {
     if (!masterData) return null
@@ -304,21 +1135,12 @@ export function DataControlPage() {
     }
 
     if (activeResourceKey === 'matches') {
-      const targetRecord =
-        (editingRecordId !== null
-          ? records.find((record) => record.id === editingRecordId)
-          : records[0]) ?? null
-
-      if (!targetRecord) return null
-
-      const eventBlockId = targetRecord.eventBlockId
-      if (typeof eventBlockId !== 'number') return null
-
-      return masterData.blocks.find((block) => block.id === eventBlockId)?.eventId ?? null
+      if (activeMatchBlockId === null) return null
+      return masterData.blocks.find((block) => block.id === activeMatchBlockId)?.eventId ?? null
     }
 
     return null
-  }, [activeResourceKey, editingRecordId, masterData, records])
+  }, [activeMatchBlockId, activeResourceKey, editingRecordId, masterData, records])
 
   const previewData = useMemo(() => {
     if (!masterData || !previewEventId) return null
@@ -351,11 +1173,33 @@ export function DataControlPage() {
   const resolvedPreviewEventId = canShowPreview ? previewEventId : null
   const resolvedPreviewData = canShowPreview ? previewData : null
 
+  const matchBlockOptions = useMemo(() => {
+    if (!masterData) return []
+
+    const blockIds = new Set(
+      records
+        .map((record) => record.eventBlockId)
+        .filter((value): value is number => typeof value === 'number'),
+    )
+
+    return masterData.blocks
+      .filter((block) => blockIds.has(block.id))
+      .map((block) => {
+        const eventName =
+          masterData.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
+
+        return {
+          value: block.id,
+          label: `${eventName} / ${block.name}`,
+        }
+      })
+  }, [masterData, records])
+
   const tableFields = useMemo(() => {
     if (!activeResource) return []
 
     const configuredFields = new Map(activeResource.fields.map((field) => [field.key, field]))
-    const observedKeys = records.flatMap((record) => Object.keys(record))
+    const observedKeys = filteredRecords.flatMap((record) => Object.keys(record))
     const unknownKeys = Array.from(new Set(observedKeys)).filter((key) => !configuredFields.has(key))
 
     return [
@@ -366,7 +1210,7 @@ export function DataControlPage() {
         type: 'text' as const,
       })),
     ]
-  }, [activeResource, records])
+  }, [activeResource, filteredRecords])
 
   async function loadActiveResource(resource: DataControlResourceDefinition) {
     const nextRecords = await resource.fetchRecords()
@@ -374,11 +1218,21 @@ export function DataControlPage() {
   }
 
   async function refreshMasterContext() {
-    const { masterData, mapOptions, locationOptions, eventOptions, eventBlockOptions } = await fetchAdminMasterOptions()
+    const {
+      masterData,
+      mapOptions,
+      locationOptions,
+      eventOptions,
+      teamOptions,
+      prereqMatchOptions,
+      eventBlockOptions,
+    } = await fetchAdminMasterOptions()
     const definitions = createAdminResourceDefinitions(
       mapOptions,
       locationOptions,
       eventOptions,
+      teamOptions,
+      prereqMatchOptions,
       eventBlockOptions,
     )
 
@@ -408,7 +1262,9 @@ export function DataControlPage() {
     setCreateDraft(getInitialDraft(activeResource.fields))
     setEditDraft({})
     setEditingRecordId(null)
+    setActiveMatchBlockId(null)
     setActiveMainView('table')
+    setCreateSuccessMessage(null)
 
     startTransition(() => {
       setErrorMessage(null)
@@ -417,6 +1273,54 @@ export function DataControlPage() {
       })
     })
   }, [activeResource])
+
+  useEffect(() => {
+    if (!createSuccessMessage) return
+
+    const timeoutId = window.setTimeout(() => {
+      setCreateSuccessMessage(null)
+    }, 2500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [createSuccessMessage])
+
+  useEffect(() => {
+    if (activeResourceKey !== 'matches') return
+
+    const availableBlockIds = Array.from(
+      new Set(
+        records
+          .map((record) => record.eventBlockId)
+          .filter((value): value is number => typeof value === 'number'),
+      ),
+    )
+
+    if (availableBlockIds.length === 0) {
+      setActiveMatchBlockId(null)
+      return
+    }
+
+    if (activeMatchBlockId === null || !availableBlockIds.includes(activeMatchBlockId)) {
+      setActiveMatchBlockId(availableBlockIds[0])
+    }
+  }, [activeMatchBlockId, activeResourceKey, records])
+
+  useEffect(() => {
+    if (activeResourceKey !== 'matches' || activeMatchBlockId === null) return
+
+    setCreateDraft((current) => ({
+      ...current,
+      eventBlockId: activeMatchBlockId,
+    }))
+
+    if (editingRecordId !== null) {
+      const editingRecord = records.find((record) => record.id === editingRecordId) ?? null
+      if (editingRecord?.eventBlockId !== activeMatchBlockId) {
+        setEditingRecordId(null)
+        setEditDraft({})
+      }
+    }
+  }, [activeMatchBlockId, activeResourceKey, editingRecordId, records])
 
   function updateCreateDraft(key: string, value: DataControlValue) {
     setCreateDraft((current) => ({ ...current, [key]: value }))
@@ -432,17 +1336,19 @@ export function DataControlPage() {
     try {
       validateDraft(activeResource.fields, createDraft)
       setErrorMessage(null)
-      await activeResource.createRecord(
-        prepareDraftForSubmit(activeResource.fields, createDraft),
-      )
+      await activeResource.createRecord(prepareDraftForSubmit(activeResource.fields, createDraft))
       const nextDefinitions = await refreshMasterContext()
       const nextActiveResource =
         nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
       if (nextActiveResource) {
         await loadActiveResource(nextActiveResource)
-        setCreateDraft(getInitialDraft(nextActiveResource.fields))
+        setCreateDraft((current) =>
+          buildCreateDraftAfterSubmit(activeResource.key, nextActiveResource.fields, current),
+        )
       }
+      setCreateSuccessMessage(`${activeResource.label}を作成しました`)
     } catch (error) {
+      setCreateSuccessMessage(null)
       setErrorMessage(error instanceof Error ? error.message : '作成に失敗しました')
     }
   }
@@ -504,8 +1410,8 @@ export function DataControlPage() {
 
     const content =
       format === 'json'
-        ? exportRecordsAsJson(records)
-        : exportRecordsAsCsv(activeResource.fields, records)
+        ? exportRecordsAsJson(filteredRecords)
+        : exportRecordsAsCsv(activeResource.fields, filteredRecords)
 
     downloadTextFile(
       `${activeResource.key}-${new Date().toISOString().slice(0, 10)}.${format}`,
@@ -519,20 +1425,45 @@ export function DataControlPage() {
 
     try {
       setErrorMessage(null)
-      const importedRecords = parseImportedRecords(importFormat, activeResource.fields, importText)
+      let importedRecords = parseImportedRecords(importFormat, activeResource.fields, importText)
+
+      if (activeResourceKey === 'matches' && activeMatchBlockId !== null) {
+        importedRecords = importedRecords.map((record) => {
+          const idValue = record[activeResource.primaryKey]
+          const eventBlockId = record.eventBlockId
+
+          if (typeof eventBlockId === 'number' && eventBlockId !== activeMatchBlockId) {
+            throw new Error('試合取込は現在選択中のイベントブロックと同じ eventBlockId のみ取り込めます')
+          }
+
+          if (typeof idValue === 'number') {
+            const existingRecord = records.find((item) => item.id === idValue)
+            if (existingRecord?.eventBlockId !== activeMatchBlockId) {
+              throw new Error('現在選択中ではないイベントブロックの試合は更新できません')
+            }
+          }
+
+          return {
+            ...record,
+            eventBlockId: activeMatchBlockId,
+          }
+        })
+      }
+
       let createdCount = 0
       let updatedCount = 0
 
       for (const importedRecord of importedRecords) {
         const idValue = importedRecord[activeResource.primaryKey]
+        const preparedRecord = prepareDraftForSubmit(activeResource.fields, importedRecord)
 
         if (typeof idValue === 'number') {
-          await activeResource.updateRecord(idValue, importedRecord)
+          await activeResource.updateRecord(idValue, preparedRecord)
           updatedCount += 1
           continue
         }
 
-        await activeResource.createRecord(importedRecord)
+        await activeResource.createRecord(preparedRecord)
         createdCount += 1
       }
 
@@ -550,18 +1481,39 @@ export function DataControlPage() {
   }
 
   async function handleImportFile(file: File | null) {
-    if (!file) return
+    if (!file || !activeResource) return
 
-    const text = await file.text()
-    setImportText(text)
+    setErrorMessage(null)
+    setImportResult(null)
 
-    if (file.name.endsWith('.csv')) {
-      setImportFormat('csv')
-      return
-    }
+    try {
+      const text = await file.text()
+      setImportText(text)
 
-    if (file.name.endsWith('.json')) {
-      setImportFormat('json')
+      const lowerName = file.name.toLowerCase()
+      const inferredFormat =
+        lowerName.endsWith('.csv')
+          ? 'csv'
+          : lowerName.endsWith('.json')
+            ? 'json'
+            : inferImportFormatFromText(text)
+
+      if (inferredFormat) {
+        setImportFormat(inferredFormat)
+      }
+
+      try {
+        const targetFields =
+          activeResourceKey === 'matches'
+            ? activeResource.fields.filter((field) => field.key !== 'participants')
+            : activeResource.fields
+        parseImportedRecords(inferredFormat ?? importFormat, targetFields, text)
+        setImportResult('ファイルを読み込みました。内容を確認してから取込実行してください。')
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'ファイルの解析に失敗しました')
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'ファイルの読込に失敗しました')
     }
   }
 
@@ -580,7 +1532,7 @@ export function DataControlPage() {
           <p className="text-sm font-medium text-slate-500">System Admin</p>
           <h1 className="mt-2 text-2xl font-semibold">データコントロール</h1>
           <p className="mt-2 text-sm text-slate-600">
-            `teams` `locations` `events` `matches` の個別編集、一覧確認、JSON / CSV の入出力を行います。
+            `maps` `teams` `locations` `events` `matches` の個別編集、一覧確認、JSON / CSV の入出力を行います。
           </p>
         </section>
 
@@ -623,7 +1575,7 @@ export function DataControlPage() {
                 <p className="text-sm text-slate-500">
                   {activeMainView === 'preview'
                     ? '既存の対戦表コンポーネントを使って、関連イベントの見え方を確認できます。'
-                    : `${records.length} 件`}
+                    : `${filteredRecords.length} 件`}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -667,9 +1619,39 @@ export function DataControlPage() {
               </div>
             </div>
 
+            {activeResourceKey === 'matches' && matchBlockOptions.length > 0 ? (
+              <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <label className="flex flex-col gap-2 text-sm text-slate-700 md:max-w-xl">
+                  <span className="font-medium">編集対象イベントブロック</span>
+                  <select
+                    value={activeMatchBlockId ?? ''}
+                    onChange={(event) => setActiveMatchBlockId(Number(event.target.value) || null)}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                  >
+                    {matchBlockOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-slate-500">
+                    一覧・作成・取込は選択中ブロック単位で扱います。プレビューは同一イベント内のブロックをまとめて表示します。
+                  </span>
+                </label>
+              </div>
+            ) : null}
+
             {activeMainView === 'preview' && resolvedPreviewEventId && resolvedPreviewData ? (
               <div className="overflow-x-auto">
-                <EventBracket eventId={resolvedPreviewEventId} previewData={resolvedPreviewData} />
+                {activeResourceKey === 'matches' ? (
+                  <MatchesPreviewByEvent
+                    eventId={resolvedPreviewEventId}
+                    activeBlockId={activeMatchBlockId}
+                    previewData={resolvedPreviewData}
+                  />
+                ) : (
+                  <EventBracket eventId={resolvedPreviewEventId} previewData={resolvedPreviewData} />
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -690,12 +1672,12 @@ export function DataControlPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {records.map((record) => (
+                    {filteredRecords.map((record) => (
                       <tr key={String(record.id ?? JSON.stringify(record))} className="align-top">
                         {tableFields.map((field) => (
                           <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
                             <div className="min-w-24 whitespace-pre-wrap break-words">
-                              {toDisplayValue(record[field.key] ?? null)}
+                              {renderTableCellValue(field, record[field.key] ?? null, masterData)}
                             </div>
                           </td>
                         ))}
@@ -721,7 +1703,7 @@ export function DataControlPage() {
                         </td>
                       </tr>
                     ))}
-                    {records.length === 0 ? (
+                    {filteredRecords.length === 0 ? (
                       <tr>
                         <td
                           colSpan={tableFields.length + 1}
@@ -781,6 +1763,7 @@ export function DataControlPage() {
                     accept=".json,.csv,application/json,text/csv"
                     onChange={(event) => {
                       void handleImportFile(event.target.files?.[0] ?? null)
+                      event.target.value = ''
                     }}
                     className="block text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-2 file:text-sm file:font-medium"
                   />
@@ -815,11 +1798,13 @@ export function DataControlPage() {
               <h2 className="text-lg font-semibold">新規作成</h2>
             </div>
             <RecordForm
+              resourceKey={activeResource.key}
               fields={activeResource.fields.filter((field) => !field.readOnly)}
               value={createDraft}
               submitLabel="作成"
               onChange={updateCreateDraft}
               onSubmit={handleCreate}
+              successMessage={createSuccessMessage}
             />
           </section>
 
@@ -837,6 +1822,7 @@ export function DataControlPage() {
               </div>
             ) : (
               <RecordForm
+                resourceKey={activeResource.key}
                 fields={activeResource.fields}
                 value={editDraft}
                 submitLabel="更新"
