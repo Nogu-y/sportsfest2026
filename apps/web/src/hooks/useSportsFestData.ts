@@ -4,7 +4,30 @@ import {api} from '../lib/api/client';
 import type {PublicMasterResponse} from '../../../api/src/schemas/public/master';
 import type {LiveResponse} from '../../../api/src/schemas/public/live';
 import type {MatchWithEventIdType} from '../types/SportsFestDataTypes';
-import {ParticipantType} from "../../../api/src/schemas/sportsData";
+import {matchStatusEnumType, ParticipantType} from "../../../api/src/schemas/sportsData";
+
+function derivePreMatchStatus(
+    status: matchStatusEnumType,
+    participants: ParticipantType[] | undefined
+): matchStatusEnumType {
+    if (status !== "Waiting" || !participants || participants.length === 0) {
+        return status;
+    }
+
+    const hasResolvedParticipants = participants.every((participant) => participant.teamId !== null);
+    const hasNoPrerequisites = participants.every(
+        (participant) =>
+            participant.prereqMatchId === null &&
+            participant.prereqBlockId === null &&
+            participant.prereqRank === null
+    );
+
+    if (hasResolvedParticipants && hasNoPrerequisites) {
+        return "Preparing";
+    }
+
+    return status;
+}
 
 export function useSportsFestData() {
     const latestMasterRef = useRef<PublicMasterResponse | null>(null);
@@ -64,7 +87,8 @@ export function useSportsFestData() {
 
     const {
         data: liveData,
-        error: liveError
+        error: liveError,
+        mutate: mutateLive
     } = useSWR<LiveResponse>('api/public/live', fetchLive, {  // URLでは無くあくまでkey
         refreshInterval: 15000, // 15秒ごとに自動更新
         dedupingInterval: 2000,  // 2秒以内の重複リクエストは1つにまとめる.
@@ -89,6 +113,7 @@ export function useSportsFestData() {
         if (!liveData?.matches || liveData.matches.length === 0) {
             return masterData.matches.map(m => ({
                 ...m,
+                status: derivePreMatchStatus(m.status, m.participants),
                 eventId: blockIdToEventIdMap.get(m.eventBlockId) || 0,
             }));
         }
@@ -105,6 +130,7 @@ export function useSportsFestData() {
             if (!liveMatch) {
                 return {
                     ...masterMatch,
+                    status: derivePreMatchStatus(masterMatch.status, masterMatch.participants),
                     eventId,
                 };
             }
@@ -217,6 +243,7 @@ export function useSportsFestData() {
         scores: liveData?.scores || [],
 
         refreshMaster: mutateMaster,
+        refreshLive: mutateLive,
         dayLabelConverter,
         getEvent,
         getLocation,
