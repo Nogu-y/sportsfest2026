@@ -1251,6 +1251,70 @@ export function DataControlPage() {
       })
   }, [activeMatchEventId, masterData, records])
 
+  const createFormFields = useMemo(() => {
+    const baseFields = activeResource?.fields.filter((field) => !field.readOnly) ?? []
+    if (!masterData || activeResource?.key !== 'matches') return baseFields
+
+    const eventBlockId = typeof createDraft.eventBlockId === 'number' ? createDraft.eventBlockId : null
+    const eventId = eventBlockId === null
+      ? null
+      : (masterData.blocks.find((block) => block.id === eventBlockId)?.eventId ?? null)
+
+    return baseFields.map((field) => {
+      if (field.key !== 'participants') return field
+
+      const participantPrereqMatchOptions =
+        eventId === null
+          ? []
+          : masterData.matches
+            .filter((match) => {
+              const block = masterData.blocks.find((item) => item.id === match.eventBlockId)
+              return block?.eventId === eventId
+            })
+            .map((match) => ({
+              value: match.id,
+              label: `${match.id}: ${match.name ?? '名称未設定'}`,
+            }))
+
+      return {
+        ...field,
+        participantPrereqMatchOptions,
+      }
+    })
+  }, [activeResource, createDraft.eventBlockId, masterData])
+
+  const editFormFields = useMemo(() => {
+    const baseFields = activeResource?.fields ?? []
+    if (!masterData || activeResource?.key !== 'matches') return baseFields
+
+    const eventBlockId = typeof editDraft.eventBlockId === 'number' ? editDraft.eventBlockId : null
+    const eventId = eventBlockId === null
+      ? null
+      : (masterData.blocks.find((block) => block.id === eventBlockId)?.eventId ?? null)
+
+    return baseFields.map((field) => {
+      if (field.key !== 'participants') return field
+
+      const participantPrereqMatchOptions =
+        eventId === null
+          ? []
+          : masterData.matches
+            .filter((match) => {
+              const block = masterData.blocks.find((item) => item.id === match.eventBlockId)
+              return block?.eventId === eventId
+            })
+            .map((match) => ({
+              value: match.id,
+              label: `${match.id}: ${match.name ?? '名称未設定'}`,
+            }))
+
+      return {
+        ...field,
+        participantPrereqMatchOptions,
+      }
+    })
+  }, [activeResource, editDraft.eventBlockId, masterData])
+
   const tableFields = useMemo(() => {
     if (!activeResource) return []
 
@@ -1943,7 +2007,7 @@ export function DataControlPage() {
             </div>
             <RecordForm
               resourceKey={activeResource.key}
-              fields={activeResource.fields.filter((field) => !field.readOnly)}
+              fields={createFormFields}
               value={createDraft}
               submitLabel="作成"
               onChange={updateCreateDraft}
@@ -1967,7 +2031,7 @@ export function DataControlPage() {
             ) : (
               <RecordForm
                 resourceKey={activeResource.key}
-                fields={activeResource.fields}
+                fields={editFormFields}
                 value={editDraft}
                 submitLabel="更新"
                 onChange={updateEditDraft}
