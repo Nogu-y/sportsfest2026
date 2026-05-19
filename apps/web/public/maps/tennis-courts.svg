@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 826 687" width="826" height="687" role="img" aria-labelledby="title desc">
+  <title id="title">テニスコート会場マップ</title>
+  <desc id="desc">受付、1コートから4コート、予備コート、プール側、野球グラウンド側を示したテニスコート会場の簡易マップ</desc>
+
+  <style>
+    .border {
+      fill: none;
+      stroke: #111827;
+      stroke-width: 2;
+    }
+
+    .accent {
+      fill: none;
+      stroke: #2563eb;
+      stroke-width: 1.5;
+    }
+
+    .label-box {
+      fill: #ffffff;
+      stroke: #111827;
+      stroke-width: 2;
+    }
+
+    .highlight-box {
+      fill: #ffffff;
+      stroke: #2f4f8f;
+      stroke-width: 5;
+    }
+
+    .label {
+      fill: #111827;
+      font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+      font-size: 20px;
+    }
+
+    .small {
+      font-size: 18px;
+    }
+
+    .large {
+      font-size: 24px;
+    }
+  </style>
+
+  <rect width="826" height="687" fill="#ffffff" />
+
+  <rect class="highlight-box" x="8" y="64" width="56" height="118" />
+  <text class="label large" x="36" y="123" text-anchor="middle" writing-mode="tb" glyph-orientation-vertical="0">受付</text>
+
+  <rect class="border" x="68" y="64" width="341" height="569" />
+  <rect class="border" x="419" y="64" width="340" height="373" />
+  <rect class="border" x="91" y="64" width="290" height="146" />
+  <rect class="border" x="90" y="259" width="291" height="179" />
+  <rect class="border" x="90" y="488" width="293" height="145" />
+  <rect class="border" x="444" y="64" width="292" height="147" />
+  <rect class="border" x="444" y="260" width="292" height="178" />
+
+  <line class="accent" x1="236" y1="64" x2="236" y2="210" />
+  <line class="accent" x1="236" y1="259" x2="236" y2="438" />
+  <line class="accent" x1="237" y1="488" x2="237" y2="633" />
+  <line class="accent" x1="590" y1="76" x2="590" y2="211" />
+  <line class="accent" x1="590" y1="260" x2="590" y2="438" />
+
+  <rect class="label-box" x="371" y="67" width="48" height="106" />
+  <text class="label small" x="395" y="119" text-anchor="middle" writing-mode="tb">プール側</text>
+
+  <rect class="label-box" x="519" y="427" width="140" height="58" />
+  <text class="label small" x="589" y="451" text-anchor="middle">
+    <tspan x="589" dy="0">野球グラウ</tspan>
+    <tspan x="589" dy="24">ンド側</tspan>
+  </text>
+
+  <text class="label" x="109" y="196">1コート</text>
+  <text class="label" x="109" y="421">2コート</text>
+  <text class="label" x="464" y="198">3コート</text>
+  <text class="label" x="464" y="421">4コート</text>
+  <text class="label" x="109" y="617">予備</text>
+
+  <rect class="highlight-box" x="446" y="563" width="249" height="61" />
+  <text class="label large" x="570" y="603" text-anchor="middle">テニスコート</text>
+</svg>

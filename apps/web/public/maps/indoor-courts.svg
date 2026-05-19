@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 725 347" width="725" height="347" role="img" aria-labelledby="title desc">
+  <title id="title">屋内コート会場マップ</title>
+  <desc id="desc">入口、本部、出口、第1から第5コート配置を示した屋内会場マップ</desc>
+
+  <style>
+    .frame {
+      fill: #ffffff;
+      stroke: #3f3f46;
+      stroke-width: 2;
+    }
+
+    .label-box {
+      fill: #ffffff;
+      stroke: #3f3f46;
+      stroke-width: 2;
+    }
+
+    .head-box {
+      fill: #a3a3a3;
+      stroke: #3f3f46;
+      stroke-width: 2;
+    }
+
+    .court-box {
+      fill: #8eb2d2;
+      stroke: #334155;
+      stroke-width: 2;
+    }
+
+    .center-line {
+      stroke: #4b5563;
+      stroke-width: 2;
+      stroke-dasharray: 6 4;
+    }
+
+    .text {
+      fill: #111827;
+      font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .text-court {
+      fill: #0f172a;
+      font-size: 18px;
+      font-weight: 700;
+    }
+  </style>
+
+  <rect width="725" height="347" fill="#ffffff" />
+  <rect class="frame" x="45" y="57" width="649" height="242" />
+
+  <rect class="label-box" x="133" y="36" width="124" height="40" />
+  <text class="text" x="195" y="62" text-anchor="middle">出口</text>
+
+  <rect class="head-box" x="320" y="36" width="123" height="40" />
+  <text class="text" x="381" y="62" text-anchor="middle">本部</text>
+
+  <rect class="label-box" x="507" y="36" width="124" height="40" />
+  <text class="text" x="569" y="62" text-anchor="middle">出口</text>
+
+  <rect class="label-box" x="18" y="138" width="52" height="80" />
+  <text class="text" x="44" y="178" text-anchor="middle" writing-mode="tb">入口</text>
+
+  <rect class="label-box" x="133" y="279" width="124" height="41" />
+  <text class="text" x="195" y="306" text-anchor="middle">出口</text>
+
+  <rect class="label-box" x="507" y="279" width="124" height="41" />
+  <text class="text" x="569" y="306" text-anchor="middle">出口</text>
+
+  <line class="center-line" x1="381" y1="76" x2="381" y2="298" />
+
+  <rect class="court-box" x="133" y="98" width="124" height="40" />
+  <text class="text-court" x="138" y="123">第4コート</text>
+
+  <rect class="court-box" x="133" y="218" width="124" height="40" />
+  <text class="text-court" x="138" y="243">第5コート</text>
+
+  <rect class="court-box" x="507" y="98" width="124" height="40" />
+  <text class="text-court" x="512" y="123">第1コート</text>
+
+  <rect class="court-box" x="507" y="158" width="124" height="40" />
+  <text class="text-court" x="512" y="183">第2コート</text>
+
+  <rect class="court-box" x="507" y="218" width="124" height="40" />
+  <text class="text-court" x="512" y="243">第3コート</text>
+</svg>
