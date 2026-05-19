@@ -15,6 +15,13 @@
       "when": 1778506760620,
       "tag": "0001_yummy_sinister_six",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779102306911,
+      "tag": "0002_aspiring_blockbuster",
+      "breakpoints": true
     }
   ]
 }

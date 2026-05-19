@@ -54,6 +54,7 @@ const main = async () => {
     // 参照関係をまとめて初期化し、投入後に連番を現在値へ揃える。
     await tx.execute(
       sql`TRUNCATE TABLE
+        match_reminder_logs,
         watchlists,
         user_subscriptions,
         scores,
