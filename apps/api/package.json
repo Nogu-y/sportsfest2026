@@ -10,6 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:insert": "tsx src/db/data/insert.ts",
+    "db:import-rows": "tsx src/db/data/importRows.ts",
+    "db:clear-rows": "tsx src/db/data/clearRows.ts",
     "auth:add-user": "tsx src/scripts/auth/createUserCli.ts"
   },
   "dependencies": {
