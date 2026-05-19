@@ -11,17 +11,21 @@ export function StaffDashboardPage() {
     isError,
     locationOptions,
     locationSections,
+    scorableEvents,
     selectedLocationIds,
     showCompletedMatches,
     toggleLocation,
     setShowCompletedMatches,
     updateStatus,
     submitResult,
+    finalizeEventScore,
     getEvent,
     getMatchTeamsLabel,
     dayLabelConverter,
     getMatchError,
     isMatchPending,
+    getEventScoreError,
+    isEventScorePending,
   } = useStaffDashboard();
   const [now, setNow] = useState(() => new Date());
 
@@ -63,6 +67,45 @@ export function StaffDashboardPage() {
           showCompletedMatches={showCompletedMatches}
           onToggleCompletedMatches={setShowCompletedMatches}
         />
+
+        {scorableEvents.length > 0 ? (
+          <section className="rounded-[18px] border border-[#D9E6F0] bg-white px-6 py-5 shadow-[0_22px_44px_rgba(28,54,80,0.08)]">
+            <div className="flex flex-col gap-4">
+              <div>
+                <h2 className="text-[18px] font-semibold text-[#2D5378]">得点計算</h2>
+                <p className="mt-1 text-sm text-[#7A96B0]">
+                  全試合が終了した種目だけ得点計算を開始できます。
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {scorableEvents.map((event) => (
+                  <div key={event.id} className="flex min-w-[240px] flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => finalizeEventScore(event.id)}
+                      disabled={isEventScorePending(event.id)}
+                      className="flex items-center justify-between rounded-[12px] border border-[#C9D9E7] bg-[#F8FBFD] px-4 py-3 text-left text-[#426A90] transition hover:border-[#7FA2C4] hover:bg-white disabled:cursor-wait disabled:opacity-60"
+                    >
+                      <span className="flex items-center gap-3">
+                        <span
+                          className="h-3 w-3 rounded-full border border-white/70"
+                          style={{ backgroundColor: event.color ?? "#7FA2C4" }}
+                        />
+                        <span className="text-sm font-medium">{event.name}</span>
+                      </span>
+                      <span className="text-sm text-[#4978A6]">
+                        {isEventScorePending(event.id) ? "送信中..." : "計算開始"}
+                      </span>
+                    </button>
+                    {getEventScoreError(event.id) ? (
+                      <p className="text-[13px] text-[#A04E4E]">{getEventScoreError(event.id)}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {selectedLocationIds.length === 0 ? (
           <section className="rounded-[18px] border border-dashed border-[#C7D7E6] bg-white px-6 py-16 text-center text-[#6E8BA7]">

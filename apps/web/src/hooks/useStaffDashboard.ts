@@ -26,6 +26,12 @@ type LocationSection = {
   matches: MatchWithEventIdType[];
 };
 
+type ScorableEvent = {
+  id: number;
+  name: string;
+  color: string | null;
+};
+
 const STAFF_REQUEST_TIMEOUT_MS = 8000;
 
 async function parseErrorMessage(response: Response, fallbackMessage: string) {
@@ -65,6 +71,7 @@ export function useStaffDashboard() {
     isError,
     matches: sourceMatches,
     locations,
+    events,
     getEvent,
     getLocation,
     getMatchTeamsLabel,
@@ -76,6 +83,10 @@ export function useStaffDashboard() {
   const [matchOverrides, setMatchOverrides] = useState<Record<number, MatchOverride>>({});
   const [pendingActions, setPendingActions] = useState<Record<number, PendingAction | undefined>>({});
   const [matchErrors, setMatchErrors] = useState<Record<number, string | undefined>>({});
+  const [pendingEventScores, setPendingEventScores] = useState<Record<number, boolean | undefined>>(
+    {},
+  );
+  const [eventScoreErrors, setEventScoreErrors] = useState<Record<number, string | undefined>>({});
 
   const matches = useMemo(() => {
     return sourceMatches.map((match) => {
@@ -156,6 +167,43 @@ export function useStaffDashboard() {
     setMatchErrors((current) => ({
       ...current,
       [matchId]: undefined,
+    }));
+  }, []);
+
+  const scorableEvents = useMemo((): ScorableEvent[] => {
+    const doneStatuses = new Set(["Completed", "Cancelled"]);
+
+    return events
+      .filter((event) => {
+        if (event.isCompleted) {
+          return false;
+        }
+
+        const eventMatches = matches.filter((match) => match.eventId === event.id);
+        if (eventMatches.length === 0) {
+          return false;
+        }
+
+        return eventMatches.every((match) => doneStatuses.has(match.status));
+      })
+      .map((event) => ({
+        id: event.id,
+        name: event.name,
+        color: event.color,
+      }));
+  }, [events, matches]);
+
+  const setEventScorePending = useCallback((eventId: number, isPending: boolean) => {
+    setPendingEventScores((current) => ({
+      ...current,
+      [eventId]: isPending,
+    }));
+  }, []);
+
+  const clearEventScoreError = useCallback((eventId: number) => {
+    setEventScoreErrors((current) => ({
+      ...current,
+      [eventId]: undefined,
     }));
   }, []);
 
@@ -268,11 +316,45 @@ export function useStaffDashboard() {
     [clearMatchError, matches, refreshLive, setPendingAction],
   );
 
+  const finalizeEventScore = useCallback(
+    async (eventId: number) => {
+      clearEventScoreError(eventId);
+      setEventScorePending(eventId, true);
+
+      try {
+        const response = await withRequestTimeout(
+          api.api.staff.events[":eventId"].score.$post({
+            param: { eventId },
+          }),
+          "得点計算がタイムアウトしました。時間をおいて再試行してください。",
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            await parseErrorMessage(response, "得点計算の開始に失敗しました"),
+          );
+        }
+
+        await refreshLive();
+      } catch (error) {
+        setEventScoreErrors((current) => ({
+          ...current,
+          [eventId]:
+            error instanceof Error ? error.message : "得点計算の開始に失敗しました",
+        }));
+      } finally {
+        setEventScorePending(eventId, false);
+      }
+    },
+    [clearEventScoreError, refreshLive, setEventScorePending],
+  );
+
   return {
     isLoading,
     isError,
     locationOptions,
     locationSections,
+    scorableEvents,
     selectedLocationIds,
     showCompletedMatches,
     matches,
@@ -280,11 +362,14 @@ export function useStaffDashboard() {
     setShowCompletedMatches,
     updateStatus,
     submitResult,
+    finalizeEventScore,
     getEvent,
     getLocation,
     getMatchTeamsLabel,
     dayLabelConverter,
     getMatchError: (matchId: number) => matchErrors[matchId],
     isMatchPending: (matchId: number) => pendingActions[matchId] !== undefined,
+    getEventScoreError: (eventId: number) => eventScoreErrors[eventId],
+    isEventScorePending: (eventId: number) => pendingEventScores[eventId] === true,
   };
 }
