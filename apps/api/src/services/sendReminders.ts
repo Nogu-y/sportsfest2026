@@ -1,5 +1,5 @@
-import { and, eq, gte, isNull, lt } from "drizzle-orm";
-import { addMinutes } from "date-fns";
+import { and, eq, gte, isNull, inArray, lte } from "drizzle-orm";
+import { addMinutes, differenceInMinutes, startOfMinute } from "date-fns";
 import webpush from "web-push";
 import { db } from "../db/client";
 import {
@@ -7,6 +7,10 @@ import {
   watchlists,
   userSubscriptions,
   matchReminderLogs,
+  matchParticipants,
+  teams,
+  eventBlocks,
+  events,
 } from "../db/schema";
 
 webpush.setVapidDetails(
@@ -17,10 +21,8 @@ webpush.setVapidDetails(
 
 export async function sendMatchReminders() {
   const now = new Date();
-
-  // 検索範囲。11分の時にうまくいくとは限らないから、身限りとして5まで値を決めてやう
   const from = addMinutes(now, 5);
-  const to = addMinutes(now, 11);
+  const to = addMinutes(now, 10);
 
   try {
     const rawTargets = await db
@@ -28,12 +30,17 @@ export async function sendMatchReminders() {
         matchId: matchPlans.id,
         matchName: matchPlans.name,
         matchDescription: matchPlans.description,
+        scheduledStartTime: matchPlans.scheduledStartTime,
+        eventName: events.name,
+        blockName: eventBlocks.name,
         subscriptionId: userSubscriptions.id,
         endpoint: userSubscriptions.endpoint,
         p256dh: userSubscriptions.p256dh,
         auth: userSubscriptions.auth,
       })
       .from(matchPlans)
+      .innerJoin(eventBlocks, eq(matchPlans.eventBlockId, eventBlocks.id))
+      .innerJoin(events, eq(eventBlocks.eventId, events.id))
       .innerJoin(watchlists, eq(watchlists.matchPlanId, matchPlans.id))
       .innerJoin(userSubscriptions, eq(watchlists.userSubscriptionId, userSubscriptions.id))
       .leftJoin(
@@ -46,7 +53,7 @@ export async function sendMatchReminders() {
       .where(
         and(
           gte(matchPlans.scheduledStartTime, from),
-          lt(matchPlans.scheduledStartTime, to),
+          lte(matchPlans.scheduledStartTime, to),
           eq(matchPlans.status, "Waiting"),
           isNull(matchReminderLogs.matchPlanId)
         )
@@ -56,7 +63,40 @@ export async function sendMatchReminders() {
       return;
     }
 
+    const matchIds = Array.from(new Set(rawTargets.map((t) => t.matchId)));
+
+    const participantRows = await db
+      .select({
+        matchPlanId: matchParticipants.matchPlanId,
+        teamName: teams.name,
+      })
+      .from(matchParticipants)
+      .innerJoin(teams, eq(matchParticipants.teamId, teams.id))
+      .where(inArray(matchParticipants.matchPlanId, matchIds));
+
+    const matchTeamsMap = new Map<number, string[]>();
+    for (const row of participantRows) {
+      if (!matchTeamsMap.has(row.matchPlanId)) {
+        matchTeamsMap.set(row.matchPlanId, []);
+      }
+      matchTeamsMap.get(row.matchPlanId)!.push(row.teamName);
+    }
+
     for (const target of rawTargets) {
+      const minutesLeft = differenceInMinutes(
+        startOfMinute(target.scheduledStartTime),
+        startOfMinute(now)
+      );
+
+      const fetchedTeams = matchTeamsMap.get(target.matchId) || [];
+      const matchVersus = fetchedTeams.length >= 2
+        ? fetchedTeams.join(" vs ")
+        : "対戦相手未定";
+
+      const eventDisplay = target.matchDescription ?? `${target.eventName} ${target.blockName}`;
+
+      const matchNumberDisplay = target.matchName ? ` (${target.matchName})` : "";
+
       try {
         await webpush.sendNotification(
           {
@@ -64,9 +104,9 @@ export async function sendMatchReminders() {
             keys: { p256dh: target.p256dh, auth: target.auth },
           },
           JSON.stringify({
-            title: "試合開始まもなく",
-            body: `${target.matchDescription ?? target.matchName} がまもなく開始します`,
-            url: `/matches/${target.matchId}`,
+            title: `試合開始まであと${minutesLeft}分！`,
+            body: `【${matchVersus}】${eventDisplay} がまもなく開始します${matchNumberDisplay}`,
+            url: `/match/${target.matchId}`,
           })
         );
 
@@ -85,12 +125,12 @@ export async function sendMatchReminders() {
             .where(eq(userSubscriptions.id, target.subscriptionId));
         } else {
           console.error(
-            `[Push] Temporary failure for Subscription ID: ${target.subscriptionId}. Will retry in the next minute.`
+            `[ERROR][Push] Temporary failure for Subscription ID: ${target.subscriptionId}. Will retry in the next minute.`
           );
         }
       }
     }
   } catch (error) {
-    console.error("Error in sendMatchReminders service:", error);
+    console.error("[ERROR][Push] Fatal error in sendMatchReminders service:", error);
   }
 }
