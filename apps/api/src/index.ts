@@ -9,6 +9,9 @@ import { systemRoutes } from './routes/system'
 import { serve } from '@hono/node-server'
 import { apiEnv } from './env'
 
+// 起動してやる
+import "./jobs/remindJob.js";
+
 export const app = new OpenAPIHono()
   .use('/*', cors({
     origin: apiEnv.WEB_ORIGIN,

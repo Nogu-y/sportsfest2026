@@ -8,10 +8,10 @@ import Image from "next/image";
 type RuleStatus = "idle" | "loading" | "success" | "error";
 
 type EventRulePopupProps = {
-  ruleId: string;
+  eventId: number;
 };
 
-const EventRulePopup = ({ ruleId }: EventRulePopupProps) => {
+const EventRulePopup = ({ eventId }: EventRulePopupProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<RuleStatus>("idle");
@@ -19,12 +19,12 @@ const EventRulePopup = ({ ruleId }: EventRulePopupProps) => {
   const loadedRuleIdRef = useRef<string | null>(null);
 
   const basePath = useMemo(
-      () => `/rules/${encodeURIComponent(ruleId)}`,
-      [ruleId],
+      () => `/rules/${encodeURIComponent(eventId)}`,
+      [eventId],
   );
 
   const loadRule = useCallback(async () => {
-    if (status === "loading" || loadedRuleIdRef.current === ruleId) {
+    if (status === "loading" || loadedRuleIdRef.current === eventId.toString()) {
       return;
     }
 
@@ -32,7 +32,7 @@ const EventRulePopup = ({ ruleId }: EventRulePopupProps) => {
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    loadedRuleIdRef.current = ruleId;
+    loadedRuleIdRef.current = eventId.toString();
     setStatus("loading");
     setContent("");
 
@@ -53,7 +53,7 @@ const EventRulePopup = ({ ruleId }: EventRulePopupProps) => {
       }
       setStatus("error");
     }
-  }, [basePath, ruleId, status]);
+  }, [basePath, eventId, status]);
 
   const openPopup = () => {
     setIsOpen(true);
@@ -65,7 +65,7 @@ const EventRulePopup = ({ ruleId }: EventRulePopupProps) => {
     setStatus("idle");
     loadedRuleIdRef.current = null;
     abortControllerRef.current?.abort();
-  }, [ruleId]);
+  }, [eventId]);
 
   useEffect(() => {
     return () => {
