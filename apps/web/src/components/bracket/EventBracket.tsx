@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSportsFestData } from "../../hooks/useSportsFestData";
 import { LeagueTable } from "./LeagueTable";
 import { TournamentTable } from "./TournamentTable";
@@ -24,7 +24,24 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
     if (isLoading) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
 
     const event = events.find((e: any) => e.id === eventId);
-    const blocks = eventBlocks?.filter((b: any) => b.eventId === eventId) || [];
+    const blocks = useMemo(
+        () => eventBlocks?.filter((b: any) => b.eventId === eventId) || [],
+        [eventBlocks, eventId],
+    );
+
+    useEffect(() => {
+        if (blocks.length === 0) {
+            setActiveBlockId(null);
+            return;
+        }
+
+        setActiveBlockId((prev) => {
+            if (prev !== null && blocks.some((block: any) => block.id === prev)) {
+                return prev;
+            }
+            return blocks[0].id;
+        });
+    }, [blocks]);
 
     if (!event || blocks.length === 0) {
         return (

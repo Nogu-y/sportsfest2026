@@ -14,7 +14,7 @@ const getIconSlug = (label: string) => {
     if (label.includes("バド")) return "badminton";
     if (label.includes("テニス")) return "softtennis";
     if (label.includes("ソフト")) return "softball";
-    if (label.includes("借人")) return "scavengerhunt";
+    if (label.includes("借り人")) return "scavengerhunt";
     if (label.includes("バスケ")) return "basketball";
 
     // 該当しない新規競技がDBに追加された場合のフォールバック

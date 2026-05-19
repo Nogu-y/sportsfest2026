@@ -10,6 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:insert": "tsx src/db/data/insert.ts",
+    "db:import-rows": "tsx src/db/data/importRows.ts",
+    "db:clear-rows": "tsx src/db/data/clearRows.ts",
     "auth:add-user": "tsx src/scripts/auth/createUserCli.ts"
   },
   "dependencies": {
@@ -19,14 +21,19 @@
     "@hono/zod-openapi": "^1.3.0",
     "@sportsfest/shared": "workspace:*",
     "@valibot/to-json-schema": "^1.6.0",
+    "date-fns": "^4.2.1",
     "drizzle-orm": "^0.42.0",
     "hono": "^4.7.7",
     "hono-openapi": "^1.3.0",
-    "postgres": "^3.4.5"
+    "node-cron": "^4.2.1",
+    "postgres": "^3.4.5",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@sportsfest/config": "workspace:*",
     "@types/node": "^22.14.1",
+    "@types/node-cron": "^3.0.11",
+    "@types/web-push": "^3.6.4",
     "drizzle-kit": "^0.31.1",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",

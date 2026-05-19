@@ -75,7 +75,7 @@ export default function Events() {
             </SubHeader>
 
             {/* ヒーローエリア */}
-            <EventHero>
+            <EventHero eventId={currentEvent.id}>
                 <img
                     src={getEventImageSrc(currentEvent.id)}
                     alt={`${currentEvent.name}の画像`}

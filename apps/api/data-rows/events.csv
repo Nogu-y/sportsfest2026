@@ -1,0 +1,8 @@
+id,name,description,color,ruleMd,rankingOrder,format,pointAllocation,isCompleted
+3,ソフトテニス,,#83e28e,,DESC,LEAGUE_TO_TOURNAMENT,"{""BLOCK"":{""QUALIFIER"":{""1"":300,""2"":100}},""MATCH"":{""FINAL"":{""1"":1000,""2"":800},""THIRD_PLACE"":{""1"":600,""2"":500}}}",false
+4,ソフトボール,,#83cceb,,DESC,TOURNAMENT,"{""MATCH"":{""FINAL"":{""1"":1000,""2"":800},""ROUND_1"":{""1"":100},""ROUND_2"":{""1"":200},""THIRD_PLACE"":{""1"":600,""2"":500},""QUARTERFINAL"":{""1"":300}}}",false
+5,バスケットボール,,#ff999a,,DESC,LEAGUE_TO_TOURNAMENT,"{""BLOCK"":{""QUALIFIER"":{""1"":400,""2"":200,""3"":100}},""MATCH"":{""FINAL"":{""1"":1000,""2"":800},""SEMIFINAL"":{""2"":600}}}",false
+6,バドミントン,,#f7c7ac,,DESC,LEAGUE_TO_TOURNAMENT,"{""MATCH"":{""FINAL"":{""1"":1000,""2"":800},""ROUND_1"":{""1"":200,""2"":100},""ROUND_2"":{""1"":300},""THIRD_PLACE"":{""1"":600,""2"":500}}}",false
+7,バレーボール,,#ffff00,,DESC,TOURNAMENT,"{""MATCH"":{""FINAL"":{""1"":1000,""2"":800},""ROUND_1"":{""1"":100},""ROUND_2"":{""1"":300},""SEMIFINAL"":{""2"":600}}}",false
+8,借り人競争,,#e49edd,,ASC,HEATS_AND_FINAL,"{""BLOCK"":{""QUALIFIER"":{""2"":50}},""MATCH"":{""FINAL"":{""1"":1000,""2"":800,""3"":600,""4"":400,""5"":200,""6"":100}}}",false
+9,選抜リレー,,#bfbfbf,,ASC,HEATS_AND_FINAL,"{""BLOCK"":{""QUALIFIER"":{""2"":50}},""MATCH"":{""FINAL"":{""1"":1000,""2"":800,""3"":600,""4"":400,""5"":200,""6"":100}}}",false
