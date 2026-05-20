@@ -408,6 +408,20 @@ function sortRecords(records: DataControlRecord[], primaryKey: string) {
   })
 }
 
+function resolveRecordId(record: DataControlRecord, primaryKey: string) {
+  const rawId = record[primaryKey]
+  if (typeof rawId === 'number' && Number.isInteger(rawId)) {
+    return rawId
+  }
+  if (typeof rawId === 'string') {
+    const numericValue = Number(rawId)
+    if (Number.isInteger(numericValue)) {
+      return numericValue
+    }
+  }
+  return null
+}
+
 function parsePointAllocationRows(value: DataControlValue): PointAllocationRow[] {
   let source = value
 
@@ -1493,9 +1507,21 @@ export function DataControlPage() {
   }
 
   function startEdit(record: DataControlRecord) {
-    if (!activeResource || typeof record.id !== 'number') return
+    if (!activeResource) return
+    const recordId = resolveRecordId(record, activeResource.primaryKey)
+    if (recordId === null) {
+      setErrorMessage(`編集対象の ${activeResource.primaryKey} が不正です`)
+      return
+    }
 
-    setEditingRecordId(record.id)
+    if (activeResource.key === 'matches') {
+      const recordEventBlockId = record.eventBlockId
+      if (typeof recordEventBlockId === 'number' && Number.isInteger(recordEventBlockId)) {
+        setActiveMatchBlockId(recordEventBlockId)
+      }
+    }
+
+    setEditingRecordId(recordId)
     setEditDraft(buildRecordDraft(activeResource.fields, record))
   }
 
@@ -1854,7 +1880,7 @@ export function DataControlPage() {
                   </thead>
                   <tbody>
                     {filteredRecords.map((record) => (
-                      <tr key={String(record.id ?? JSON.stringify(record))} className="align-top">
+                      <tr key={String(record[activeResource.primaryKey] ?? JSON.stringify(record))} className="align-top">
                         {tableFields.map((field) => (
                           <td key={field.key} className="border-b border-slate-100 px-3 py-3 text-slate-700">
                             <div className="min-w-24 whitespace-pre-wrap break-words">
@@ -1871,10 +1897,12 @@ export function DataControlPage() {
                             >
                               編集
                             </button>
-                            {typeof record.id === 'number' ? (
+                            {resolveRecordId(record, activeResource.primaryKey) !== null ? (
                               <button
                                 type="button"
-                                onClick={() => handleDelete(record.id as number)}
+                                onClick={() =>
+                                  handleDelete(resolveRecordId(record, activeResource.primaryKey) as number)
+                                }
                                 className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700"
                               >
                                 削除
