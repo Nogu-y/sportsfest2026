@@ -32,6 +32,18 @@ type ScorableEvent = {
   color: string | null;
 };
 
+type AdvancableEvent = {
+  id: number;
+  name: string;
+  color: string | null;
+};
+
+type RankableEvent = {
+  id: number;
+  name: string;
+  color: string | null;
+};
+
 const STAFF_REQUEST_TIMEOUT_MS = 8000;
 
 async function parseErrorMessage(response: Response, fallbackMessage: string) {
@@ -72,10 +84,13 @@ export function useStaffDashboard() {
     matches: sourceMatches,
     locations,
     events,
+    eventBlocks,
+    blockRankings,
     getEvent,
     getLocation,
     getMatchTeamsLabel,
     dayLabelConverter,
+    refreshMaster,
     refreshLive,
   } = useSportsFestData();
   const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
@@ -87,6 +102,14 @@ export function useStaffDashboard() {
     {},
   );
   const [eventScoreErrors, setEventScoreErrors] = useState<Record<number, string | undefined>>({});
+  const [pendingEventAdvances, setPendingEventAdvances] = useState<Record<number, boolean | undefined>>(
+    {},
+  );
+  const [eventAdvanceErrors, setEventAdvanceErrors] = useState<Record<number, string | undefined>>({});
+  const [pendingEventRankings, setPendingEventRankings] = useState<Record<number, boolean | undefined>>(
+    {},
+  );
+  const [eventRankingErrors, setEventRankingErrors] = useState<Record<number, string | undefined>>({});
 
   const matches = useMemo(() => {
     return sourceMatches.map((match) => {
@@ -193,6 +216,103 @@ export function useStaffDashboard() {
       }));
   }, [events, matches]);
 
+  const advancableEvents = useMemo((): AdvancableEvent[] => {
+    const blockRankTeamMap = new Map<string, number>();
+    for (const ranking of blockRankings) {
+      blockRankTeamMap.set(`${ranking.eventBlockId}:${ranking.rank}`, ranking.teamId);
+    }
+
+    const matchRankTeamMap = new Map<string, number>();
+    for (const match of matches) {
+      for (const participant of match.participants) {
+        if (participant.teamId === null || participant.rank === null) {
+          continue;
+        }
+        matchRankTeamMap.set(`${match.id}:${participant.rank}`, participant.teamId);
+      }
+    }
+
+    return events
+      .filter((event) => {
+        const eventMatches = matches.filter((match) => match.eventId === event.id);
+        if (eventMatches.length === 0) {
+          return false;
+        }
+
+        const unresolvedDependencyParticipants = eventMatches.flatMap((match) =>
+          match.participants.filter(
+            (participant) =>
+              participant.teamId === null &&
+              (participant.prereqMatchId !== null || participant.prereqBlockId !== null),
+          ),
+        );
+
+        if (unresolvedDependencyParticipants.length === 0) {
+          return false;
+        }
+
+        return unresolvedDependencyParticipants.some((participant) => {
+          const rank = participant.prereqRank ?? 1;
+
+          if (participant.prereqBlockId !== null) {
+            return blockRankTeamMap.has(`${participant.prereqBlockId}:${rank}`);
+          }
+
+          if (participant.prereqMatchId !== null) {
+            return matchRankTeamMap.has(`${participant.prereqMatchId}:${rank}`);
+          }
+
+          return false;
+        });
+      })
+      .map((event) => ({
+        id: event.id,
+        name: event.name,
+        color: event.color,
+      }));
+  }, [blockRankings, events, matches]);
+
+  const rankableEvents = useMemo((): RankableEvent[] => {
+    return events
+      .filter((event) => {
+        const leagueBlockIds = eventBlocks
+          ?.filter((block) => block.eventId === event.id && block.type === "LEAGUE")
+          .map((block) => block.id) ?? [];
+
+        if (leagueBlockIds.length === 0) {
+          return false;
+        }
+
+        const hasUnrankedLeagueBlock = leagueBlockIds.some((blockId) =>
+          !blockRankings.some((ranking) => ranking.eventBlockId === blockId),
+        );
+
+        if (!hasUnrankedLeagueBlock) {
+          return false;
+        }
+
+        const eventMatches = matches.filter((match) => match.eventId === event.id);
+        if (eventMatches.length === 0) {
+          return false;
+        }
+
+        return eventMatches.some((match) => {
+          if (match.status !== "Completed") {
+            return false;
+          }
+
+          return match.participants.some(
+            (participant) => participant.teamId !== null && participant.rank !== null,
+          );
+        });
+      })
+      .map((event) => ({
+        id: event.id,
+        name: event.name,
+        color: event.color,
+      }));
+  }, [blockRankings, eventBlocks, events, matches]);
+
   const setEventScorePending = useCallback((eventId: number, isPending: boolean) => {
     setPendingEventScores((current) => ({
       ...current,
@@ -202,6 +322,34 @@ export function useStaffDashboard() {
 
   const clearEventScoreError = useCallback((eventId: number) => {
     setEventScoreErrors((current) => ({
+      ...current,
+      [eventId]: undefined,
+    }));
+  }, []);
+
+  const setEventAdvancePending = useCallback((eventId: number, isPending: boolean) => {
+    setPendingEventAdvances((current) => ({
+      ...current,
+      [eventId]: isPending,
+    }));
+  }, []);
+
+  const clearEventAdvanceError = useCallback((eventId: number) => {
+    setEventAdvanceErrors((current) => ({
+      ...current,
+      [eventId]: undefined,
+    }));
+  }, []);
+
+  const setEventRankingPending = useCallback((eventId: number, isPending: boolean) => {
+    setPendingEventRankings((current) => ({
+      ...current,
+      [eventId]: isPending,
+    }));
+  }, []);
+
+  const clearEventRankingError = useCallback((eventId: number) => {
+    setEventRankingErrors((current) => ({
       ...current,
       [eventId]: undefined,
     }));
@@ -349,11 +497,79 @@ export function useStaffDashboard() {
     [clearEventScoreError, refreshLive, setEventScorePending],
   );
 
+  const resolveEventAdvancement = useCallback(
+    async (eventId: number) => {
+      clearEventAdvanceError(eventId);
+      setEventAdvancePending(eventId, true);
+
+      try {
+        const response = await withRequestTimeout(
+          api.api.staff.events[":eventId"].advance.$post({
+            param: { eventId },
+          }),
+          "勝ち上がり反映がタイムアウトしました。時間をおいて再試行してください。",
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            await parseErrorMessage(response, "勝ち上がり反映に失敗しました"),
+          );
+        }
+
+        await Promise.all([refreshMaster(), refreshLive()]);
+      } catch (error) {
+        setEventAdvanceErrors((current) => ({
+          ...current,
+          [eventId]:
+            error instanceof Error ? error.message : "勝ち上がり反映に失敗しました",
+        }));
+      } finally {
+        setEventAdvancePending(eventId, false);
+      }
+    },
+    [clearEventAdvanceError, refreshLive, refreshMaster, setEventAdvancePending],
+  );
+
+  const finalizeEventRankings = useCallback(
+    async (eventId: number) => {
+      clearEventRankingError(eventId);
+      setEventRankingPending(eventId, true);
+
+      try {
+        const response = await withRequestTimeout(
+          api.api.staff.events[":eventId"].rankings.$post({
+            param: { eventId },
+          }),
+          "予選順位確定がタイムアウトしました。時間をおいて再試行してください。",
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            await parseErrorMessage(response, "予選順位の確定に失敗しました"),
+          );
+        }
+
+        await Promise.all([refreshMaster(), refreshLive()]);
+      } catch (error) {
+        setEventRankingErrors((current) => ({
+          ...current,
+          [eventId]:
+            error instanceof Error ? error.message : "予選順位の確定に失敗しました",
+        }));
+      } finally {
+        setEventRankingPending(eventId, false);
+      }
+    },
+    [clearEventRankingError, refreshLive, refreshMaster, setEventRankingPending],
+  );
+
   return {
     isLoading,
     isError,
     locationOptions,
     locationSections,
+    rankableEvents,
+    advancableEvents,
     scorableEvents,
     selectedLocationIds,
     showCompletedMatches,
@@ -362,6 +578,8 @@ export function useStaffDashboard() {
     setShowCompletedMatches,
     updateStatus,
     submitResult,
+    finalizeEventRankings,
+    resolveEventAdvancement,
     finalizeEventScore,
     getEvent,
     getLocation,
@@ -371,5 +589,9 @@ export function useStaffDashboard() {
     isMatchPending: (matchId: number) => pendingActions[matchId] !== undefined,
     getEventScoreError: (eventId: number) => eventScoreErrors[eventId],
     isEventScorePending: (eventId: number) => pendingEventScores[eventId] === true,
+    getEventRankingError: (eventId: number) => eventRankingErrors[eventId],
+    isEventRankingPending: (eventId: number) => pendingEventRankings[eventId] === true,
+    getEventAdvanceError: (eventId: number) => eventAdvanceErrors[eventId],
+    isEventAdvancePending: (eventId: number) => pendingEventAdvances[eventId] === true,
   };
 }
