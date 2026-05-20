@@ -2,7 +2,12 @@ import React from "react";
 import { Sun, CloudSun, Cloud, CloudDrizzle, CloudRain, CloudLightning, Snowflake } from "lucide-react";
 
 type WeatherBadgeProps = {
-    weather?: { code: number; prob: number } | null;
+    weather?: {
+        code: number;
+        prob: number | null | undefined;
+        temp?: number | null | undefined;
+        precip?: number | null | undefined;
+    } | null;
     done?: boolean;
     variant?: "full" | "simple"; // full: アイコン+テキスト+確率, simple: アイコン+確率
 };
@@ -24,16 +29,25 @@ export const WeatherBadge: React.FC<WeatherBadgeProps> = ({ weather, done = fals
     if (!weather) return null;
 
     const info = getWeatherInfo(weather.code);
-    const isHighProb = weather.prob >= 30;
+    const probValue = typeof weather.prob === "number" && Number.isFinite(weather.prob) ? weather.prob : null;
+    const tempValue = typeof weather.temp === "number" && Number.isFinite(weather.temp) ? weather.temp : null;
+    const precipValue =
+        typeof weather.precip === "number" && Number.isFinite(weather.precip) ? weather.precip : null;
+    const probText = probValue !== null ? `${Math.round(probValue)}%` : "--%";
+    const tempText = tempValue !== null ? `${Math.round(tempValue)}°C` : "--°C";
+    const precipText = precipValue !== null ? `${precipValue.toFixed(1)}mm` : "--mm";
+    const isHighProb = probValue !== null && probValue >= 30;
 
     // SimpleSlot用のコンパクトなデザイン
     if (variant === "simple") {
         return (
             <div className="flex items-center gap-1 mx-1 px-1.5 py-0.5 bg-gray-50 rounded text-xs text-gray-500">
+                <span className={done ? "opacity-50" : "text-rose-500"}>{tempText}</span>
                 <span className={done ? "opacity-50" : "text-[#2d5a8e]"}>{info.icon}</span>
                 <span className={`font-medium ${done ? "opacity-50" : isHighProb ? "text-blue-500" : ""}`}>
-          {weather.prob}%
+          {probText}
         </span>
+                <span className={done ? "opacity-50" : "text-cyan-600"}>{precipText}</span>
             </div>
         );
     }
@@ -41,11 +55,13 @@ export const WeatherBadge: React.FC<WeatherBadgeProps> = ({ weather, done = fals
     // TimeSlot用の標準デザイン (テキストあり)
     return (
         <div className="flex items-center gap-1 ml-2 px-2 py-0.5 bg-gray-50 rounded-full border border-gray-100 text-xs text-gray-500">
+            <span className={done ? "opacity-50" : "text-rose-500"}>{tempText}</span>
             <span className={done ? "opacity-50" : "text-[#2d5a8e]"}>{info.icon}</span>
             <span className={done ? "opacity-50" : ""}>{info.text}</span>
             <span className={`font-medium ${done ? "opacity-50" : isHighProb ? "text-blue-500" : ""}`}>
-        {weather.prob}%
+        {probText}
       </span>
+            <span className={done ? "opacity-50" : "text-cyan-600"}>{precipText}</span>
         </div>
     );
 };

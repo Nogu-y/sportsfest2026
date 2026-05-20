@@ -153,7 +153,12 @@ const TimeSlot = ({
   matchesMap: Map<number, MatchWithEventIdType>;
   blocksMap: Map<number, { name: string }>;
   myTeamId: number | null;
-  weather?: { code: number; prob: number } | null;
+  weather?: {
+    code: number;
+    prob: number | null;
+    temp?: number | null;
+    precip?: number | null;
+  } | null;
   eventMap: Map<number, { name: string; color: string | null }>;
   locationNameMap: Map<number, string>;
   horizontalScrollable?: boolean;
@@ -213,6 +218,7 @@ const TimeSlot = ({
             return (
               <Link
                 href={`/match/${match.id}`}
+                scroll={false}
                 key={match.id}
                 className={`block flex-none max-w-full ${
                   horizontalScrollable ? "w-[10rem]" : "min-w-[4.5rem]"
@@ -248,11 +254,17 @@ const SimpleSlot = ({
   match: MatchWithEventIdType;
   done: boolean;
   isMyTeam: boolean;
-  weather?: { code: number; prob: number } | null;
+  weather?: {
+    code: number;
+    prob: number | null;
+    temp?: number | null;
+    precip?: number | null;
+  } | null;
 }) => (
   <div className="relative mb-2">
     <Link
       href={`/match/${match.id}`}
+      scroll={false}
       className="relative z-10 flex items-center gap-3 py-2 transition-transform active:scale-95"
     >
       <div
