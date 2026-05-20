@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { StaffMatchCard } from "./StaffMatchCard";
 import { StaffVenueSelector } from "./StaffVenueSelector";
 import { useStaffDashboard } from "../../hooks/useStaffDashboard";
@@ -75,6 +76,23 @@ export function StaffDashboardPage() {
           showCompletedMatches={showCompletedMatches}
           onToggleCompletedMatches={setShowCompletedMatches}
         />
+
+        <section className="rounded-[18px] border border-[#D9E6F0] bg-white px-6 py-4 shadow-[0_22px_44px_rgba(28,54,80,0.08)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-[16px] font-semibold text-[#2D5378]">得点確認</h2>
+              <p className="mt-1 text-sm text-[#7A96B0]">
+                チーム合計点と得点積算履歴を確認する場合は、得点表示パネルを開いてください。
+              </p>
+            </div>
+            <Link
+              href="/staff/scores"
+              className="rounded-[10px] border border-[#C9D9E7] bg-[#F8FBFD] px-4 py-2 text-sm font-medium text-[#426A90] transition hover:border-[#7FA2C4] hover:bg-white"
+            >
+              得点表示パネルへ
+            </Link>
+          </div>
+        </section>
 
         {rankableEvents.length > 0 ? (
           <section className="rounded-[18px] border border-[#D9E6F0] bg-white px-6 py-5 shadow-[0_22px_44px_rgba(28,54,80,0.08)]">
