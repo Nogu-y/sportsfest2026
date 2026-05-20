@@ -224,6 +224,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     const statusLabel = formatStatusLabel(match.status);
     const teamsNames = getMatchTeamsLabel(match.participants);
     const watched = isWatched(matchId);
+    const headerLabel = match.name ?? `#${match.id}`;
 
     // 共有処理
     const handleShare = async () => {
@@ -266,7 +267,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
                     </button>
                     <div className="flex flex-col">
                         <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">試合管理ID</span>
-                        <span className="text-sm font-mono font-bold text-gray-600">#{match.id}</span>
+                        <span className="text-sm font-mono font-bold text-gray-600">{headerLabel}</span>
                     </div>
                 </div>
                 <span className="inline-flex items-center rounded-full bg-dark px-3 py-1 text-xs font-bold text-white">
