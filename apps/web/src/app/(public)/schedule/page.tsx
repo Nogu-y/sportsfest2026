@@ -213,6 +213,7 @@ const TimeSlot = ({
             return (
               <Link
                 href={`/match/${match.id}`}
+                scroll={false}
                 key={match.id}
                 className={`block flex-none max-w-full ${
                   horizontalScrollable ? "w-[10rem]" : "min-w-[4.5rem]"
@@ -253,6 +254,7 @@ const SimpleSlot = ({
   <div className="relative mb-2">
     <Link
       href={`/match/${match.id}`}
+      scroll={false}
       className="relative z-10 flex items-center gap-3 py-2 transition-transform active:scale-95"
     >
       <div
