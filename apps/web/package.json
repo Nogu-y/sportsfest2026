@@ -20,7 +20,8 @@
     "react-zoom-pan-pinch": "^4.0.3",
     "serwist": "^9.5.10",
     "swr": "^2.4.1",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@sportsfest/config": "workspace:*",
