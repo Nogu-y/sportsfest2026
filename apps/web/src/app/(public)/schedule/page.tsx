@@ -153,7 +153,12 @@ const TimeSlot = ({
   matchesMap: Map<number, MatchWithEventIdType>;
   blocksMap: Map<number, { name: string }>;
   myTeamId: number | null;
-  weather?: { code: number; prob: number } | null;
+  weather?: {
+    code: number;
+    prob: number | null;
+    temp?: number | null;
+    precip?: number | null;
+  } | null;
   eventMap: Map<number, { name: string; color: string | null }>;
   locationNameMap: Map<number, string>;
   horizontalScrollable?: boolean;
@@ -249,7 +254,12 @@ const SimpleSlot = ({
   match: MatchWithEventIdType;
   done: boolean;
   isMyTeam: boolean;
-  weather?: { code: number; prob: number } | null;
+  weather?: {
+    code: number;
+    prob: number | null;
+    temp?: number | null;
+    precip?: number | null;
+  } | null;
 }) => (
   <div className="relative mb-2">
     <Link
