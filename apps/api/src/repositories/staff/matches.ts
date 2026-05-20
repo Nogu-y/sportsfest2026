@@ -1,6 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '../../db/client'
-import { matchParticipants, matchPlans } from '../../db/schema'
+import { eventBlocks, matchParticipants, matchPlans } from '../../db/schema'
 import type {
   CreateMatchResultReq,
   UpdateMatchResultRes,
@@ -8,11 +8,53 @@ import type {
   UpdateMatchStatusRes
 } from '../../schemas/staff/matches'
 import { toIsoString } from '../../utils/dates'
+import {
+  finalizeEventBlockRankings,
+  finalizeEventScores,
+  resolveEventParticipants
+} from './events'
 
 type UpdateMatchResultError =
   | 'match_not_found'
   | 'unresolved_participants'
   | 'invalid_participant_ids'
+
+const runAutoFinalize = async (eventId: number) => {
+  const resolveBeforeRankings = await resolveEventParticipants(eventId)
+  if ('error' in resolveBeforeRankings && resolveBeforeRankings.error !== 'incomplete_prerequisites') {
+    console.warn('[staff.matches] 自動勝ち上がり反映(事前)に失敗しました', {
+      eventId,
+      error: resolveBeforeRankings.error
+    })
+  }
+
+  const finalizeRankings = await finalizeEventBlockRankings(eventId)
+  if ('error' in finalizeRankings) {
+    console.warn('[staff.matches] 自動予選順位確定に失敗しました', {
+      eventId,
+      error: finalizeRankings.error
+    })
+  }
+
+  const resolveAfterRankings = await resolveEventParticipants(eventId)
+  if ('error' in resolveAfterRankings && resolveAfterRankings.error !== 'incomplete_prerequisites') {
+    console.warn('[staff.matches] 自動勝ち上がり反映(順位確定後)に失敗しました', {
+      eventId,
+      error: resolveAfterRankings.error
+    })
+  }
+
+  const finalizeScores = await finalizeEventScores(eventId)
+  if (
+    'error' in finalizeScores &&
+    finalizeScores.error !== 'incomplete_score_sources'
+  ) {
+    console.warn('[staff.matches] 自動得点確定に失敗しました', {
+      eventId,
+      error: finalizeScores.error
+    })
+  }
+}
 
 const mapMatchStatus = (
   match: typeof matchPlans.$inferSelect
@@ -80,15 +122,24 @@ export const updateMatchStatus = async (
 export const updateMatchResult = async (
   matchId: number,
   input: CreateMatchResultReq
-) => {
-  return db.transaction(async (tx) => {
-    const [match] = await tx
-      .select()
+): Promise<UpdateMatchResultRes | { error: UpdateMatchResultError }> => {
+  type TransactionResult =
+    | { error: UpdateMatchResultError }
+    | { result: UpdateMatchResultRes; eventId: number | null }
+
+  const transactionResult: TransactionResult = await db.transaction(async (tx): Promise<TransactionResult> => {
+    const [matchRow] = await tx
+      .select({
+        id: matchPlans.id,
+        endedAt: matchPlans.endedAt,
+        eventId: eventBlocks.eventId
+      })
       .from(matchPlans)
+      .leftJoin(eventBlocks, eq(eventBlocks.id, matchPlans.eventBlockId))
       .where(eq(matchPlans.id, matchId))
       .limit(1)
 
-    if (!match) {
+    if (!matchRow) {
       return { error: 'match_not_found' as UpdateMatchResultError }
     }
 
@@ -130,7 +181,7 @@ export const updateMatchResult = async (
       .update(matchPlans)
       .set({
         status: 'Completed',
-        endedAt: match.endedAt ?? new Date()
+        endedAt: matchRow.endedAt ?? new Date()
       })
       .where(eq(matchPlans.id, matchId))
       .returning()
@@ -143,6 +194,19 @@ export const updateMatchResult = async (
           .from(matchParticipants)
           .where(inArray(matchParticipants.id, participantIds))
 
-    return mapMatchResult(updatedMatch, updatedParticipants)
+    return {
+      result: mapMatchResult(updatedMatch, updatedParticipants),
+      eventId: matchRow.eventId
+    }
   })
+
+  if ('error' in transactionResult) {
+    return transactionResult
+  }
+
+  if (transactionResult.eventId !== null) {
+    await runAutoFinalize(transactionResult.eventId)
+  }
+
+  return transactionResult.result
 }
