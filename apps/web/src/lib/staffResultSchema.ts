@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import type {
   CreateMatchResultReq,
 } from "../../../api/src/schemas/staff/matches";
@@ -15,6 +16,19 @@ type SchemaOptions = {
   participantIds: number[];
   mode: StaffResultInputMode;
 };
+
+type ValidationIssue = {
+  message: string;
+  path: Array<string | number>;
+};
+
+type ValidationError = {
+  issues: ValidationIssue[];
+};
+
+type SafeParseResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: ValidationError };
 
 function parseInteger(value: string) {
   return Number.parseInt(value, 10);
@@ -44,94 +58,109 @@ export function createStaffResultSchema(options: SchemaOptions) {
   );
   const expectsWinner = options.mode === "score" && options.participantIds.length === 2;
   const expectsRanks = options.mode === "rank" || options.participantIds.length > 2;
+  const participantKeys = [...participantKeySet];
 
-  return z
-    .object({
-      winnerParticipantId: z.string(),
-      scores: z.record(z.string(), z.string()),
-      ranks: z.record(z.string(), z.string()),
-    })
-    .superRefine((values, context) => {
-      if (expectsWinner) {
-        if (!participantKeySet.has(values.winnerParticipantId)) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "勝者を選択してください",
-            path: ["winnerParticipantId"],
+  const validate = (values: StaffResultFormValues): ValidationIssue[] => {
+    const issues: ValidationIssue[] = [];
+
+    if (expectsWinner && !participantKeySet.has(values.winnerParticipantId)) {
+      issues.push({
+        message: "勝者を選択してください",
+        path: ["winnerParticipantId"],
+      });
+    }
+
+    for (const participantId of participantKeys) {
+      if (options.mode === "score") {
+        const scoreRaw = values.scores[participantId] ?? "";
+        const score = parseInteger(scoreRaw);
+
+        if (scoreRaw.trim().length === 0 || Number.isNaN(score) || score < 0) {
+          issues.push({
+            message: "0以上の整数で入力してください",
+            path: ["scores", participantId],
           });
-        }
-      }
-
-      for (const participantId of participantKeySet) {
-        if (options.mode === "score") {
-          const scoreRaw = values.scores[participantId] ?? "";
-          const score = parseInteger(scoreRaw);
-
-          if (scoreRaw.trim().length === 0 || Number.isNaN(score) || score < 0) {
-            context.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: "0以上の整数で入力してください",
-              path: ["scores", participantId],
-            });
-          }
-        }
-
-        if (expectsRanks) {
-          const rankRaw = values.ranks[participantId] ?? "";
-          const rank = parseInteger(rankRaw);
-
-          if (
-            rankRaw.trim().length === 0 ||
-            Number.isNaN(rank) ||
-            rank < 1 ||
-            rank > options.participantIds.length
-          ) {
-            context.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `1 から ${options.participantIds.length} の整数で入力してください`,
-              path: ["ranks", participantId],
-            });
-          }
-        }
-      }
-
-      if (expectsWinner) {
-        const winnerKey = values.winnerParticipantId;
-        const loserKey = [...participantKeySet].find((participantId) => participantId !== winnerKey);
-
-        if (winnerKey && loserKey) {
-          const winnerScore = parseInteger(values.scores[winnerKey] ?? "");
-          const loserScore = parseInteger(values.scores[loserKey] ?? "");
-
-          if (
-            !Number.isNaN(winnerScore) &&
-            !Number.isNaN(loserScore) &&
-            winnerScore <= loserScore
-          ) {
-            context.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: "勝者のスコアは相手より大きくしてください",
-              path: ["winnerParticipantId"],
-            });
-          }
         }
       }
 
       if (expectsRanks) {
-        const ranks = [...participantKeySet].map((participantId) =>
-          parseInteger(values.ranks[participantId] ?? ""),
-        );
-        const validRanks = ranks.filter((rank) => !Number.isNaN(rank));
+        const rankRaw = values.ranks[participantId] ?? "";
+        const rank = parseInteger(rankRaw);
 
-        if (new Set(validRanks).size !== validRanks.length) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "着順は重複できません",
-            path: ["ranks"],
+        if (
+          rankRaw.trim().length === 0 ||
+          Number.isNaN(rank) ||
+          rank < 1 ||
+          rank > options.participantIds.length
+        ) {
+          issues.push({
+            message: `1 から ${options.participantIds.length} の整数で入力してください`,
+            path: ["ranks", participantId],
           });
         }
       }
-    });
+    }
+
+    if (expectsWinner) {
+      const winnerKey = values.winnerParticipantId;
+      const loserKey = participantKeys.find((participantId) => participantId !== winnerKey);
+
+      if (winnerKey && loserKey) {
+        const winnerScore = parseInteger(values.scores[winnerKey] ?? "");
+        const loserScore = parseInteger(values.scores[loserKey] ?? "");
+
+        if (
+          !Number.isNaN(winnerScore) &&
+          !Number.isNaN(loserScore) &&
+          winnerScore <= loserScore
+        ) {
+          issues.push({
+            message: "勝者のスコアは相手より大きくしてください",
+            path: ["winnerParticipantId"],
+          });
+        }
+      }
+    }
+
+    if (expectsRanks) {
+      const ranks = participantKeys.map((participantId) =>
+        parseInteger(values.ranks[participantId] ?? ""),
+      );
+      const validRanks = ranks.filter((rank) => !Number.isNaN(rank));
+
+      if (new Set(validRanks).size !== validRanks.length) {
+        issues.push({
+          message: "着順は重複できません",
+          path: ["ranks"],
+        });
+      }
+    }
+
+    return issues;
+  };
+
+  return {
+    safeParse(values: StaffResultFormValues): SafeParseResult<StaffResultFormValues> {
+      const issues = validate(values);
+      if (issues.length > 0) {
+        return {
+          success: false,
+          error: { issues },
+        };
+      }
+      return {
+        success: true,
+        data: values,
+      };
+    },
+    parse(values: StaffResultFormValues) {
+      const parsed = this.safeParse(values);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
+      return parsed.data;
+    },
+  };
 }
 
 export function buildMatchResultPayload(

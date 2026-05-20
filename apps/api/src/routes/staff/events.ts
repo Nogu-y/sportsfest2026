@@ -16,18 +16,8 @@ export const staffEventRoutes = new OpenAPIHono()
     const { eventId } = c.req.valid('param')
     const result = await finalizeEventBlockRankings(eventId)
 
-    if ('error' in result) {
-      if (result.error === 'event_not_found') {
-        return c.json(createNotFoundResponse('対象競技が見つかりません'), 404)
-      }
-
-      return c.json(
-        {
-          message: '順位確定に必要な試合結果が不足しています',
-          detail: result.detail ?? null
-        },
-        409
-      )
+    if ('error' in result && result.error === 'event_not_found') {
+      return c.json(createNotFoundResponse('対象競技が見つかりません'), 404)
     }
 
     return c.json(result, 200)
