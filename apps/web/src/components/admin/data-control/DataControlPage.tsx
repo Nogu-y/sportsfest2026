@@ -1111,6 +1111,9 @@ export function DataControlPage() {
   const [importText, setImportText] = useState('')
   const [importResult, setImportResult] = useState<string | null>(null)
   const [activeMatchBlockId, setActiveMatchBlockId] = useState<number | null>(null)
+  const [matchIdQuery, setMatchIdQuery] = useState('')
+  const [matchDisplayMode, setMatchDisplayMode] = useState<'block' | 'event'>('block')
+  const [matchDisplayEventId, setMatchDisplayEventId] = useState<number | null>(null)
 
   const activeResource = useMemo(
     () => resourceDefinitions.find((definition) => definition.key === activeResourceKey) ?? null,
@@ -1118,12 +1121,37 @@ export function DataControlPage() {
   )
 
   const filteredRecords = useMemo(() => {
-    if (activeResourceKey !== 'matches' || activeMatchBlockId === null) {
+    if (activeResourceKey !== 'matches') {
       return records
     }
 
-    return records.filter((record) => record.eventBlockId === activeMatchBlockId)
-  }, [activeMatchBlockId, activeResourceKey, records])
+    let scopedRecords = records
+
+    if (matchDisplayMode === 'block') {
+      scopedRecords =
+        activeMatchBlockId === null
+          ? records
+          : records.filter((record) => record.eventBlockId === activeMatchBlockId)
+    } else if (matchDisplayEventId !== null && masterData) {
+      const blockIds = new Set(
+        masterData.blocks
+          .filter((block) => block.eventId === matchDisplayEventId)
+          .map((block) => block.id),
+      )
+      scopedRecords = records.filter((record) => blockIds.has(record.eventBlockId as number))
+    }
+
+    const normalizedQuery = matchIdQuery.trim()
+    if (normalizedQuery.length === 0) {
+      return scopedRecords
+    }
+
+    return scopedRecords.filter((record) => {
+      const id = record.id
+      if (typeof id !== 'number') return false
+      return String(id).includes(normalizedQuery)
+    })
+  }, [activeMatchBlockId, activeResourceKey, matchDisplayEventId, matchDisplayMode, matchIdQuery, masterData, records])
 
   const previewEventId = useMemo(() => {
     if (!masterData) return null
@@ -1195,6 +1223,27 @@ export function DataControlPage() {
       })
   }, [masterData, records])
 
+  const matchEventOptions = useMemo(() => {
+    if (!masterData) return []
+
+    const eventIds = new Set(
+      records
+        .map((record) => {
+          const blockId = record.eventBlockId
+          if (typeof blockId !== 'number') return null
+          return masterData.blocks.find((block) => block.id === blockId)?.eventId ?? null
+        })
+        .filter((value): value is number => typeof value === 'number'),
+    )
+
+    return masterData.events
+      .filter((event) => eventIds.has(event.id))
+      .map((event) => ({
+        value: event.id,
+        label: `${event.id}: ${event.name}`,
+      }))
+  }, [masterData, records])
+
   const tableFields = useMemo(() => {
     if (!activeResource) return []
 
@@ -1263,6 +1312,9 @@ export function DataControlPage() {
     setEditDraft({})
     setEditingRecordId(null)
     setActiveMatchBlockId(null)
+    setMatchIdQuery('')
+    setMatchDisplayMode('block')
+    setMatchDisplayEventId(null)
     setActiveMainView('table')
     setCreateSuccessMessage(null)
 
@@ -1304,6 +1356,32 @@ export function DataControlPage() {
       setActiveMatchBlockId(availableBlockIds[0])
     }
   }, [activeMatchBlockId, activeResourceKey, records])
+
+  useEffect(() => {
+    if (activeResourceKey !== 'matches') return
+
+    if (matchDisplayMode === 'block') {
+      if (activeMatchBlockId !== null && masterData) {
+        const eventId = masterData.blocks.find((block) => block.id === activeMatchBlockId)?.eventId ?? null
+        if (eventId !== null) {
+          setMatchDisplayEventId(eventId)
+        }
+      }
+      return
+    }
+
+    if (matchEventOptions.length === 0) {
+      setMatchDisplayEventId(null)
+      return
+    }
+
+    if (
+      matchDisplayEventId === null ||
+      !matchEventOptions.some((option) => option.value === matchDisplayEventId)
+    ) {
+      setMatchDisplayEventId(matchEventOptions[0].value)
+    }
+  }, [activeMatchBlockId, activeResourceKey, matchDisplayEventId, matchDisplayMode, matchEventOptions, masterData])
 
   useEffect(() => {
     if (activeResourceKey !== 'matches' || activeMatchBlockId === null) return
@@ -1621,23 +1699,64 @@ export function DataControlPage() {
 
             {activeResourceKey === 'matches' && matchBlockOptions.length > 0 ? (
               <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <label className="flex flex-col gap-2 text-sm text-slate-700 md:max-w-xl">
-                  <span className="font-medium">編集対象イベントブロック</span>
-                  <select
-                    value={activeMatchBlockId ?? ''}
-                    onChange={(event) => setActiveMatchBlockId(Number(event.target.value) || null)}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2"
-                  >
-                    {matchBlockOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-xs text-slate-500">
-                    一覧・作成・取込は選択中ブロック単位で扱います。プレビューは同一イベント内のブロックをまとめて表示します。
-                  </span>
-                </label>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm text-slate-700">
+                    <span className="font-medium">編集対象イベントブロック</span>
+                    <select
+                      value={activeMatchBlockId ?? ''}
+                      onChange={(event) => setActiveMatchBlockId(Number(event.target.value) || null)}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    >
+                      {matchBlockOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm text-slate-700">
+                    <span className="font-medium">試合ID検索</span>
+                    <input
+                      type="text"
+                      value={matchIdQuery}
+                      onChange={(event) => setMatchIdQuery(event.target.value)}
+                      placeholder="例: 223"
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    />
+                  </label>
+                </div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm text-slate-700">
+                    <span className="font-medium">表示単位</span>
+                    <select
+                      value={matchDisplayMode}
+                      onChange={(event) => setMatchDisplayMode(event.target.value as 'block' | 'event')}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    >
+                      <option value="block">EventBlock単位</option>
+                      <option value="event">Event全体（全Block）</option>
+                    </select>
+                  </label>
+                  {matchDisplayMode === 'event' ? (
+                    <label className="flex flex-col gap-2 text-sm text-slate-700">
+                      <span className="font-medium">表示対象イベント</span>
+                      <select
+                        value={matchDisplayEventId ?? ''}
+                        onChange={(event) => setMatchDisplayEventId(Number(event.target.value) || null)}
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+                      >
+                        {matchEventOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+                <span className="mt-3 block text-xs text-slate-500">
+                  作成・取込は選択中ブロック単位です。表示は EventBlock単位 / Event全体（全Block）を切り替えできます。
+                </span>
               </div>
             ) : null}
 
