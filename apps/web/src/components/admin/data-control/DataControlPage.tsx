@@ -698,7 +698,7 @@ function ParticipantsEditor({
           value={draft.prereqRank ?? ''}
           placeholder="prereqRank"
           onChange={(event) => setDraft((current) => ({ ...current, prereqRank: (() => { const next = toNullableNumber(event.target.value); return next !== null && next >= 1 ? next : null })() }))}
-          disabled={!isPrereqBlockMode}
+                    disabled={!isPrereqBlockMode}
           className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
         />
       </div>
@@ -1167,7 +1167,7 @@ export function DataControlPage() {
       return masterData.blocks.find((block) => block.id === activeMatchBlockId)?.eventId ?? null
     }
 
-    return null
+      return null
   }, [activeMatchBlockId, activeResourceKey, editingRecordId, masterData, records])
 
   const previewData = useMemo(() => {

@@ -120,6 +120,8 @@ function omitReadonlyFields(fields: DataControlField[], input: Record<string, Da
 
 export async function fetchAdminMasterOptions() {
   const master = await fetchPublicMasterData()
+  const blockById = new Map(master.blocks.map((block) => [block.id, block]))
+  const eventById = new Map(master.events.map((event) => [event.id, event]))
 
   return {
     masterData: master,
@@ -139,10 +141,16 @@ export async function fetchAdminMasterOptions() {
       label: `${team.id}: ${team.name}`,
       value: team.id,
     })),
-    prereqMatchOptions: master.matches.map((match) => ({
-      label: `${match.id}: ${match.name ?? '名称未設定'}`,
-      value: match.id,
-    })),
+    prereqMatchOptions: master.matches.map((match) => {
+      const block = blockById.get(match.eventBlockId)
+      const eventName = block ? (eventById.get(block.eventId)?.name ?? `event:${block.eventId}`) : null
+      const blockLabel = block ? `${eventName} / ${block.name}` : `block:${match.eventBlockId}`
+
+      return {
+        label: `${match.id}: ${blockLabel} / ${match.name ?? '名称未設定'}`,
+        value: match.id,
+      }
+    }),
     eventBlockOptions: master.blocks.map((block) => {
       const eventName =
         master.events.find((event) => event.id === block.eventId)?.name ?? `event:${block.eventId}`
