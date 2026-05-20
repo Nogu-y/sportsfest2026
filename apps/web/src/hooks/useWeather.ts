@@ -5,7 +5,9 @@ type WeatherData = {
     hourly: {
         time: string[];
         weather_code: number[];
-        precipitation_probability: number[];
+        precipitation_probability: Array<number | null>;
+        temperature_2m: Array<number | null>;
+        precipitation: Array<number | null>;
     };
 };
 
@@ -30,7 +32,9 @@ export function useWeather() {
         if (index !== -1) {
             return {
                 code: data.hourly.weather_code[index],
-                prob: data.hourly.precipitation_probability[index]
+                prob: data.hourly.precipitation_probability[index],
+                temp: data.hourly.temperature_2m[index],
+                precip: data.hourly.precipitation[index],
             };
         }
         return null;
