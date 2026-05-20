@@ -124,13 +124,21 @@ export async function sendMatchReminders() {
             .delete(userSubscriptions)
             .where(eq(userSubscriptions.id, target.subscriptionId));
         } else {
+          const statusCode = err?.statusCode || 'Unknown';
+          const errorBody = err?.body || err?.message || 'No specific error body provided';
+
           console.error(
-            `[ERROR][Push] Temporary failure for Subscription ID: ${target.subscriptionId}. Will retry in the next minute.`
-          );
+            `[ERROR][Push] Notification failure for Subscription ID: ${target.subscriptionId}\n` +
+            `  - Endpoint: ${target.endpoint}\n` +
+            `  - Status Code: ${statusCode}\n` +
+            `  - Details: ${errorBody}`)
         }
       }
     }
   } catch (error) {
-    console.error("[ERROR][Push] Fatal error in sendMatchReminders service:", error);
+    console.error(
+      "[ERROR][Push] Fatal error in sendMatchReminders service:\n",
+      error instanceof Error ? error.stack || error.message : error
+    );
   }
 }
