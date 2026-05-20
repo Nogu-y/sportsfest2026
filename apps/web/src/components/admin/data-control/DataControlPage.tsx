@@ -1258,6 +1258,12 @@ export function DataControlPage() {
       }))
   }, [masterData, records])
 
+  const matchesInActiveBlock = useMemo(() => {
+    if (activeResourceKey !== 'matches' || activeMatchBlockId === null) return []
+
+    return records.filter((record) => record.eventBlockId === activeMatchBlockId)
+  }, [activeMatchBlockId, activeResourceKey, records])
+
   const createFormFields = useMemo(() => {
     const baseFields = activeResource?.fields.filter((field) => !field.readOnly) ?? []
     if (!masterData || activeResource?.key !== 'matches') return baseFields
@@ -1570,6 +1576,52 @@ export function DataControlPage() {
     }
   }
 
+  async function handleDeleteMatchesInActiveBlock() {
+    if (!activeResource || activeResource.key !== 'matches' || activeMatchBlockId === null) return
+
+    const targetMatches = matchesInActiveBlock
+    if (targetMatches.length === 0) {
+      setErrorMessage('選択中のイベントブロックに削除対象の試合がありません')
+      return
+    }
+
+    const blockLabel =
+      matchBlockOptions.find((option) => option.value === activeMatchBlockId)?.label ??
+      `EventBlock ${activeMatchBlockId}`
+
+    const shouldDelete = window.confirm(
+      `${blockLabel} の試合 ${targetMatches.length} 件をすべて削除しますか？`,
+    )
+    if (!shouldDelete) return
+
+    try {
+      setErrorMessage(null)
+
+      for (const match of targetMatches) {
+        const matchId = resolveRecordId(match, activeResource.primaryKey)
+        if (matchId === null) continue
+        await activeResource.deleteRecord(matchId)
+      }
+
+      const nextDefinitions = await refreshMasterContext()
+      const nextActiveResource =
+        nextDefinitions.find((definition) => definition.key === activeResource.key) ?? null
+      if (nextActiveResource) {
+        await loadActiveResource(nextActiveResource)
+      }
+
+      if (
+        editingRecordId !== null &&
+        targetMatches.some((record) => resolveRecordId(record, activeResource.primaryKey) === editingRecordId)
+      ) {
+        setEditingRecordId(null)
+        setEditDraft({})
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'EventBlock内試合の一括削除に失敗しました')
+    }
+  }
+
   function handleExport(format: DataControlImportFormat) {
     if (!activeResource) return
 
@@ -1845,6 +1897,21 @@ export function DataControlPage() {
                 <span className="mt-3 block text-xs text-slate-500">
                   作成・取込は選択中ブロック単位です。表示は EventBlock単位 / Event全体（全Block）を切り替えできます。
                 </span>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleDeleteMatchesInActiveBlock()
+                    }}
+                    disabled={matchesInActiveBlock.length === 0}
+                    className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    このEventBlockの試合を全削除
+                  </button>
+                  <span className="text-xs text-slate-500">
+                    削除対象: {matchesInActiveBlock.length} 件
+                  </span>
+                </div>
               </div>
             ) : null}
 
