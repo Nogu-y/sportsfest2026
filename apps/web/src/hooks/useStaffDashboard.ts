@@ -30,6 +30,7 @@ type ScorableEvent = {
   id: number;
   name: string;
   color: string | null;
+  isCompleted: boolean;
 };
 
 type AdvancableEvent = {
@@ -102,6 +103,7 @@ export function useStaffDashboard() {
     {},
   );
   const [eventScoreErrors, setEventScoreErrors] = useState<Record<number, string | undefined>>({});
+  const [eventScoreSuccessMessages, setEventScoreSuccessMessages] = useState<Record<number, string | undefined>>({});
   const [pendingEventAdvances, setPendingEventAdvances] = useState<Record<number, boolean | undefined>>(
     {},
   );
@@ -198,10 +200,6 @@ export function useStaffDashboard() {
 
     return events
       .filter((event) => {
-        if (event.isCompleted) {
-          return false;
-        }
-
         const eventMatches = matches.filter((match) => match.eventId === event.id);
         if (eventMatches.length === 0) {
           return false;
@@ -213,6 +211,7 @@ export function useStaffDashboard() {
         id: event.id,
         name: event.name,
         color: event.color,
+        isCompleted: event.isCompleted,
       }));
   }, [events, matches]);
 
@@ -322,6 +321,13 @@ export function useStaffDashboard() {
 
   const clearEventScoreError = useCallback((eventId: number) => {
     setEventScoreErrors((current) => ({
+      ...current,
+      [eventId]: undefined,
+    }));
+  }, []);
+
+  const clearEventScoreSuccessMessage = useCallback((eventId: number) => {
+    setEventScoreSuccessMessages((current) => ({
       ...current,
       [eventId]: undefined,
     }));
@@ -467,6 +473,7 @@ export function useStaffDashboard() {
   const finalizeEventScore = useCallback(
     async (eventId: number) => {
       clearEventScoreError(eventId);
+      clearEventScoreSuccessMessage(eventId);
       setEventScorePending(eventId, true);
 
       try {
@@ -483,7 +490,12 @@ export function useStaffDashboard() {
           );
         }
 
-        await refreshLive();
+        setEventScoreSuccessMessages((current) => ({
+          ...current,
+          [eventId]: "得点計算に成功しました",
+        }));
+
+        await Promise.all([refreshMaster(), refreshLive()]);
       } catch (error) {
         setEventScoreErrors((current) => ({
           ...current,
@@ -494,7 +506,7 @@ export function useStaffDashboard() {
         setEventScorePending(eventId, false);
       }
     },
-    [clearEventScoreError, refreshLive, setEventScorePending],
+    [clearEventScoreError, clearEventScoreSuccessMessage, refreshLive, refreshMaster, setEventScorePending],
   );
 
   const resolveEventAdvancement = useCallback(
@@ -588,6 +600,7 @@ export function useStaffDashboard() {
     getMatchError: (matchId: number) => matchErrors[matchId],
     isMatchPending: (matchId: number) => pendingActions[matchId] !== undefined,
     getEventScoreError: (eventId: number) => eventScoreErrors[eventId],
+    getEventScoreSuccessMessage: (eventId: number) => eventScoreSuccessMessages[eventId],
     isEventScorePending: (eventId: number) => pendingEventScores[eventId] === true,
     getEventRankingError: (eventId: number) => eventRankingErrors[eventId],
     isEventRankingPending: (eventId: number) => pendingEventRankings[eventId] === true,
