@@ -263,10 +263,11 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
                             alt={watched ? "ウォッチリスト登録済" : "ウォッチリスト未登録"}
                             width={22}
                             height={22}
+                            className="invert-75"
                         />
                     </button>
                     <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">試合管理ID</span>
+                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">試合名</span>
                         <span className="text-sm font-mono font-bold text-gray-600">{headerLabel}</span>
                     </div>
                 </div>

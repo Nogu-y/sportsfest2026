@@ -10,6 +10,15 @@ const BOX_W = 200;  // 試合箱の幅
 const BOX_H = 64;   // 試合箱の高さ
 const GAP_X = 40;   // 列間隔
 const GAP_Y = 28;   // 行間隔
+const STAGE_ORDER: Record<string, number> = {
+    ROUND_1: 0,
+    ROUND_2: 1,
+    QUARTERFINAL: 2,
+    SEMIFINAL: 3,
+    FINAL: 4,
+    CONSOLATION: 5,
+    QUALIFIER: 0,
+};
 
 type PreviewData = {
     matches: PublicMasterResponse["matches"];
@@ -42,6 +51,18 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     )
 
     const buildLayout = (targetMatches: any[]) => {
+        if (targetMatches.length === 0) {
+            return { nodes: [], links: [], width: BOX_W, height: BOX_H + GAP_Y };
+        }
+
+        const hasPrereqLink = targetMatches.some((match: any) =>
+            (match.participants ?? []).some((participant: any) => participant.prereqMatchId),
+        );
+
+        if (!hasPrereqLink) {
+            return buildLayoutWithoutPrereq(targetMatches);
+        }
+
         const roots = targetMatches.filter((m: any) =>
             !targetMatches.some((other: any) => other.participants.some((p: any) => p.prereqMatchId === m.id))
         )
@@ -103,6 +124,74 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
         }
     }
 
+    const buildLayoutWithoutPrereq = (targetMatches: any[]) => {
+        const stageBuckets = new Map<number, any[]>();
+
+        for (const match of targetMatches) {
+            const stageOrder = STAGE_ORDER[match.stage] ?? 0;
+            const bucket = stageBuckets.get(stageOrder) ?? [];
+            bucket.push(match);
+            stageBuckets.set(stageOrder, bucket);
+        }
+
+        const orderedColumns = [...stageBuckets.entries()]
+            .sort((left, right) => left[0] - right[0])
+            .map(([, bucket]) =>
+                bucket.sort((left: any, right: any) => {
+                    const t = new Date(left.scheduledStartTime).getTime() - new Date(right.scheduledStartTime).getTime();
+                    if (t !== 0) return t;
+                    return left.id - right.id;
+                }),
+            );
+
+        const nodes: any[] = [];
+        const links: any[] = [];
+        let maxRows = 1;
+
+        orderedColumns.forEach((columnMatches, colIndex) => {
+            maxRows = Math.max(maxRows, columnMatches.length);
+            columnMatches.forEach((match: any, rowIndex: number) => {
+                nodes.push({
+                    match,
+                    x: colIndex * (BOX_W + GAP_X),
+                    y: rowIndex * (BOX_H + GAP_Y),
+                });
+            });
+        });
+
+        for (let colIndex = 0; colIndex < orderedColumns.length - 1; colIndex += 1) {
+            const currentColumn = orderedColumns[colIndex];
+            const nextColumn = orderedColumns[colIndex + 1];
+            if (currentColumn.length === 0 || nextColumn.length === 0) continue;
+
+            nextColumn.forEach((_, nextIndex: number) => {
+                const start = Math.floor((nextIndex * currentColumn.length) / nextColumn.length);
+                const endExclusive = Math.floor(((nextIndex + 1) * currentColumn.length) / nextColumn.length);
+                const sourceIndices = [...new Set([start, Math.max(start, endExclusive - 1)])]
+                    .filter((index) => index >= 0 && index < currentColumn.length);
+
+                const targetY = nextIndex * (BOX_H + GAP_Y) + BOX_H / 2;
+                for (const sourceIndex of sourceIndices) {
+                    const sourceY = sourceIndex * (BOX_H + GAP_Y) + BOX_H / 2;
+                    links.push({
+                        x1: colIndex * (BOX_W + GAP_X) + BOX_W,
+                        y1: sourceY,
+                        x2: (colIndex + 1) * (BOX_W + GAP_X),
+                        y2: targetY,
+                        isWinner: false,
+                    });
+                }
+            });
+        }
+
+        return {
+            nodes,
+            links,
+            width: orderedColumns.length * BOX_W + Math.max(orderedColumns.length - 1, 0) * GAP_X,
+            height: maxRows * (BOX_H + GAP_Y),
+        };
+    };
+
     // 本線トーナメントのレイアウト計算（再帰処理）
     const layout = useMemo(() => buildLayout(mainBracketMatches), [mainBracketMatches])
 
@@ -130,6 +219,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
             <Link
                 key={match.id}
                 href={`/match/${match.id}`}
+                scroll={false}
                 className={`absolute z-10 flex flex-col rounded bg-white border transition-all hover:border-primary hover:shadow-md ${boxBorderClass}`}
                 style={{ left: x, top: y, width: BOX_W, height: BOX_H }}
             >
@@ -155,7 +245,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
 
                 {match.name && (
                     <div className={`absolute -top-4.5 left-0.5 text-[10px] font-bold tracking-wide ${isMyMatch ? 'text-amber-600 font-black' : 'text-gray-400'}`}>
-                        {match.name} {isMyMatch && "⭐"}
+                        {match.name}
                     </div>
                 )}
             </Link>
@@ -177,6 +267,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
             <Link
                 key={`third-${match.id}`}
                 href={`/match/${match.id}`}
+                scroll={false}
                 className={`relative z-10 flex flex-col rounded bg-white border transition-all hover:border-primary hover:shadow-md ${boxBorderClass}`}
                 style={{ width: BOX_W, height: BOX_H }}
             >
@@ -202,7 +293,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
 
                 {match.name && (
                     <div className={`absolute -top-4.5 left-0.5 text-[10px] font-bold tracking-wide ${isMyMatch ? 'text-amber-600 font-black' : 'text-gray-400'}`}>
-                        {match.name} {isMyMatch && "⭐"}
+                        {match.name}
                     </div>
                 )}
             </Link>

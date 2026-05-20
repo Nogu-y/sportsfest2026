@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 
 export type MapPin = {
@@ -9,6 +10,7 @@ export type MapPin = {
     xRatio: number; // 0-100
     yRatio: number; // 0-100
     isHighlighted?: boolean;
+    locationIds?: number[];
 };
 
 type MapViewerProps = {
@@ -26,7 +28,7 @@ export const MapViewer = ({
                               imageHeight,
                               pins = [],
                               currentPos,
-                              onPinClick,
+                          onPinClick,
                           }: MapViewerProps) => {
     const [minScale, setMinScale] = useState<number | null>(null);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -46,6 +48,15 @@ export const MapViewer = ({
         observer.observe(mapContainerRef.current);
         return () => observer.disconnect();
     }, [imageWidth, imageHeight]);
+
+    const normalizedImageUrl = (() => {
+        const trimmed = imageUrl.trim();
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+
+        const withoutPublicPrefix = trimmed.replace(/^\/?public\//, '/');
+        if (withoutPublicPrefix.startsWith('/')) return withoutPublicPrefix;
+        return `/${withoutPublicPrefix}`;
+    })();
 
     return (
         <div ref={mapContainerRef} className="relative h-full w-full bg-gray-200 overflow-hidden">
@@ -67,9 +78,13 @@ export const MapViewer = ({
                             }}
                         >
                             {/* 地図画像 */}
-                            <img
-                                src={imageUrl}
+                            <Image
+                                src={normalizedImageUrl}
                                 alt="Map"
+                                width={imageWidth}
+                                height={imageHeight}
+                                unoptimized
+                                priority
                                 style={{ width: '100%', height: '100%', display: 'block' }}
                             />
 
