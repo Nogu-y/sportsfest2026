@@ -30,6 +30,7 @@ export function StaffDashboardPage() {
     getMatchError,
     isMatchPending,
     getEventScoreError,
+    getEventScoreSuccessMessage,
     isEventScorePending,
     getEventRankingError,
     isEventRankingPending,
@@ -187,7 +188,7 @@ export function StaffDashboardPage() {
                     <button
                       type="button"
                       onClick={() => finalizeEventScore(event.id)}
-                      disabled={isEventScorePending(event.id)}
+                      disabled={isEventScorePending(event.id) || event.isCompleted}
                       className="flex items-center justify-between rounded-[12px] border border-[#C9D9E7] bg-[#F8FBFD] px-4 py-3 text-left text-[#426A90] transition hover:border-[#7FA2C4] hover:bg-white disabled:cursor-wait disabled:opacity-60"
                     >
                       <span className="flex items-center gap-3">
@@ -198,11 +199,18 @@ export function StaffDashboardPage() {
                         <span className="text-sm font-medium">{event.name}</span>
                       </span>
                       <span className="text-sm text-[#4978A6]">
-                        {isEventScorePending(event.id) ? "送信中..." : "計算開始"}
+                        {isEventScorePending(event.id)
+                          ? "送信中..."
+                          : event.isCompleted
+                            ? "計算済み"
+                            : "計算開始"}
                       </span>
                     </button>
                     {getEventScoreError(event.id) ? (
                       <p className="text-[13px] text-[#A04E4E]">{getEventScoreError(event.id)}</p>
+                    ) : null}
+                    {getEventScoreSuccessMessage(event.id) ? (
+                      <p className="text-[13px] text-[#2B7A4B]">{getEventScoreSuccessMessage(event.id)}</p>
                     ) : null}
                   </div>
                 ))}
