@@ -12,8 +12,6 @@ export function StaffDashboardPage() {
     isError,
     locationOptions,
     locationSections,
-    rankableEvents,
-    advancableEvents,
     scorableEvents,
     selectedLocationIds,
     showCompletedMatches,
@@ -21,8 +19,6 @@ export function StaffDashboardPage() {
     setShowCompletedMatches,
     updateStatus,
     submitResult,
-    finalizeEventRankings,
-    resolveEventAdvancement,
     finalizeEventScore,
     getEvent,
     getMatchTeamsLabel,
@@ -32,10 +28,6 @@ export function StaffDashboardPage() {
     getEventScoreError,
     getEventScoreSuccessMessage,
     isEventScorePending,
-    getEventRankingError,
-    isEventRankingPending,
-    getEventAdvanceError,
-    isEventAdvancePending,
   } = useStaffDashboard();
   const [now, setNow] = useState(() => new Date());
 
@@ -94,84 +86,6 @@ export function StaffDashboardPage() {
             </Link>
           </div>
         </section>
-
-        {rankableEvents.length > 0 ? (
-          <section className="rounded-[18px] border border-[#D9E6F0] bg-white px-6 py-5 shadow-[0_22px_44px_rgba(28,54,80,0.08)]">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-[18px] font-semibold text-[#2D5378]">予選順位確定</h2>
-                <p className="mt-1 text-sm text-[#7A96B0]">
-                  予選リーグの結果からブロック順位を確定します。勝ち上がり反映の前に実行してください。
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {rankableEvents.map((event) => (
-                  <div key={event.id} className="flex min-w-[240px] flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={() => finalizeEventRankings(event.id)}
-                      disabled={isEventRankingPending(event.id)}
-                      className="flex items-center justify-between rounded-[12px] border border-[#C9D9E7] bg-[#F8FBFD] px-4 py-3 text-left text-[#426A90] transition hover:border-[#7FA2C4] hover:bg-white disabled:cursor-wait disabled:opacity-60"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span
-                          className="h-3 w-3 rounded-full border border-white/70"
-                          style={{ backgroundColor: event.color ?? "#7FA2C4" }}
-                        />
-                        <span className="text-sm font-medium">{event.name}</span>
-                      </span>
-                      <span className="text-sm text-[#4978A6]">
-                        {isEventRankingPending(event.id) ? "確定中..." : "予選順位を確定"}
-                      </span>
-                    </button>
-                    {getEventRankingError(event.id) ? (
-                      <p className="text-[13px] text-[#A04E4E]">{getEventRankingError(event.id)}</p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {advancableEvents.length > 0 ? (
-          <section className="rounded-[18px] border border-[#D9E6F0] bg-white px-6 py-5 shadow-[0_22px_44px_rgba(28,54,80,0.08)]">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-[18px] font-semibold text-[#2D5378]">決勝進出反映</h2>
-                <p className="mt-1 text-sm text-[#7A96B0]">
-                  予選順位または前試合結果をもとに、決勝側の参加チームを反映します。
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {advancableEvents.map((event) => (
-                  <div key={event.id} className="flex min-w-[240px] flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={() => resolveEventAdvancement(event.id)}
-                      disabled={isEventAdvancePending(event.id)}
-                      className="flex items-center justify-between rounded-[12px] border border-[#C9D9E7] bg-[#F8FBFD] px-4 py-3 text-left text-[#426A90] transition hover:border-[#7FA2C4] hover:bg-white disabled:cursor-wait disabled:opacity-60"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span
-                          className="h-3 w-3 rounded-full border border-white/70"
-                          style={{ backgroundColor: event.color ?? "#7FA2C4" }}
-                        />
-                        <span className="text-sm font-medium">{event.name}</span>
-                      </span>
-                      <span className="text-sm text-[#4978A6]">
-                        {isEventAdvancePending(event.id) ? "反映中..." : "勝ち上がり反映"}
-                      </span>
-                    </button>
-                    {getEventAdvanceError(event.id) ? (
-                      <p className="text-[13px] text-[#A04E4E]">{getEventAdvanceError(event.id)}</p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
 
         {scorableEvents.length > 0 ? (
           <section className="rounded-[18px] border border-[#D9E6F0] bg-white px-6 py-5 shadow-[0_22px_44px_rgba(28,54,80,0.08)]">

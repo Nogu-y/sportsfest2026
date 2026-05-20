@@ -24,7 +24,6 @@ type ResolveEventParticipantsError =
 
 type FinalizeBlockRankingsError =
   | 'event_not_found'
-  | 'incomplete_match_results'
 
 type ResolveEventParticipantsErrorResult = {
   error: ResolveEventParticipantsError
@@ -795,17 +794,18 @@ export const finalizeEventBlockRankings = async (eventId: number) => {
     }
 
     const incompleteBlockIds = [...incompleteBlockIdSet].sort((a, b) => a - b)
-    if (incompleteBlockIds.length > 0) {
-      return {
-        error: 'incomplete_match_results' as FinalizeBlockRankingsError,
-        detail: { incompleteBlockIds }
-      } satisfies FinalizeBlockRankingsErrorResult
-    }
 
     const rankingRows: FinalizeBlockRankingsResponse['rankings'] = []
 
     for (const blockId of leagueBlockIds) {
+      if (incompleteBlockIdSet.has(blockId)) {
+        continue
+      }
+
       const statsByTeam = blockStatsMap.get(blockId) ?? new Map()
+      if (statsByTeam.size === 0) {
+        continue
+      }
       const sortedRows = [...statsByTeam.values()].sort((left, right) => {
         if (left.firstPlaceCount !== right.firstPlaceCount) {
           return right.firstPlaceCount - left.firstPlaceCount
@@ -835,7 +835,11 @@ export const finalizeEventBlockRankings = async (eventId: number) => {
       })
     }
 
-    await tx.delete(blockRankings).where(inArray(blockRankings.eventBlockId, leagueBlockIds))
+    const processedBlockIds = leagueBlockIds.filter((blockId) => !incompleteBlockIdSet.has(blockId))
+
+    if (processedBlockIds.length > 0) {
+      await tx.delete(blockRankings).where(inArray(blockRankings.eventBlockId, processedBlockIds))
+    }
 
     if (rankingRows.length > 0) {
       await tx.insert(blockRankings).values(rankingRows)
@@ -843,7 +847,7 @@ export const finalizeEventBlockRankings = async (eventId: number) => {
 
     return {
       eventId,
-      processedBlocks: leagueBlockIds.length,
+      processedBlocks: processedBlockIds.length,
       rankings: rankingRows
     } satisfies FinalizeBlockRankingsResponse
   })

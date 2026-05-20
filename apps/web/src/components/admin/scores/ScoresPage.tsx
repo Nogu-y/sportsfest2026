@@ -85,8 +85,12 @@ export function ScoresPage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isManualTriggering, setIsManualTriggering] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
+  const [manualTriggerError, setManualTriggerError] = useState<string | null>(null)
+  const [manualTriggerInfo, setManualTriggerInfo] = useState<string | null>(null)
+  const [manualTargetEventId, setManualTargetEventId] = useState<number | null>(null)
 
   const [editingMatchId, setEditingMatchId] = useState<number | null>(null)
   const [draftParticipants, setDraftParticipants] = useState<ParticipantDraft[]>([])
@@ -231,6 +235,68 @@ export function ScoresPage() {
     }
   }
 
+  async function runManualTrigger(action: 'rankings' | 'advance' | 'score') {
+    if (manualTargetEventId === null) {
+      setManualTriggerError('手動トリガー対象のイベントを選択してください')
+      setManualTriggerInfo(null)
+      return
+    }
+
+    setIsManualTriggering(true)
+    setManualTriggerError(null)
+    setManualTriggerInfo(null)
+    setErrorMessage(null)
+    setInfoMessage(null)
+
+    try {
+      const response = action === 'rankings'
+        ? await api.api.staff.events[':eventId'].rankings.$post({
+            param: { eventId: manualTargetEventId },
+          })
+        : action === 'advance'
+          ? await api.api.staff.events[':eventId'].advance.$post({
+              param: { eventId: manualTargetEventId },
+            })
+          : await api.api.staff.events[':eventId'].score.$post({
+            param: { eventId: manualTargetEventId },
+          })
+
+      if (!response.ok) {
+        throw new Error(
+          await parseErrorMessage(
+            response,
+            action === 'rankings'
+              ? '予選順位確定に失敗しました'
+              : action === 'advance'
+                ? '勝ち上がり反映に失敗しました'
+                : '得点再計算に失敗しました',
+          ),
+        )
+      }
+
+      await loadData()
+      setManualTriggerInfo(
+        action === 'rankings'
+          ? `イベントID ${manualTargetEventId} の予選順位を確定しました`
+          : action === 'advance'
+            ? `イベントID ${manualTargetEventId} の勝ち上がりを反映しました`
+            : `イベントID ${manualTargetEventId} の得点を再計算しました`,
+      )
+    } catch (error) {
+      setManualTriggerError(
+        error instanceof Error
+          ? error.message
+          : action === 'rankings'
+            ? '予選順位確定に失敗しました'
+            : action === 'advance'
+              ? '勝ち上がり反映に失敗しました'
+              : '得点再計算に失敗しました',
+      )
+    } finally {
+      setIsManualTriggering(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 md:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -252,6 +318,71 @@ export function ScoresPage() {
             {infoMessage}
           </div>
         ) : null}
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-semibold">手動トリガー（フォールバック）</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            試合結果更新時の自動処理が動作しなかった場合のみ、ここからイベント単位で実行してください。
+          </p>
+          <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end">
+            <label className="flex min-w-[280px] flex-col gap-1 text-sm">
+              <span className="text-slate-600">対象イベント</span>
+              <select
+                value={manualTargetEventId === null ? '' : manualTargetEventId}
+                onChange={(event) =>
+                  setManualTargetEventId(event.target.value.length === 0 ? null : Number(event.target.value))
+                }
+                className="rounded-md border border-slate-300 px-3 py-2"
+                disabled={isManualTriggering}
+              >
+                <option value="">選択してください</option>
+                {events.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.id}: {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  void runManualTrigger('rankings')
+                }}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                disabled={isManualTriggering}
+              >
+                予選順位を確定
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void runManualTrigger('advance')
+                }}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                disabled={isManualTriggering}
+              >
+                勝ち上がり反映
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void runManualTrigger('score')
+                }}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                disabled={isManualTriggering}
+              >
+                得点再計算
+              </button>
+            </div>
+          </div>
+          {manualTriggerError ? (
+            <p className="mt-3 text-sm text-rose-700">{manualTriggerError}</p>
+          ) : null}
+          {manualTriggerInfo ? (
+            <p className="mt-3 text-sm text-emerald-700">{manualTriggerInfo}</p>
+          ) : null}
+        </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-lg font-semibold">フィルター</h2>
