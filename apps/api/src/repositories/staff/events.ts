@@ -534,9 +534,6 @@ export const resolveEventParticipants = async (eventId: number) => {
       id: number
       matchPlanId: number
       teamId: number
-      prereqMatchId: null
-      prereqBlockId: null
-      prereqRank: null
     }> = []
 
     let unresolvedParticipants = 0
@@ -587,19 +584,18 @@ export const resolveEventParticipants = async (eventId: number) => {
         prereqRank: participant.prereqRank
       }
 
-      if (resolvedTeamId !== null && isDependencyParticipant) {
+      if (
+        resolvedTeamId !== null &&
+        isDependencyParticipant &&
+        participant.teamId !== resolvedTeamId
+      ) {
         updates.push({
           id: participant.id,
           matchPlanId: participant.matchPlanId,
-          teamId: resolvedTeamId,
-          prereqMatchId: null,
-          prereqBlockId: null,
-          prereqRank: null
+          teamId: resolvedTeamId
         })
 
-        nextParticipant.prereqMatchId = null
-        nextParticipant.prereqBlockId = null
-        nextParticipant.prereqRank = null
+        nextParticipant.teamId = resolvedTeamId
       }
 
       const rows = nextParticipantsByMatch.get(participant.matchPlanId) ?? []
@@ -611,10 +607,7 @@ export const resolveEventParticipants = async (eventId: number) => {
       await tx
         .update(matchParticipants)
         .set({
-          teamId: item.teamId,
-          prereqMatchId: item.prereqMatchId,
-          prereqBlockId: item.prereqBlockId,
-          prereqRank: item.prereqRank
+          teamId: item.teamId
         })
         .where(eq(matchParticipants.id, item.id))
     }
@@ -624,10 +617,7 @@ export const resolveEventParticipants = async (eventId: number) => {
       .map((match) => {
         const rows = nextParticipantsByMatch.get(match.id) ?? []
         const isReady = rows.length > 0 && rows.every((participant) =>
-          participant.teamId !== null &&
-          participant.prereqMatchId === null &&
-          participant.prereqBlockId === null &&
-          participant.prereqRank === null
+          participant.teamId !== null
         )
         return isReady ? match.id : null
       })

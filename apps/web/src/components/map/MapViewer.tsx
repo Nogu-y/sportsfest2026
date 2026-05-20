@@ -111,7 +111,7 @@ export const MapViewer = ({
                                     className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                                     style={{ left: `${currentPos.xRatio}%`, top: `${currentPos.yRatio}%` }}
                                 >
-                                    <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md animate-pulse" />
+                                    <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md animate-pulse" />
                                 </div>
                             )}
                         </div>
