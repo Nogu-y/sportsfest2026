@@ -1,7 +1,5 @@
-export default  function Staff() {
-    return (
-        <main>
-            WIP
-        </main>
-    )
+import { StaffDashboardPage } from "../../../components/staff/StaffDashboardPage";
+
+export default function StaffPage() {
+  return <StaffDashboardPage />;
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSportsFestData } from "../../hooks/useSportsFestData";
 import { LeagueTable } from "./LeagueTable";
 import { TournamentTable } from "./TournamentTable";
+import { HeatsAndFinalTable } from "./HeatsAndFinalTable";
 import type { PublicMasterResponse } from "../../../../api/src/schemas/public/master";
 
 type PreviewData = {
@@ -20,16 +21,21 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
     const events = previewData?.events ?? sportsFestData.events;
     const eventBlocks = previewData?.eventBlocks ?? sportsFestData.eventBlocks;
     const isLoading = previewData ? false : sportsFestData.isLoading;
-
-    if (isLoading) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
-
-    const event = events.find((e: any) => e.id === eventId);
+    const event = useMemo(() => events.find((e: any) => e.id === eventId), [events, eventId]);
     const blocks = useMemo(
         () => eventBlocks?.filter((b: any) => b.eventId === eventId) || [],
         [eventBlocks, eventId],
     );
+    const isHeatsAndFinal = event?.format === "HEATS_AND_FINAL";
+
+    if (isLoading) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
 
     useEffect(() => {
+        if (isHeatsAndFinal) {
+            setActiveBlockId(null);
+            return;
+        }
+
         if (blocks.length === 0) {
             setActiveBlockId(null);
             return;
@@ -41,7 +47,7 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
             }
             return blocks[0].id;
         });
-    }, [blocks]);
+    }, [blocks, isHeatsAndFinal]);
 
     if (!event || blocks.length === 0) {
         return (
@@ -59,7 +65,7 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
             <h2 className="mb-4 text-xl  ">{event.name}</h2>
 
             {/* ブロック切り替えタブ */}
-            {blocks.length > 1 && (
+            {!isHeatsAndFinal && blocks.length > 1 && (
                 <div className="mb-6 flex gap-2 overflow-x-auto scrollbar-none pb-2">
                     {blocks.map((block: any) => (
                         <button
@@ -79,7 +85,19 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
 
             <div className="w-full overflow-x-auto">
                 <span className="text-xs text-gray-400 mb-2 block">※ 試合をタップすると詳細が開きます</span>
-                {currentBlock?.type === "LEAGUE" && (
+                {isHeatsAndFinal && (
+                    <HeatsAndFinalTable
+                        eventId={eventId}
+                        blocks={blocks}
+                        previewData={previewData ? {
+                            matches: previewData.matches,
+                            teams: previewData.teams,
+                            eventBlocks: previewData.eventBlocks,
+                            myTeamId: previewData.myTeamId,
+                        } : undefined}
+                    />
+                )}
+                {!isHeatsAndFinal && currentBlock?.type === "LEAGUE" && (
                     <LeagueTable
                         block={currentBlock}
                         previewData={previewData ? {
@@ -89,7 +107,7 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
                         } : undefined}
                     />
                 )}
-                {currentBlock?.type === "TOURNAMENT" && (
+                {!isHeatsAndFinal && currentBlock?.type === "TOURNAMENT" && (
                     <TournamentTable
                         block={currentBlock}
                         previewData={previewData ? {
@@ -100,7 +118,7 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
                         } : undefined}
                     />
                 )}
-                {currentBlock?.type === "CUMULATIVE" && (
+                {!isHeatsAndFinal && currentBlock?.type === "CUMULATIVE" && (
                     <div className="p-4 text-center text-gray-400">ランキング集計表（開発中）</div>
                 )}
             </div>
