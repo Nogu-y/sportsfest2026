@@ -1125,6 +1125,15 @@ export function DataControlPage() {
       return records
     }
 
+    const normalizedQuery = matchIdQuery.trim()
+    if (normalizedQuery.length > 0) {
+      return records.filter((record) => {
+        const id = record.id
+        if (typeof id !== 'number') return false
+        return String(id).includes(normalizedQuery)
+      })
+    }
+
     let scopedRecords = records
 
     if (matchDisplayMode === 'block') {
@@ -1141,16 +1150,7 @@ export function DataControlPage() {
       scopedRecords = records.filter((record) => blockIds.has(record.eventBlockId as number))
     }
 
-    const normalizedQuery = matchIdQuery.trim()
-    if (normalizedQuery.length === 0) {
-      return scopedRecords
-    }
-
-    return scopedRecords.filter((record) => {
-      const id = record.id
-      if (typeof id !== 'number') return false
-      return String(id).includes(normalizedQuery)
-    })
+    return scopedRecords
   }, [activeMatchBlockId, activeResourceKey, matchDisplayEventId, matchDisplayMode, matchIdQuery, masterData, records])
 
   const previewEventId = useMemo(() => {
@@ -1439,11 +1439,8 @@ export function DataControlPage() {
       return
     }
 
-    if (
-      matchDisplayEventId === null ||
-      !matchEventOptions.some((option) => option.value === matchDisplayEventId)
-    ) {
-      setMatchDisplayEventId(matchEventOptions[0].value)
+    if (matchDisplayEventId !== null && !matchEventOptions.some((option) => option.value === matchDisplayEventId)) {
+      setMatchDisplayEventId(null)
     }
   }, [activeMatchBlockId, activeResourceKey, matchDisplayEventId, matchDisplayMode, matchEventOptions, masterData])
 
@@ -1809,6 +1806,7 @@ export function DataControlPage() {
                         onChange={(event) => setMatchDisplayEventId(Number(event.target.value) || null)}
                         className="rounded-lg border border-slate-300 bg-white px-3 py-2"
                       >
+                        <option value="">全表示</option>
                         {matchEventOptions.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
