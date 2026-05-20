@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import useSWR from "swr";
 import { api } from "../lib/api/client"; 
 
@@ -30,6 +30,11 @@ export function useWatchlist() {
     const [localWatchlist, setLocalWatchlist] = useState<number[]>([]);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
     const [isPushSupported, setIsPushSupported] = useState(false);
+
+    const disableNotificationLocally = useCallback(() => {
+        setIsNotificationEnabled(false)
+        localStorage.setItem(LOCAL_STORAGE_KEYS.PUSH_ENABLED, "false")
+    }, [])
 
     // 1. 初期化: UUID生成, ローカルリスト, 通知設定の読み込み
     useEffect(() => {
@@ -101,7 +106,7 @@ export function useWatchlist() {
     };
 
     // 4. プッシュ通知の有効化 (Web Push購読とサーバー登録)
-    const enableNotification = async () => {
+    const enableNotification = useCallback(async () => {
         if (!isPushSupported || !uuid) return false;
         if (!VAPID_PUBLIC_KEY) {
             console.error("環境変数 NEXT_PUBLIC_VAPID_PUBLIC_KEY が設定されていません。");
@@ -172,7 +177,63 @@ export function useWatchlist() {
             console.error("通知の有効化に失敗しました", err);
             return false;
         }
-    };
+    }, [isPushSupported, uuid, localWatchlist, mutateRemote])
+
+    // 5. 実際の購読状態とローカル状態の不整合を補正
+    useEffect(() => {
+        if (typeof window === "undefined") return
+        if (!isPushSupported || !uuid) return
+
+        let cancelled = false
+
+        const reconcilePushState = async () => {
+            const localEnabled = localStorage.getItem(LOCAL_STORAGE_KEYS.PUSH_ENABLED) === "true"
+            const permission = typeof Notification !== "undefined"
+                ? Notification.permission
+                : "denied"
+
+            if (permission !== "granted") {
+                if (!cancelled && localEnabled) {
+                    disableNotificationLocally()
+                }
+                return
+            }
+
+            try {
+                const registration = await navigator.serviceWorker.ready
+                const subscription = await registration.pushManager.getSubscription()
+
+                if (!subscription) {
+                    if (!localEnabled) {
+                        return
+                    }
+
+                    const restored = await enableNotification()
+                    if (!restored && !cancelled) {
+                        disableNotificationLocally()
+                    }
+                    return
+                }
+
+                if (!localEnabled && !cancelled) {
+                    setIsNotificationEnabled(true)
+                    localStorage.setItem(LOCAL_STORAGE_KEYS.PUSH_ENABLED, "true")
+                    await mutateRemote()
+                }
+            } catch (err) {
+                console.error("通知状態の照合に失敗しました", err)
+                if (!cancelled) {
+                    disableNotificationLocally()
+                }
+            }
+        }
+
+        reconcilePushState()
+
+        return () => {
+            cancelled = true
+        }
+    }, [isPushSupported, uuid, enableNotification, disableNotificationLocally, mutateRemote])
 
     return {
         watchedIds,
