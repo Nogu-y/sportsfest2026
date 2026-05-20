@@ -132,6 +132,9 @@ importers:
       web-push:
         specifier: ^3.6.7
         version: 3.6.7
+      zod:
+        specifier: ^3.24.4
+        version: 3.25.76
     devDependencies:
       '@sportsfest/config':
         specifier: workspace:*
