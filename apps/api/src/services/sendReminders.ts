@@ -107,7 +107,12 @@ export async function sendMatchReminders() {
             title: `試合開始まであと${minutesLeft}分！`,
             body: `【${matchVersus}】${eventDisplay} がまもなく開始します${matchNumberDisplay}`,
             url: `/match/${target.matchId}`,
-          })
+          }),
+            {
+                headers: {
+                    'Urgency': 'high',
+                }
+            }
         );
 
         await db
