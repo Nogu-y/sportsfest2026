@@ -225,6 +225,36 @@ export function useStaffDashboard() {
       blockRankTeamMap.set(`${ranking.eventBlockId}:${ranking.rank}`, ranking.teamId);
     }
 
+    const blockRankTeamMapFromMatches = new Map<string, number>();
+    const ambiguousBlockRankKeys = new Set<string>();
+    for (const match of matches) {
+      if (match.status !== "Completed") {
+        continue;
+      }
+
+      for (const participant of match.participants) {
+        if (participant.teamId === null || participant.rank === null) {
+          continue;
+        }
+
+        const key = `${match.eventBlockId}:${participant.rank}`;
+        if (ambiguousBlockRankKeys.has(key)) {
+          continue;
+        }
+
+        const existingTeamId = blockRankTeamMapFromMatches.get(key);
+        if (existingTeamId === undefined) {
+          blockRankTeamMapFromMatches.set(key, participant.teamId);
+          continue;
+        }
+
+        if (existingTeamId !== participant.teamId) {
+          ambiguousBlockRankKeys.add(key);
+          blockRankTeamMapFromMatches.delete(key);
+        }
+      }
+    }
+
     const matchRankTeamMap = new Map<string, number>();
     for (const match of matches) {
       for (const participant of match.participants) {
@@ -258,7 +288,8 @@ export function useStaffDashboard() {
           const rank = participant.prereqRank ?? 1;
 
           if (participant.prereqBlockId !== null) {
-            return blockRankTeamMap.has(`${participant.prereqBlockId}:${rank}`);
+            const key = `${participant.prereqBlockId}:${rank}`;
+            return blockRankTeamMap.has(key) || blockRankTeamMapFromMatches.has(key);
           }
 
           if (participant.prereqMatchId !== null) {
