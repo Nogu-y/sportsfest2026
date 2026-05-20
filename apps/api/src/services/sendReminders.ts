@@ -2,6 +2,7 @@ import { and, eq, gte, isNull, inArray, lte } from "drizzle-orm";
 import { addMinutes, differenceInMinutes, startOfMinute } from "date-fns";
 import webpush from "web-push";
 import { db } from "../db/client";
+import { apiEnv } from "../env";
 import {
   matchPlans,
   watchlists,
@@ -14,9 +15,9 @@ import {
 } from "../db/schema";
 
 webpush.setVapidDetails(
-  process.env.MAIL_ADDRESS!,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
+  apiEnv.MAIL_ADDRESS,
+  apiEnv.VAPID_PUBLIC_KEY,
+  apiEnv.VAPID_PRIVATE_KEY
 );
 
 export async function sendMatchReminders() {
