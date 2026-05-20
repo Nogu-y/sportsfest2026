@@ -20,8 +20,6 @@ const STAGE_ORDER: Record<string, number> = {
     QUALIFIER: 0,
 };
 
-const getStageOrder = (match: any) => STAGE_ORDER[match.stage] ?? 0;
-
 type PreviewData = {
     matches: PublicMasterResponse["matches"];
     teams: PublicMasterResponse["teams"];
@@ -35,7 +33,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     const matches = previewData?.matches ?? sportsFestData.matches;
     const teams = previewData?.teams ?? sportsFestData.teams;
     const eventBlocks = previewData?.eventBlocks ?? sportsFestData.eventBlocks;
-    const activeMyTeamId = previewData && "myTeamId" in previewData ? previewData.myTeamId : myTeamId;
+    const activeMyTeamId = previewData?.myTeamId ?? myTeamId;
 
     const blockMatches = useMemo(
         () => matches.filter((m: any) => m.eventBlockId === block.id),
@@ -46,48 +44,6 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
         () => blockMatches.filter((m: any) => m.stage !== "THIRD_PLACE"),
         [blockMatches]
     )
-
-    const layoutMatches = useMemo(() => {
-        const inferSourceMatch = (match: any, participant: any) => {
-            if (participant.prereqMatchId || participant.teamId == null) return null;
-
-            const currentStageOrder = getStageOrder(match);
-            return mainBracketMatches
-                .filter((candidate: any) =>
-                    candidate.id !== match.id &&
-                    getStageOrder(candidate) < currentStageOrder &&
-                    (candidate.participants ?? []).some((sourceParticipant: any) =>
-                        sourceParticipant.teamId === participant.teamId &&
-                        sourceParticipant.rank === 1,
-                    ),
-                )
-                .sort((left: any, right: any) => {
-                    const stageDiff = getStageOrder(right) - getStageOrder(left);
-                    if (stageDiff !== 0) return stageDiff;
-
-                    const timeDiff =
-                        new Date(right.scheduledStartTime).getTime() -
-                        new Date(left.scheduledStartTime).getTime();
-                    if (timeDiff !== 0) return timeDiff;
-
-                    return right.id - left.id;
-                })[0] ?? null;
-        };
-
-        return mainBracketMatches.map((match: any) => ({
-            ...match,
-            participants: (match.participants ?? []).map((participant: any) => {
-                const sourceMatch = inferSourceMatch(match, participant);
-                if (!sourceMatch) return participant;
-
-                return {
-                    ...participant,
-                    prereqMatchId: sourceMatch.id,
-                    prereqRank: participant.prereqRank ?? 1,
-                };
-            }),
-        }));
-    }, [mainBracketMatches]);
 
     const thirdPlaceMatches = useMemo(
         () => blockMatches.filter((m: any) => m.stage === "THIRD_PLACE"),
@@ -108,51 +64,28 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
         }
 
         const roots = targetMatches.filter((m: any) =>
-            !targetMatches.some((other: any) =>
-                (other.participants ?? []).some((p: any) => p.prereqMatchId === m.id),
-            )
+            !targetMatches.some((other: any) => other.participants.some((p: any) => p.prereqMatchId === m.id))
         )
-
-        if (roots.length === 0) {
-            return buildLayoutWithoutPrereq(targetMatches);
-        }
 
         const getDepth = (matchId: number): number => {
             const match = targetMatches.find((m: any) => m.id === matchId);
             if (!match) return 0;
-            const participants = match.participants ?? [];
-            const d0 = participants[0]?.prereqMatchId ? getDepth(participants[0].prereqMatchId) : 0;
-            const d1 = participants[1]?.prereqMatchId ? getDepth(participants[1].prereqMatchId) : 0;
+            const d0 = match.participants[0]?.prereqMatchId ? getDepth(match.participants[0].prereqMatchId) : 0;
+            const d1 = match.participants[1]?.prereqMatchId ? getDepth(match.participants[1].prereqMatchId) : 0;
             return Math.max(d0, d1) + 1;
         };
 
         const maxCols = Math.max(...roots.map((r: any) => getDepth(r.id)), 1);
         const nodes: any[] = [];
         const links: any[] = [];
-        const visitedNodes = new Map<number, any>();
         let globalRow = 0;
 
-        const isSourceWinner = (participant: any) => {
-            if (!participant?.prereqMatchId) return false;
-
-            const sourceMatch = targetMatches.find((m: any) => m.id === participant.prereqMatchId);
-            const sourceRank = participant.prereqRank ?? 1;
-            return (sourceMatch?.participants ?? []).some((sourceParticipant: any) =>
-                sourceParticipant.rank === sourceRank &&
-                (participant.teamId == null || sourceParticipant.teamId === participant.teamId),
-            );
-        };
-
         const traverse = (matchId: number, col: number) => {
-            const visited = visitedNodes.get(matchId);
-            if (visited) return visited;
-
             const match = targetMatches.find((m: any) => m.id === matchId);
             if (!match) return null;
 
-            const participants = match.participants ?? [];
-            const p0 = participants[0];
-            const p1 = participants[1];
+            const p0 = match.participants[0];
+            const p1 = match.participants[1];
 
             let y0, y1;
             if (p0?.prereqMatchId) y0 = traverse(p0.prereqMatchId, col - 1)?.y;
@@ -166,21 +99,20 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
 
             if (p0?.prereqMatchId && y0 !== undefined) {
                 const cx = (col - 1) * (BOX_W + GAP_X);
-                links.push({ x1: cx + BOX_W, y1: y0 + BOX_H / 2, x2: myX, y2: myY + BOX_H / 4, isWinner: isSourceWinner(p0) });
+                links.push({ x1: cx + BOX_W, y1: y0 + BOX_H / 2, x2: myX, y2: myY + BOX_H / 4, isWinner: p0.rank === 1 });
             }
             if (p1?.prereqMatchId && y1 !== undefined) {
                 const cx = (col - 1) * (BOX_W + GAP_X);
-                links.push({ x1: cx + BOX_W, y1: y1 + BOX_H / 2, x2: myX, y2: myY + BOX_H * (3 / 4), isWinner: isSourceWinner(p1) });
+                links.push({ x1: cx + BOX_W, y1: y1 + BOX_H / 2, x2: myX, y2: myY + BOX_H * (3 / 4), isWinner: p1.rank === 1 });
             }
 
             const node = { match, x: myX, y: myY };
             nodes.push(node);
-            visitedNodes.set(matchId, node);
             return node;
         };
 
         roots.forEach((root: any) => {
-            traverse(root.id, getDepth(root.id) - 1);
+            traverse(root.id, maxCols - 1);
             globalRow += 0.5;
         });
 
@@ -261,7 +193,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     };
 
     // 本線トーナメントのレイアウト計算（再帰処理）
-    const layout = useMemo(() => buildLayout(layoutMatches), [layoutMatches])
+    const layout = useMemo(() => buildLayout(mainBracketMatches), [mainBracketMatches])
 
     const getTeamLabel = (p: any) => {
         if (p.teamId) return teams.find((t: any) => t.id === p.teamId)?.name ?? "未定";
@@ -273,7 +205,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     };
 
     const renderMatchCard = ({ match, x, y }: { match: any; x: number; y: number }) => {
-        const isMyMatch = activeMyTeamId != null && match.participants?.some((p: any) => p.teamId === activeMyTeamId);
+        const isMyMatch = match.participants?.some((p: any) => p.teamId === activeMyTeamId);
         const isPlaying = match.status === "Playing";
 
         let boxBorderClass = "border-gray-300 shadow-sm";
@@ -321,7 +253,7 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     }
 
     const renderStandaloneMatchCard = (match: any) => {
-        const isMyMatch = activeMyTeamId != null && match.participants?.some((p: any) => p.teamId === activeMyTeamId);
+        const isMyMatch = match.participants?.some((p: any) => p.teamId === activeMyTeamId);
         const isPlaying = match.status === "Playing";
 
         let boxBorderClass = "border-gray-300 shadow-sm";

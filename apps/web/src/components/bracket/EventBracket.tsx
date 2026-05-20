@@ -28,6 +28,8 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
     );
     const isHeatsAndFinal = event?.format === "HEATS_AND_FINAL";
 
+    if (isLoading) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
+
     useEffect(() => {
         if (isHeatsAndFinal) {
             setActiveBlockId(null);
@@ -46,8 +48,6 @@ export const EventBracket = ({ eventId, previewData }: { eventId: number; previe
             return blocks[0].id;
         });
     }, [blocks, isHeatsAndFinal]);
-
-    if (isLoading) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
 
     if (!event || blocks.length === 0) {
         return (
