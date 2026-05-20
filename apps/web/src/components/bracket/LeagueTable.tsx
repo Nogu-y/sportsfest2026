@@ -82,9 +82,6 @@ export const LeagueTable = ({ block, previewData }: { block: any; previewData?: 
                                     }`}
                                 >
                                     {getTeamName(pt.teamId)}
-                                    {isMyTeamCol && (
-                                        <span className="block text-[8px] text-amber-700">My Class</span>
-                                    )}
                                 </th>
                             );
                         })}
@@ -117,11 +114,6 @@ export const LeagueTable = ({ block, previewData }: { block: any; previewData?: 
                                     }`}
                                 >
                                     {getTeamName(rowTeam.teamId)}
-                                    {isMyTeamRow && (
-                                        <span className="ml-1 inline-block rounded bg-amber-500 px-1 text-[9px] text-white">
-                                            自分
-                                        </span>
-                                    )}
                                 </td>
 
                                 {participatingTeams.map((colTeam) => {
@@ -173,7 +165,7 @@ export const LeagueTable = ({ block, previewData }: { block: any; previewData?: 
                                             key={`match-${match.id}-${colTeam.teamId}`}
                                             className={`border border-gray-300 p-0 text-center align-middle transition-all ${cellBgClass}`}
                                         >
-                                            <Link href={`/match/${match.id}`} className="block h-full w-full p-2">
+                                            <Link href={`/match/${match.id}`} scroll={false} className="block h-full w-full p-2">
                                                 {match.status === "Finished" || match.status === "Completed" ? (
                                                     <span
                                                         className={`font-mono text-base tracking-wider ${
