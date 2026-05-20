@@ -466,6 +466,7 @@ export const resolveEventParticipants = async (eventId: number) => {
     const matches = await tx
       .select({
         id: matchPlans.id,
+        eventBlockId: matchPlans.eventBlockId,
         status: matchPlans.status
       })
       .from(matchPlans)
@@ -486,6 +487,7 @@ export const resolveEventParticipants = async (eventId: number) => {
         id: matchParticipants.id,
         matchPlanId: matchParticipants.matchPlanId,
         teamId: matchParticipants.teamId,
+        rank: matchParticipants.rank,
         prereqMatchId: matchParticipants.prereqMatchId,
         prereqBlockId: matchParticipants.prereqBlockId,
         prereqRank: matchParticipants.prereqRank
@@ -524,6 +526,29 @@ export const resolveEventParticipants = async (eventId: number) => {
       teamByBlockRank.set(`${ranking.eventBlockId}:${ranking.rank}`, ranking.teamId)
     }
 
+    const matchById = new Map(matches.map((match) => [match.id, match]))
+    const teamByBlockRankFromMatches = new Map<string, number>()
+    const ambiguousBlockRankKeys = new Set<string>()
+    for (const participant of participants) {
+      if (participant.teamId === null || participant.rank === null) continue
+      const sourceMatch = matchById.get(participant.matchPlanId)
+      if (!sourceMatch || sourceMatch.status !== 'Completed') continue
+
+      const key = `${sourceMatch.eventBlockId}:${participant.rank}`
+      if (ambiguousBlockRankKeys.has(key)) continue
+
+      const existingTeamId = teamByBlockRankFromMatches.get(key)
+      if (existingTeamId === undefined) {
+        teamByBlockRankFromMatches.set(key, participant.teamId)
+        continue
+      }
+
+      if (existingTeamId !== participant.teamId) {
+        ambiguousBlockRankKeys.add(key)
+        teamByBlockRankFromMatches.delete(key)
+      }
+    }
+
     const teamByMatchRank = new Map<string, number>()
     for (const participant of prereqParticipantRows) {
       if (participant.teamId === null || participant.rank === null) continue
@@ -552,10 +577,14 @@ export const resolveEventParticipants = async (eventId: number) => {
       let resolvedTeamId: number | null = participant.teamId
 
       if (participant.prereqBlockId !== null) {
-        resolvedTeamId = teamByBlockRank.get(`${participant.prereqBlockId}:${rank}`) ?? null
+        const blockRankKey = `${participant.prereqBlockId}:${rank}`
+        resolvedTeamId =
+          teamByBlockRank.get(blockRankKey) ??
+          teamByBlockRankFromMatches.get(blockRankKey) ??
+          null
         if (resolvedTeamId === null) {
           missingFromBlocksMap.set(
-            `${participant.prereqBlockId}:${rank}`,
+            blockRankKey,
             { blockId: participant.prereqBlockId, rank },
           )
         }
