@@ -78,6 +78,10 @@ async function withRequestTimeout<T>(
   }
 }
 
+const delay = (ms: number) => new Promise((resolve) => {
+  setTimeout(resolve, ms)
+})
+
 export function useStaffDashboard() {
   const {
     isLoading,
@@ -457,6 +461,8 @@ export function useStaffDashboard() {
         }));
 
         await refreshLive();
+        await delay(1000);
+        await refreshMaster();
       } catch (error) {
         setMatchErrors((current) => ({
           ...current,
@@ -467,7 +473,7 @@ export function useStaffDashboard() {
         setPendingAction(matchId, undefined);
       }
     },
-    [clearMatchError, matches, refreshLive, setPendingAction],
+    [clearMatchError, matches, refreshLive, refreshMaster, setPendingAction],
   );
 
   const finalizeEventScore = useCallback(
