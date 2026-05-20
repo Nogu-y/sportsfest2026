@@ -4,7 +4,41 @@ import {api} from '../lib/api/client';
 import type {PublicMasterResponse} from '../../../api/src/schemas/public/master';
 import type {LiveResponse} from '../../../api/src/schemas/public/live';
 import type {MatchWithEventIdType} from '../types/SportsFestDataTypes';
-import {ParticipantType} from "../../../api/src/schemas/sportsData";
+import {matchStatusEnumType, ParticipantType} from "../../../api/src/schemas/sportsData";
+
+function derivePreMatchStatus(
+    status: matchStatusEnumType,
+    participants: ParticipantType[] | undefined
+): matchStatusEnumType {
+    if (status !== "Waiting" || !participants || participants.length === 0) {
+        return status;
+    }
+
+    const hasResolvedParticipants = participants.every((participant) => participant.teamId !== null);
+    const hasNoPrerequisites = participants.every(
+        (participant) =>
+            participant.prereqMatchId === null &&
+            participant.prereqBlockId === null &&
+            participant.prereqRank === null
+    );
+
+    if (hasResolvedParticipants && hasNoPrerequisites) {
+        return "Preparing";
+    }
+
+    return status;
+}
+
+function toJstDateKey(date: Date) {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
+
+    return formatter.format(date);
+}
 
 export function useSportsFestData() {
     const latestMasterRef = useRef<PublicMasterResponse | null>(null);
@@ -64,7 +98,8 @@ export function useSportsFestData() {
 
     const {
         data: liveData,
-        error: liveError
+        error: liveError,
+        mutate: mutateLive
     } = useSWR<LiveResponse>('api/public/live', fetchLive, {  // URLでは無くあくまでkey
         refreshInterval: 15000, // 15秒ごとに自動更新
         dedupingInterval: 2000,  // 2秒以内の重複リクエストは1つにまとめる.
@@ -89,6 +124,7 @@ export function useSportsFestData() {
         if (!liveData?.matches || liveData.matches.length === 0) {
             return masterData.matches.map(m => ({
                 ...m,
+                status: derivePreMatchStatus(m.status, m.participants),
                 eventId: blockIdToEventIdMap.get(m.eventBlockId) || 0,
             }));
         }
@@ -105,6 +141,7 @@ export function useSportsFestData() {
             if (!liveMatch) {
                 return {
                     ...masterMatch,
+                    status: derivePreMatchStatus(masterMatch.status, masterMatch.participants),
                     eventId,
                 };
             }
@@ -138,10 +175,43 @@ export function useSportsFestData() {
      **/
     
     
+    const eventsMap = useMemo(() => new Map(masterData?.events.map((e) => [e.id, e])), [masterData?.events]);
+    const locationsMap = useMemo(() => new Map(masterData?.locations.map((l) => [l.id, l])), [masterData?.locations]);
+    const teamsMap = useMemo(() => new Map(masterData?.teams.map((t) => [t.id, t])), [masterData?.teams]);
+    const blocksMap = useMemo(() => new Map(masterData?.blocks.map((b) => [b.id, b])), [masterData?.blocks]);
+    const masterMatchesMap = useMemo(() => new Map(masterData?.matches?.map((m) => [m.id, m])), [masterData?.matches]);
+    const masterMatchDayKeys = useMemo(() => {
+        if (!masterData?.matches) return [];
+
+        return [...new Set(
+            masterData.matches.map((match) => toJstDateKey(new Date(match.scheduledStartTime)))
+        )].sort();
+    }, [masterData?.matches]);
+
     // systemInfoの日付データを使用し, 与えられた試合が1日目か2日目かを返す
     const dayLabelConverter = (startTime: Date) => {
         if (!masterData ) return null
         const day2 = new Date(masterData.systemInfo.day2);
+        const day1 = new Date(masterData.systemInfo.day1);
+        const startKey = toJstDateKey(startTime);
+        const day1Key = toJstDateKey(day1);
+        const day2Key = toJstDateKey(day2);
+
+        if (startKey === day1Key) {
+            return "Day1";
+        }
+
+        if (startKey === day2Key) {
+            return "Day2";
+        }
+
+        if (masterMatchDayKeys.length >= 1 && startKey === masterMatchDayKeys[0]) {
+            return "Day1";
+        }
+
+        if (masterMatchDayKeys.length >= 2 && startKey === masterMatchDayKeys[1]) {
+            return "Day2";
+        }
 
         if (startTime < day2) {
             return "Day1";
@@ -149,13 +219,6 @@ export function useSportsFestData() {
             return "Day2";
         }
     }
-    
-    
-    const eventsMap = useMemo(() => new Map(masterData?.events.map((e) => [e.id, e])), [masterData?.events]);
-    const locationsMap = useMemo(() => new Map(masterData?.locations.map((l) => [l.id, l])), [masterData?.locations]);
-    const teamsMap = useMemo(() => new Map(masterData?.teams.map((t) => [t.id, t])), [masterData?.teams]);
-    const blocksMap = useMemo(() => new Map(masterData?.blocks.map((b) => [b.id, b])), [masterData?.blocks]);
-    const masterMatchesMap = useMemo(() => new Map(masterData?.matches?.map((m) => [m.id, m])), [masterData?.matches]);
 
     
     const getEvent = (eventId: number) => eventsMap.get(eventId);
@@ -217,6 +280,7 @@ export function useSportsFestData() {
         scores: liveData?.scores || [],
 
         refreshMaster: mutateMaster,
+        refreshLive: mutateLive,
         dayLabelConverter,
         getEvent,
         getLocation,

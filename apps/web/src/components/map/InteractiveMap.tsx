@@ -1,16 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSportsFestData } from '../../hooks/useSportsFestData';
 import { useCampusGps } from '../../hooks/useCampusGps';
 import { MapViewer, MapPin } from './MapViewer';
 import { LocationMatchesModal } from './LocationMatchesModal';
 
+const TRAILING_SEPARATORS_PATTERN = /[\s\-_/・,，、。]+$/u;
+
+const getCommonPrefix = (values: string[]) => {
+    if (values.length === 0) return '';
+    let prefix = values[0];
+    for (let i = 1; i < values.length; i += 1) {
+        const value = values[i];
+        let j = 0;
+        const limit = Math.min(prefix.length, value.length);
+        while (j < limit && prefix[j] === value[j]) {
+            j += 1;
+        }
+        prefix = prefix.slice(0, j);
+        if (prefix.length === 0) break;
+    }
+    return prefix;
+};
+
+const getMergedPinLabel = (names: string[]) => {
+    const normalized = names.map((name) => name.trim()).filter((name) => name.length > 0);
+    if (normalized.length === 0) return '';
+    if (normalized.length === 1) return normalized[0];
+
+    const commonPrefix = getCommonPrefix(normalized).replace(TRAILING_SEPARATORS_PATTERN, '').trim();
+    if (commonPrefix.length > 0) return commonPrefix;
+
+    return [...normalized].sort((left, right) => left.length - right.length || left.localeCompare(right))[0];
+};
+
 export const InteractiveMap = () => {
     const { maps, locations, matches, isLoading } = useSportsFestData();
-    console.log("a", maps, locations, matches)
     const [activeMapId, setActiveMapId] = useState<number | null>(null);
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+    const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
 
     // activeMapIdが未設定なら最初のマップ（全体マップ等）を選択
     const currentMapId = activeMapId ?? maps?.[0]?.id;
@@ -23,22 +51,49 @@ export const InteractiveMap = () => {
     const isCampusMap = currentMapId === 1;
     const { currentPos, errorMsg } = useCampusGps(isCampusMap);
 
+    useEffect(() => {
+        setSelectedPin(null);
+    }, [currentMapId]);
+
+    // 座標が完全一致する会場はピンを1つに統合
+    const pins: MapPin[] = useMemo(() => {
+        const groupedByCoordinate = new Map<string, typeof activeLocations>();
+
+        for (const location of activeLocations) {
+            const key = `${location.xRatio}:${location.yRatio}`;
+            const current = groupedByCoordinate.get(key) ?? [];
+            current.push(location);
+            groupedByCoordinate.set(key, current);
+        }
+
+        return [...groupedByCoordinate.values()].map((group, index) => {
+            const primary = group[0];
+            const locationIds = group.map((location) => location.id);
+            const isMerged = group.length > 1;
+            const label = getMergedPinLabel(group.map((location) => location.name)) || primary.name;
+
+            return {
+                id: isMerged ? -(currentMapId * 1000 + index + 1) : primary.id,
+                label,
+                xRatio: primary.xRatio,
+                yRatio: primary.yRatio,
+                isHighlighted: false,
+                locationIds,
+            };
+        });
+    }, [activeLocations, currentMapId]);
+
+    const selectedLocationIds = selectedPin?.locationIds ?? [];
+    const selectedLocations = locations.filter((location) => selectedLocationIds.includes(location.id));
+    const selectedLocationName = selectedPin?.label ?? selectedLocations[0]?.name ?? '';
+
+    const locationMatches = matches.filter(
+        (match) => match.locationId !== null && selectedLocationIds.includes(match.locationId),
+    );
+
     if (isLoading || !activeMap) {
         return <div className="flex h-full items-center justify-center text-gray-500">読み込み中...</div>;
     }
-
-    // MapViewerに渡すためのピン配列を生成
-    const pins: MapPin[] = activeLocations.map(loc => ({
-        id: loc.id,
-        label: loc.name,
-        xRatio: loc.xRatio,
-        yRatio: loc.yRatio,
-        isHighlighted: false,
-    }));
-
-    // 選択された会場での試合を抽出（時間順などソートも可能）
-    const selectedLocationName = locations?.find(l => l.id === selectedLocationId)?.name || '';
-    const locationMatches = matches.filter(m => m.locationId === selectedLocationId);
 
     return (
         <div className="flex flex-col h-full w-full bg-white relative">
@@ -76,16 +131,17 @@ export const InteractiveMap = () => {
                     imageHeight={activeMap.height}
                     pins={pins}
                     currentPos={currentPos}
-                    onPinClick={(pin) => setSelectedLocationId(pin.id)}
+                    onPinClick={(pin) => setSelectedPin(pin)}
                 />
             </div>
 
             {/* 会場ピンクリック時の試合一覧モーダル */}
             <LocationMatchesModal
-                isOpen={selectedLocationId !== null}
-                onClose={() => setSelectedLocationId(null)}
+                isOpen={selectedPin !== null}
+                onClose={() => setSelectedPin(null)}
                 locationName={selectedLocationName}
                 matches={locationMatches}
+                locationFilters={selectedLocations.map((location) => ({ id: location.id, name: location.name }))}
             />
         </div>
     );

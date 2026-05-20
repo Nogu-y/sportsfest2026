@@ -2,7 +2,7 @@
 
 import RadioGroup from "src/components/common/RadioGroup";
 import RectButtonList from "src/components/common/RectButtonList";
-import {useEffect, useState} from "react";
+import {useMemo, useState} from "react";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import {useSportsFestData} from "../../hooks/useSportsFestData";
 import {MatchCardList} from "../../components/common/MatchCardList";
@@ -10,7 +10,6 @@ import {matchStatusEnumType} from "../../../../api/src/schemas/sportsData";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
 import {PwaNotificationPrompt} from "../../components/home/PwaNotificationPrompt";
 import {MyTeamSelector} from "../../components/common/MyTeamSelector";
-import {EventBracket} from "../../components/bracket/EventBracket";
 
 const eventStatusOptions = [
     {label: "開催予定", value: "upcoming"},
@@ -64,11 +63,10 @@ export default function HomePage() {
     const [sortOrder, setSortOrder] = useState<SortOrderValue>("startsAt");
 
     const sportsFestData = useSportsFestData()
-    const [displayMatches, setDisplayMatches] = useState<MatchWithEventIdType[]>(filterMatches(sportsFestData.matches, eventStatus, sortOrder));
-
-    useEffect(() => {
-        setDisplayMatches(filterMatches(sportsFestData.matches, eventStatus, sortOrder))
-    }, [eventStatus, sortOrder, sportsFestData.matches])
+    const displayMatches = useMemo(
+        () => filterMatches(sportsFestData.matches, eventStatus, sortOrder),
+        [sportsFestData.matches, eventStatus, sortOrder]
+    );
 
     if (sportsFestData.isLoading) return null
     return (
@@ -79,10 +77,7 @@ export default function HomePage() {
                         <RectButtonList
                             options={eventStatusOptions}
                             value={eventStatus}
-                            onChange={(value) => {
-                                setEventStatus(value)
-                                setDisplayMatches(filterMatches(sportsFestData.matches, eventStatus, sortOrder))
-                            }}
+                            onChange={setEventStatus}
                         />
                     </div>
 
@@ -91,10 +86,7 @@ export default function HomePage() {
                             name="header-sort-order"
                             options={sortOrderOptions}
                             value={sortOrder}
-                            onChange={(value) => {
-                                setSortOrder(value)
-                                setDisplayMatches(filterMatches(sportsFestData.matches, eventStatus, sortOrder))
-                            }}
+                            onChange={setSortOrder}
                         />
                     </div>
                 </div>
