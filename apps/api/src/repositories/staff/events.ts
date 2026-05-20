@@ -43,6 +43,12 @@ type FinalizeBlockRankingsErrorResult = {
 }
 
 type ScoreRecord = FinalizeEventScoreResponse['scores'][number]
+type ScoreSource = 'MATCH' | 'BLOCK'
+type CalculatedScoreRecord = ScoreRecord & {
+  stage: string
+  rank: number
+  source: ScoreSource
+}
 
 // `reason` に使う stage 名は enum のままだと運用上読みづらいため、
 // ここで日本語ラベルへ寄せておく
@@ -55,6 +61,19 @@ const stageLabelMap: Record<string, string> = {
   ROUND_1: '1回戦',
   QUALIFIER: '予選',
   CONSOLATION: '敗者戦'
+}
+
+// 同点時の優先度判定に使う。
+// 決勝に近いステージほど値を大きくしている。
+const stagePriorityMap: Record<string, number> = {
+  FINAL: 100,
+  THIRD_PLACE: 90,
+  SEMIFINAL: 80,
+  QUARTERFINAL: 70,
+  ROUND_2: 60,
+  ROUND_1: 50,
+  QUALIFIER: 40,
+  CONSOLATION: 30
 }
 
 // PointAllocation は optional な入れ子構造なので、
@@ -92,6 +111,33 @@ const sortScores = (rows: ScoreRecord[]) => {
   })
 }
 
+const pickBestScoresPerTeam = (rows: CalculatedScoreRecord[]) => {
+  const bestByTeamId = new Map<number, CalculatedScoreRecord>()
+
+  for (const row of rows) {
+    const current = bestByTeamId.get(row.teamId)
+    if (!current) {
+      bestByTeamId.set(row.teamId, row)
+      continue
+    }
+
+    const currentStagePriority = stagePriorityMap[current.stage] ?? 0
+    const nextStagePriority = stagePriorityMap[row.stage] ?? 0
+
+    const shouldReplace =
+      row.points > current.points ||
+      (row.points === current.points && row.source === 'MATCH' && current.source === 'BLOCK') ||
+      (row.points === current.points && row.source === current.source && nextStagePriority > currentStagePriority) ||
+      (row.points === current.points && row.source === current.source && nextStagePriority === currentStagePriority && row.rank < current.rank)
+
+    if (shouldReplace) {
+      bestByTeamId.set(row.teamId, row)
+    }
+  }
+
+  return [...bestByTeamId.values()].map(({ stage: _stage, rank: _rank, source: _source, ...score }) => score)
+}
+
 // MATCH 配点は試合結果から直接加点する。
 // 例: 決勝の 1 位に 30 点、2 位に 20 点、のような設定を
 // matchParticipants.rank を使って score レコードへ変換する。
@@ -114,7 +160,7 @@ const buildMatchScores = ({
     }>
   }>
 }) => {
-  const scoreRows: ScoreRecord[] = []
+  const scoreRows: CalculatedScoreRecord[] = []
 
   // 配点定義にある stage ごとに対象試合を集めて処理する
   for (const [stage, rankPoints] of getRuleEntries(pointAllocation.MATCH)) {
@@ -154,7 +200,10 @@ const buildMatchScores = ({
           eventId,
           teamId: participant.teamId,
           points,
-          reason: createReason(eventName, stage, rank)
+          reason: createReason(eventName, stage, rank),
+          stage,
+          rank,
+          source: 'MATCH'
         })
       }
     }
@@ -179,7 +228,7 @@ const buildBlockScores = ({
   rankingsByBlockId: Map<number, Array<{ teamId: number; rank: number }>>
   blocks: Array<{ id: number; stage: string }>
 }) => {
-  const scoreRows: ScoreRecord[] = []
+  const scoreRows: CalculatedScoreRecord[] = []
 
   // 配点定義にある stage ごとに対象ブロックを集めて処理する
   for (const [stage, rankPoints] of getRuleEntries(pointAllocation.BLOCK)) {
@@ -213,7 +262,10 @@ const buildBlockScores = ({
           eventId,
           teamId: ranking.teamId,
           points,
-          reason: createReason(eventName, stage, rank)
+          reason: createReason(eventName, stage, rank),
+          stage,
+          rank,
+          source: 'BLOCK'
         })
       }
     }
@@ -358,10 +410,10 @@ export const finalizeEventScores = async (eventId: number) => {
 
     // 当該競技の score は「差分更新」ではなく「再生成」で揃える。
     // 既存レコードを残したままにすると、配点変更や再確定時に古い加点が混ざる。
-    const scoreRows = sortScores([
+    const scoreRows = sortScores(pickBestScoresPerTeam([
       ...matchScoreResult.scores,
       ...blockScoreResult.scores
-    ])
+    ]))
 
     await tx.delete(scores).where(eq(scores.eventId, eventId))
 
