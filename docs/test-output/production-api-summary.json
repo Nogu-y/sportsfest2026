@@ -1,0 +1,117 @@
+{
+  "generatedAt": "2026-05-20T12:03:47.601Z",
+  "apiBase": "https://sportsfest-api.ichinoseki.ac.jp",
+  "masterVersion": "sample-master-minimal-2026-05-18",
+  "eventCount": 7,
+  "matchCount": 152,
+  "liveCounts": {
+    "matches": 0,
+    "blockRankings": 0,
+    "scores": 0
+  },
+  "events": [
+    {
+      "id": 3,
+      "name": "ソフトテニス",
+      "format": "LEAGUE_TO_TOURNAMENT",
+      "rankingOrder": "DESC",
+      "blocks": 8,
+      "matches": 27,
+      "readyMatches": 20,
+      "unresolvedMatches": 7,
+      "locations": [
+        "テニスコート 1",
+        "テニスコート 2",
+        "テニスコート 3",
+        "テニスコート 4"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "ソフトボール",
+      "format": "TOURNAMENT",
+      "rankingOrder": "DESC",
+      "blocks": 1,
+      "matches": 22,
+      "readyMatches": 8,
+      "unresolvedMatches": 14,
+      "locations": [
+        "野球グラウンド A",
+        "野球グラウンド B"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "バスケットボール",
+      "format": "LEAGUE_TO_TOURNAMENT",
+      "rankingOrder": "DESC",
+      "blocks": 8,
+      "matches": 28,
+      "readyMatches": 21,
+      "unresolvedMatches": 7,
+      "locations": [
+        "第一体育館 Aコート",
+        "第一体育館 Bコート",
+        "第二体育館 Cコート",
+        "第二体育館 Dコート"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "バドミントン",
+      "format": "LEAGUE_TO_TOURNAMENT",
+      "rankingOrder": "DESC",
+      "blocks": 6,
+      "matches": 42,
+      "readyMatches": 30,
+      "unresolvedMatches": 12,
+      "locations": [
+        "第一体育館 1",
+        "第一体育館 2",
+        "第一体育館 3",
+        "第一体育館 4",
+        "第一体育館 5"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "バレーボール",
+      "format": "TOURNAMENT",
+      "rankingOrder": "DESC",
+      "blocks": 1,
+      "matches": 21,
+      "readyMatches": 8,
+      "unresolvedMatches": 13,
+      "locations": [
+        "第二体育館 1",
+        "第二体育館 2"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "借り人競争",
+      "format": "HEATS_AND_FINAL",
+      "rankingOrder": "ASC",
+      "blocks": 6,
+      "matches": 6,
+      "readyMatches": 5,
+      "unresolvedMatches": 1,
+      "locations": [
+        "陸上グラウンド"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "選抜リレー",
+      "format": "HEATS_AND_FINAL",
+      "rankingOrder": "ASC",
+      "blocks": 6,
+      "matches": 6,
+      "readyMatches": 5,
+      "unresolvedMatches": 1,
+      "locations": [
+        "陸上グラウンド"
+      ]
+    }
+  ]
+}
