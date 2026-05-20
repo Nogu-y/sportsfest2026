@@ -29,11 +29,10 @@ export const MyTeamSelector = () => {
 
             <div className="relative">
                 <select
-                    value={myTeamId ?? ""}
+                    value={myTeamId || ""}
                     onChange={(e) => {
                         const val = e.target.value;
-                        const teamId = val ? Number.parseInt(val, 10) : null;
-                        saveMyTeam(Number.isInteger(teamId) ? teamId : null);
+                        saveMyTeam(val ? parseInt(val, 10) : null);
                     }}
                     className="w-full appearance-none rounded-sm border border-gray-300 bg-gray-50 p-3 pr-10 text-sm font-bold text-dark transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >

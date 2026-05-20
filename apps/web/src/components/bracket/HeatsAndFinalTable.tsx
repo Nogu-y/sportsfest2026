@@ -419,6 +419,9 @@ export const HeatsAndFinalTable = ({
                     </div>
                 </Link>
             </div>
+            <p className="mt-2 text-xs text-gray-400">
+                予選（SINGLE）から勝ち上がる HEATS_AND_FINAL 形式
+            </p>
         </div>
     );
 };
