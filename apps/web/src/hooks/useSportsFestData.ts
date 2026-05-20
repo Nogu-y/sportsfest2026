@@ -15,14 +15,8 @@ function derivePreMatchStatus(
     }
 
     const hasResolvedParticipants = participants.every((participant) => participant.teamId !== null);
-    const hasNoPrerequisites = participants.every(
-        (participant) =>
-            participant.prereqMatchId === null &&
-            participant.prereqBlockId === null &&
-            participant.prereqRank === null
-    );
 
-    if (hasResolvedParticipants && hasNoPrerequisites) {
+    if (hasResolvedParticipants) {
         return "Preparing";
     }
 

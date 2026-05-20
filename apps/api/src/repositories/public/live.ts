@@ -4,7 +4,7 @@ import {blockRankings, matchParticipants, matchPlans, scores} from '../../db/sch
 import type {LiveResponse} from '../../schemas/public/live'
 import {mapBlockRanking, mapMatch, mapParticipant, mapScore} from "../../utils/mappers";
 
-const liveMatchStatuses = ['Finished', 'Completed', 'Cancelled'] as const
+const liveMatchStatuses = ['Preparing', 'Playing', 'Finished', 'Completed', 'Cancelled'] as const
 
 const getJstDayRange = (base = new Date()) => {
     const parts = new Intl.DateTimeFormat('en-CA', {
