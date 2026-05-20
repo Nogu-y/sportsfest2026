@@ -12,6 +12,19 @@ const LOCAL_STORAGE_KEYS = {
     PUSH_ENABLED: "sportsfest_push_enabled",
 };
 
+const base64UrlToUint8Array = (base64UrlString: string) => {
+    const padding = "=".repeat((4 - (base64UrlString.length % 4)) % 4)
+    const base64 = (base64UrlString + padding).replace(/-/g, "+").replace(/_/g, "/")
+    const raw = atob(base64)
+    const output = new Uint8Array(raw.length)
+
+    for (let i = 0; i < raw.length; i++) {
+        output[i] = raw.charCodeAt(i)
+    }
+
+    return output
+}
+
 export function useWatchlist() {
     const [uuid, setUuid] = useState<string | null>(null);
     const [localWatchlist, setLocalWatchlist] = useState<number[]>([]);
@@ -97,12 +110,13 @@ export function useWatchlist() {
 
         try {
             const registration = await navigator.serviceWorker.ready;
+            const applicationServerKey = base64UrlToUint8Array(VAPID_PUBLIC_KEY)
 
             let subscription = await registration.pushManager.getSubscription();
             if (!subscription) {
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: VAPID_PUBLIC_KEY,
+                    applicationServerKey,
                 });
             }
 
@@ -112,7 +126,7 @@ export function useWatchlist() {
             }
 
             // Hono RPC: サブスクリプションのPOST
-            await api.api.public.subscriptions.$post({
+            const createRes = await api.api.public.subscriptions.$post({
                 json: {
                     uuid,
                     endpoint: subObj.endpoint,
@@ -123,6 +137,24 @@ export function useWatchlist() {
                     },
                 },
             });
+            if (createRes.status === 409) {
+                const updateRes = await api.api.public.subscriptions.$put({
+                    json: {
+                        uuid,
+                        endpoint: subObj.endpoint,
+                        expirationTime: subObj.expirationTime ?? null,
+                        keys: {
+                            p256dh: subObj.keys.p256dh,
+                            auth: subObj.keys.auth,
+                        },
+                    },
+                })
+                if (!updateRes.ok) {
+                    throw new Error(`サブスクリプション更新失敗: ${updateRes.status}`)
+                }
+            } else if (!createRes.ok) {
+                throw new Error(`サブスクリプション作成失敗: ${createRes.status}`)
+            }
 
             // Hono RPC: ローカルに保存していたウォッチリストを一気にサーバーへ登録同期
             if (localWatchlist.length > 0) {
