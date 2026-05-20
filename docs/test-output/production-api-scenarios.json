@@ -1,0 +1,2391 @@
+[
+  {
+    "id": "softball-first-round",
+    "title": "ソフトボール序盤トーナメント入力",
+    "eventId": 4,
+    "eventName": "ソフトボール",
+    "intent": "2会場並行で、開始・終了・勝者選択・公開live反映を短時間で確認する。",
+    "humanOperators": "野球グラウンド A / B に1人ずつ。最初の8試合だけでも十分に煙テストになる。",
+    "matches": [
+      {
+        "id": 94,
+        "eventBlockId": 11,
+        "locationId": 7,
+        "name": "①",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:15:00.000Z",
+        "participants": [
+          {
+            "id": 188,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 189,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 95,
+        "eventBlockId": 11,
+        "locationId": 8,
+        "name": "②",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:15:00.000Z",
+        "participants": [
+          {
+            "id": 190,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 191,
+            "teamId": 22,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 98,
+        "eventBlockId": 11,
+        "locationId": 7,
+        "name": "③",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:55:00.000Z",
+        "participants": [
+          {
+            "id": 196,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 197,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 101,
+        "eventBlockId": 11,
+        "locationId": 8,
+        "name": "④",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:55:00.000Z",
+        "participants": [
+          {
+            "id": 226,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 227,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 104,
+        "eventBlockId": 11,
+        "locationId": 7,
+        "name": "⑤",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:35:00.000Z",
+        "participants": [
+          {
+            "id": 208,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 209,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 106,
+        "eventBlockId": 11,
+        "locationId": 8,
+        "name": "⑥",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:35:00.000Z",
+        "participants": [
+          {
+            "id": 212,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 213,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 108,
+        "eventBlockId": 11,
+        "locationId": 7,
+        "name": "⑦",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:15:00.000Z",
+        "participants": [
+          {
+            "id": 220,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 221,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 109,
+        "eventBlockId": 11,
+        "locationId": 8,
+        "name": "⑧",
+        "stage": "ROUND_1",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:15:00.000Z",
+        "participants": [
+          {
+            "id": 222,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 223,
+            "teamId": 21,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "basketball-qualifiers",
+    "title": "バスケットボール予選リーグ入力",
+    "eventId": 5,
+    "eventName": "バスケットボール",
+    "intent": "LEAGUE_TO_TOURNAMENT の予選入力、予選順位確定、勝ち上がり反映を確認する。",
+    "humanOperators": "第一体育館A/B、第二体育館C/Dに各1人。予選ブロックを分担する。",
+    "matches": [
+      {
+        "id": 84,
+        "eventBlockId": 12,
+        "locationId": 3,
+        "name": "A-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:20:00.000Z",
+        "participants": [
+          {
+            "id": 167,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 168,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 90,
+        "eventBlockId": 13,
+        "locationId": 4,
+        "name": "B-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:20:00.000Z",
+        "participants": [
+          {
+            "id": 179,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 180,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 213,
+        "eventBlockId": 14,
+        "locationId": 5,
+        "name": "C-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:20:00.000Z",
+        "participants": [
+          {
+            "id": 518,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 519,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 214,
+        "eventBlockId": 15,
+        "locationId": 6,
+        "name": "D-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:20:00.000Z",
+        "participants": [
+          {
+            "id": 520,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 521,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 87,
+        "eventBlockId": 16,
+        "locationId": 3,
+        "name": "E-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:45:00.000Z",
+        "participants": [
+          {
+            "id": 173,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 174,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 208,
+        "eventBlockId": 17,
+        "locationId": 4,
+        "name": "F-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:45:00.000Z",
+        "participants": [
+          {
+            "id": 508,
+            "teamId": 22,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 509,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 215,
+        "eventBlockId": 18,
+        "locationId": 5,
+        "name": "G-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T00:45:00.000Z",
+        "participants": [
+          {
+            "id": 522,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 523,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 85,
+        "eventBlockId": 12,
+        "locationId": 3,
+        "name": "A-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:10:00.000Z",
+        "participants": [
+          {
+            "id": 169,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 170,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 209,
+        "eventBlockId": 13,
+        "locationId": 4,
+        "name": "B-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:10:00.000Z",
+        "participants": [
+          {
+            "id": 510,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 511,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 216,
+        "eventBlockId": 14,
+        "locationId": 5,
+        "name": "C-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:10:00.000Z",
+        "participants": [
+          {
+            "id": 524,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 525,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 217,
+        "eventBlockId": 15,
+        "locationId": 6,
+        "name": "D-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:10:00.000Z",
+        "participants": [
+          {
+            "id": 526,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 527,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 88,
+        "eventBlockId": 16,
+        "locationId": 3,
+        "name": "E-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:35:00.000Z",
+        "participants": [
+          {
+            "id": 175,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 176,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 210,
+        "eventBlockId": 17,
+        "locationId": 4,
+        "name": "F-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:35:00.000Z",
+        "participants": [
+          {
+            "id": 512,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 513,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 218,
+        "eventBlockId": 18,
+        "locationId": 5,
+        "name": "G-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T01:35:00.000Z",
+        "participants": [
+          {
+            "id": 528,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 529,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 86,
+        "eventBlockId": 12,
+        "locationId": 3,
+        "name": "A-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 171,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 172,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 211,
+        "eventBlockId": 13,
+        "locationId": 4,
+        "name": "B-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 514,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 515,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 219,
+        "eventBlockId": 14,
+        "locationId": 5,
+        "name": "C-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 530,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 531,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 220,
+        "eventBlockId": 15,
+        "locationId": 6,
+        "name": "D-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 532,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 533,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 89,
+        "eventBlockId": 16,
+        "locationId": 3,
+        "name": "E-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:25:00.000Z",
+        "participants": [
+          {
+            "id": 177,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 178,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 212,
+        "eventBlockId": 17,
+        "locationId": 4,
+        "name": "F-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:25:00.000Z",
+        "participants": [
+          {
+            "id": 516,
+            "teamId": 22,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 517,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 221,
+        "eventBlockId": 18,
+        "locationId": 5,
+        "name": "G-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T02:25:00.000Z",
+        "participants": [
+          {
+            "id": 534,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 535,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "badminton-qualifiers",
+    "title": "バドミントン予選リーグ入力",
+    "eventId": 6,
+    "eventName": "バドミントン",
+    "intent": "4人リーグの入力量が多いケースで、複数人同時操作と順位確定を確認する。",
+    "humanOperators": "第一体育館1-5に各1人。全30試合を会場ごとに処理する。",
+    "matches": [
+      {
+        "id": 91,
+        "eventBlockId": 20,
+        "locationId": 15,
+        "name": "A-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:00:00.000Z",
+        "participants": [
+          {
+            "id": 182,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 183,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 102,
+        "eventBlockId": 21,
+        "locationId": 16,
+        "name": "B-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:00:00.000Z",
+        "participants": [
+          {
+            "id": 204,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 205,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 112,
+        "eventBlockId": 22,
+        "locationId": 17,
+        "name": "C-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:00:00.000Z",
+        "participants": [
+          {
+            "id": 230,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 231,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 124,
+        "eventBlockId": 23,
+        "locationId": 18,
+        "name": "D-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:00:00.000Z",
+        "participants": [
+          {
+            "id": 260,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 261,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 137,
+        "eventBlockId": 24,
+        "locationId": 19,
+        "name": "E-1",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:00:00.000Z",
+        "participants": [
+          {
+            "id": 290,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 291,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 92,
+        "eventBlockId": 20,
+        "locationId": 15,
+        "name": "A-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:30:00.000Z",
+        "participants": [
+          {
+            "id": 184,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 185,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 103,
+        "eventBlockId": 21,
+        "locationId": 16,
+        "name": "B-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:30:00.000Z",
+        "participants": [
+          {
+            "id": 206,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 207,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 113,
+        "eventBlockId": 22,
+        "locationId": 17,
+        "name": "C-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:30:00.000Z",
+        "participants": [
+          {
+            "id": 238,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 239,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 126,
+        "eventBlockId": 23,
+        "locationId": 18,
+        "name": "D-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:30:00.000Z",
+        "participants": [
+          {
+            "id": 264,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 265,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 139,
+        "eventBlockId": 24,
+        "locationId": 19,
+        "name": "E-2",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T00:30:00.000Z",
+        "participants": [
+          {
+            "id": 294,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 295,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 93,
+        "eventBlockId": 20,
+        "locationId": 15,
+        "name": "A-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:00:00.000Z",
+        "participants": [
+          {
+            "id": 186,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 187,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 105,
+        "eventBlockId": 21,
+        "locationId": 16,
+        "name": "B-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:00:00.000Z",
+        "participants": [
+          {
+            "id": 210,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 211,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 116,
+        "eventBlockId": 22,
+        "locationId": 17,
+        "name": "C-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:00:00.000Z",
+        "participants": [
+          {
+            "id": 242,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 243,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 128,
+        "eventBlockId": 23,
+        "locationId": 18,
+        "name": "D-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:00:00.000Z",
+        "participants": [
+          {
+            "id": 268,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 269,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 142,
+        "eventBlockId": 24,
+        "locationId": 19,
+        "name": "E-3",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:00:00.000Z",
+        "participants": [
+          {
+            "id": 300,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 301,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 96,
+        "eventBlockId": 20,
+        "locationId": 15,
+        "name": "A-4",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:30:00.000Z",
+        "participants": [
+          {
+            "id": 192,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 193,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 107,
+        "eventBlockId": 21,
+        "locationId": 16,
+        "name": "B-4",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:30:00.000Z",
+        "participants": [
+          {
+            "id": 218,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 219,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 119,
+        "eventBlockId": 22,
+        "locationId": 17,
+        "name": "C-4",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:30:00.000Z",
+        "participants": [
+          {
+            "id": 248,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 249,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 129,
+        "eventBlockId": 23,
+        "locationId": 18,
+        "name": "D-4",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:30:00.000Z",
+        "participants": [
+          {
+            "id": 274,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 275,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 144,
+        "eventBlockId": 24,
+        "locationId": 19,
+        "name": "E-4",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T01:30:00.000Z",
+        "participants": [
+          {
+            "id": 304,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 305,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 97,
+        "eventBlockId": 20,
+        "locationId": 15,
+        "name": "A-5",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 194,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 195,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 110,
+        "eventBlockId": 21,
+        "locationId": 16,
+        "name": "B-5",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 224,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 225,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 121,
+        "eventBlockId": 22,
+        "locationId": 17,
+        "name": "C-5",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 252,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 253,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 133,
+        "eventBlockId": 23,
+        "locationId": 18,
+        "name": "D-5",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 282,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 283,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 146,
+        "eventBlockId": 24,
+        "locationId": 19,
+        "name": "E-5",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:00:00.000Z",
+        "participants": [
+          {
+            "id": 308,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 309,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 100,
+        "eventBlockId": 20,
+        "locationId": 15,
+        "name": "A-6",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:30:00.000Z",
+        "participants": [
+          {
+            "id": 200,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 201,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 111,
+        "eventBlockId": 21,
+        "locationId": 16,
+        "name": "B-6",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:30:00.000Z",
+        "participants": [
+          {
+            "id": 228,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 229,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 122,
+        "eventBlockId": 22,
+        "locationId": 17,
+        "name": "C-6",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:30:00.000Z",
+        "participants": [
+          {
+            "id": 256,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 257,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 134,
+        "eventBlockId": 23,
+        "locationId": 18,
+        "name": "D-6",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:30:00.000Z",
+        "participants": [
+          {
+            "id": 284,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 285,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 148,
+        "eventBlockId": 24,
+        "locationId": 19,
+        "name": "E-6",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T02:30:00.000Z",
+        "participants": [
+          {
+            "id": 312,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 313,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "relay-placement",
+    "title": "選抜リレー順位入力",
+    "eventId": 9,
+    "eventName": "選抜リレー",
+    "intent": "rankingOrder=ASC の順位入力画面を確認する。CUMULATIVE ブロックのため、現行APIでは予選順位確定・勝ち上がり反映の主検証には使わない。",
+    "humanOperators": "陸上グラウンド担当1人。予選5試合の順位入力までを確認する。",
+    "matches": [
+      {
+        "id": 180,
+        "eventBlockId": 27,
+        "locationId": 13,
+        "name": "1年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T05:40:00.000Z",
+        "participants": [
+          {
+            "id": 434,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 435,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 436,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 437,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 182,
+        "eventBlockId": 28,
+        "locationId": 13,
+        "name": "2年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T05:50:00.000Z",
+        "participants": [
+          {
+            "id": 440,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 441,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 442,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 443,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 187,
+        "eventBlockId": 29,
+        "locationId": 13,
+        "name": "3年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T06:00:00.000Z",
+        "participants": [
+          {
+            "id": 452,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 453,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 454,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 455,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 189,
+        "eventBlockId": 30,
+        "locationId": 13,
+        "name": "4年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T06:10:00.000Z",
+        "participants": [
+          {
+            "id": 458,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 459,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 460,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 461,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 190,
+        "eventBlockId": 31,
+        "locationId": 13,
+        "name": "5年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-22T06:20:00.000Z",
+        "participants": [
+          {
+            "id": 462,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 463,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 464,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 465,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "scavengerhunt-placement",
+    "title": "借り人競争順位入力",
+    "eventId": 8,
+    "eventName": "借り人競争",
+    "intent": "順位のみ入力のもう一つの競技で、同じ入力処理がイベントをまたいで動くか確認する。CUMULATIVE ブロックのため、現行APIでは予選順位確定・勝ち上がり反映の主検証には使わない。",
+    "humanOperators": "陸上グラウンド担当1人。選抜リレーとは時間をずらし、予選5試合の順位入力までを確認する。",
+    "matches": [
+      {
+        "id": 222,
+        "eventBlockId": 33,
+        "locationId": 13,
+        "name": "1年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T05:55:00.000Z",
+        "participants": [
+          {
+            "id": 536,
+            "teamId": 1,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 537,
+            "teamId": 2,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 538,
+            "teamId": 3,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 539,
+            "teamId": 4,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 224,
+        "eventBlockId": 34,
+        "locationId": 13,
+        "name": "2年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T06:05:00.000Z",
+        "participants": [
+          {
+            "id": 542,
+            "teamId": 5,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 543,
+            "teamId": 6,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 544,
+            "teamId": 7,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 545,
+            "teamId": 8,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 231,
+        "eventBlockId": 35,
+        "locationId": 13,
+        "name": "3年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T06:15:00.000Z",
+        "participants": [
+          {
+            "id": 568,
+            "teamId": 9,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 569,
+            "teamId": 10,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 570,
+            "teamId": 11,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 571,
+            "teamId": 12,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 232,
+        "eventBlockId": 36,
+        "locationId": 13,
+        "name": "4年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T06:25:00.000Z",
+        "participants": [
+          {
+            "id": 574,
+            "teamId": 13,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 575,
+            "teamId": 14,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 576,
+            "teamId": 15,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 577,
+            "teamId": 16,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      },
+      {
+        "id": 233,
+        "eventBlockId": 37,
+        "locationId": 13,
+        "name": "5年生",
+        "stage": "QUALIFIER",
+        "status": "Waiting",
+        "scheduledStartTime": "2026-05-21T06:35:00.000Z",
+        "participants": [
+          {
+            "id": 578,
+            "teamId": 17,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 579,
+            "teamId": 18,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 580,
+            "teamId": 19,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          },
+          {
+            "id": 581,
+            "teamId": 20,
+            "prereqMatchId": null,
+            "prereqBlockId": null,
+            "prereqRank": null,
+            "score": null,
+            "rank": null,
+            "isDisqualified": false
+          }
+        ]
+      }
+    ]
+  }
+]
