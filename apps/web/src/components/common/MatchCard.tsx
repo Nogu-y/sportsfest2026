@@ -27,7 +27,7 @@ const MatchCard = ({
 
     const {isLoading, dayLabelConverter, getEvent, getLocation, getMatchTeamsLabel} = useSportsFestData();
     const {myTeamId} = useMyTeam();
-    const {isWatched} = useWatchlist();
+    const {isWatched, toggleWatchlist} = useWatchlist();
 
 
     if (isLoading) return null;
@@ -58,12 +58,15 @@ const MatchCard = ({
             >
                 <div className="flex h-[17px] w-full items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
-                        <div onClick={(e) => {
-                            // Linkによるページ遷移を防ぐ（ウォッチリストボタン用）
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log("ウォッチリスト処理");
-                        }}>
+                        <button
+                            type="button"
+                            aria-label={watched ? "ウォッチリストから削除" : "ウォッチリストに追加"}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                void toggleWatchlist(match.id);
+                            }}
+                        >
                             <Image
                                 src={watched ? "/icons/watchlist-on-icon.svg" : "/icons/watchlist-off-icon.svg"}
                                 alt=""
@@ -71,7 +74,7 @@ const MatchCard = ({
                                 height={13}
                                 className="h-[13px] w-[10px] shrink-0"
                             />
-                        </div>
+                        </button>
                         <p className="truncate text-[8px] font-medium leading-normal">{eventName}</p>
                     </div>
                     {showVenueLabel && venue?.name && (

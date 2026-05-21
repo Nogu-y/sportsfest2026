@@ -1,4 +1,4 @@
-import { and, eq, gte, isNull, inArray, lte } from "drizzle-orm";
+import { and, eq, gte, isNull, inArray, lte, sql } from "drizzle-orm";
 import { addMinutes, differenceInMinutes, startOfMinute } from "date-fns";
 import webpush from "web-push";
 import { db } from "../db/client";
@@ -25,6 +25,15 @@ export async function sendMatchReminders() {
   const to = addMinutes(now, 10);
 
   try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "match_reminder_logs" (
+        "match_plan_id" integer NOT NULL,
+        "user_subscription_id" integer NOT NULL,
+        "sent_at" timestamp with time zone DEFAULT now() NOT NULL,
+        CONSTRAINT "match_reminder_unique" UNIQUE("match_plan_id", "user_subscription_id")
+      );
+    `);
+
     const rawTargets = await db
       .select({
         matchId: matchPlans.id,
