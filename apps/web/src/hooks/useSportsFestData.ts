@@ -5,6 +5,7 @@ import type {PublicMasterResponse} from '../../../api/src/schemas/public/master'
 import type {LiveResponse} from '../../../api/src/schemas/public/live';
 import type {MatchWithEventIdType} from '../types/SportsFestDataTypes';
 import {matchStatusEnumType, ParticipantType} from "../../../api/src/schemas/sportsData";
+import { resolvePrereqMatchOutcomeLabel } from "../lib/participantSourceLabel";
 
 function derivePreMatchStatus(
     status: matchStatusEnumType,
@@ -233,7 +234,8 @@ export function useSportsFestData() {
             // 2. チームが未確定で, 前提試合(勝ち上がり元)が設定されている場合
             if (p.prereqMatchId) {
                 const prereqMatch = masterMatchesMap.get(p.prereqMatchId);
-                return prereqMatch?.name ? `${prereqMatch.name}の勝者` : "未定の勝者";
+                const { sideLabel, unknownSideLabel } = resolvePrereqMatchOutcomeLabel(p)
+                return prereqMatch?.name ? `${prereqMatch.name}の${sideLabel}` : unknownSideLabel
             }
 
             // 3. チームが未確定で, 前提ブロック(リーグ予選抜け等)が設定されている場合

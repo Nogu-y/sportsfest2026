@@ -3,6 +3,7 @@ import {MatchDetailView} from "../../../../components/layouts/publicMatch/MatchD
 import {Metadata} from "next";
 import {cache} from "react";
 import {api} from "../../../../lib/api/client";
+import { resolvePrereqMatchOutcomeLabel } from "../../../../lib/participantSourceLabel";
 
 type Props = {
     params: Promise<{ match_id: string }>;
@@ -30,7 +31,8 @@ const getServerMatchData = cache(async (matchId: number) => {
             }
             if (p.prereqMatchId) {
                 const prereqMatch = masterData.matches.find((m) => m.id === p.prereqMatchId);
-                return prereqMatch?.name ? `${prereqMatch.name}の勝者` : "未定の勝者";
+                const { sideLabel, unknownSideLabel } = resolvePrereqMatchOutcomeLabel(p)
+                return prereqMatch?.name ? `${prereqMatch.name}の${sideLabel}` : unknownSideLabel
             }
             if (p.prereqBlockId) {
                 const prereqBlock = masterData.blocks.find((b) => b.id === p.prereqBlockId);
