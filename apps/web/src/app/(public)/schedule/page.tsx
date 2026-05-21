@@ -5,6 +5,7 @@ import Link from "next/link";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import HeaderEventCardList from "src/components/common/HeaderEventCardList";
 import { WeatherBadge } from "../../../components/common/WeatherBadge";
+import { resolvePrereqMatchOutcomeLabel } from "../../../lib/participantSourceLabel";
 import { useMyTeam } from "../../../hooks/useMyTeam";
 import { useSportsFestData } from "../../../hooks/useSportsFestData";
 import { useWeather } from "../../../hooks/useWeather";
@@ -200,7 +201,13 @@ const TimeSlot = ({
 
                 if (participant.prereqMatchId) {
                   const prereqMatch = matchesMap.get(participant.prereqMatchId);
-                  return prereqMatch?.name ? `${prereqMatch.name} 勝者` : "未定 勝者";
+                  const { sideLabel, unknownSideLabel } = resolvePrereqMatchOutcomeLabel(participant, {
+                    winnerLabel: "勝者",
+                    loserLabel: "敗者",
+                    unknownWinnerLabel: "未定 勝者",
+                    unknownLoserLabel: "未定 敗者",
+                  });
+                  return prereqMatch?.name ? `${prereqMatch.name} ${sideLabel}` : unknownSideLabel;
                 }
 
                 if (participant.prereqBlockId) {
