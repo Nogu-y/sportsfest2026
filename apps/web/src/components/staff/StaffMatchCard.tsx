@@ -16,7 +16,6 @@ import {
   formatElapsedTime,
   formatWaitingTime,
   getDisplayDuration,
-  getDisplayEndTime,
   getDisplayStatusLabel,
   getStatusTone,
   isPlacementOnlyEvent,
@@ -104,7 +103,8 @@ export function StaffMatchCard({
   const tone = getStatusTone(match.status);
   const isStatusPending = isPending && match.status !== "Finished";
   const isResultPending = isPending && match.status === "Finished";
-  const displayEndTime = formatClockTime(getDisplayEndTime(match));
+  const displayStartTime = formatClockTime(match.scheduledStartTime);
+  const displayEndTime = formatClockTime(match.scheduledEndTime);
   const displayDuration = getDisplayDuration(match);
   const statusLabel = getDisplayStatusLabel(match.status);
   const waitingLabel = formatWaitingTime(match.scheduledStartTime, now);
@@ -461,7 +461,7 @@ export function StaffMatchCard({
 
       <div className={`mt-4 flex items-baseline gap-3 text-[15px] ${tone.metaClass}`}>
         <span>{dayLabel ?? "-"}</span>
-        <span>{`~${displayEndTime}`}</span>
+        <span>{`${displayStartTime} ~ ${displayEndTime}`}</span>
         <span className={`text-[12px] ${tone.subtleClass}`}>{displayDuration}</span>
       </div>
 
