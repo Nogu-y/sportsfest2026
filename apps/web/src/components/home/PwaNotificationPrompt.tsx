@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useWatchlist } from "../../hooks/useWatchlist";
 
 export const PwaNotificationPrompt = () => {
-    const { isNotificationEnabled, isPushSupported, enableNotification } = useWatchlist();
+    const { isNotificationEnabled, isPushSupported, enableNotification, reSubscribeNotification } = useWatchlist();
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isStandalone, setIsStandalone] = useState(false);
 
@@ -72,6 +72,18 @@ export const PwaNotificationPrompt = () => {
                         className="w-full rounded-lg bg-dark py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-95"
                     >
                         試合速報のプッシュ通知をオンにする
+                    </button>
+                )}
+
+                {isPushSupported && isNotificationEnabled && (
+                    <button
+                        onClick={async () => {
+                            const success = await reSubscribeNotification();
+                            if (success) alert("プッシュ通知の購読を再設定しました。");
+                        }}
+                        className="w-full rounded-lg border border-blue-300 bg-white py-2.5 text-xs font-bold text-blue-700 transition-opacity hover:opacity-95"
+                    >
+                        通知購読を再設定する
                     </button>
                 )}
             </div>

@@ -41,7 +41,7 @@ export const post = createRoute({
   responses: {
     201: createResBody(SubscriptionResSchema, '作成成功'),
     400: createErrResBody('不正なリクエスト'),
-    409: createErrResBody('同じ UUID のサブスクリプションがすでに存在する'),
+    500: createErrResBody('サブスクリプション登録に失敗'),
   },
 })
 

@@ -40,7 +40,19 @@ export const createSubscription = async (input: SubscriptionUpsertReq
   const existing = await findSubscriptionByUuid(input.uuid)
 
   if (existing) {
-    return null
+    const [updated] = await db
+      .update(userSubscriptions)
+      .set({
+        endpoint: input.endpoint,
+        p256dh: input.keys.p256dh,
+        auth: input.keys.auth,
+        expiration: toExpirationDate(input.expirationTime),
+        updatedAt: new Date()
+      })
+      .where(eq(userSubscriptions.uuid, input.uuid))
+      .returning()
+
+    return updated ? mapSubscription(updated) : null
   }
 
   const [row] = await db
