@@ -1,6 +1,6 @@
 "use client";
 
-import React, { type CSSProperties, useEffect, useMemo, useState } from "react";
+import React, { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import SubHeader from "src/components/layouts/subheader/SubHeader";
 import HeaderEventCardList from "src/components/common/HeaderEventCardList";
@@ -301,8 +301,10 @@ export default function SchedulePage() {
   const { myTeamId } = useMyTeam();
   const { getWeatherForTime } = useWeather();
 
-  const [activeDay, setActiveDay] = useState<string>("Day1");
+  const [activeDay, setActiveDay] = useState<string>("Day2");
   const [selectedEventId, setSelectedEventId] = useState<number | "all">("all");
+  const slotRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const autoScrolledKeysRef = useRef<Set<string>>(new Set());
 
   const teamsMap = useMemo(() => new Map(teams?.map((team) => [team.id, team])), [teams]);
   const matchesMap = useMemo(() => new Map(matches?.map((match) => [match.id, match])), [matches]);
@@ -452,6 +454,32 @@ export default function SchedulePage() {
     return items;
   }, [matches, activeDay, selectedEventId, dayLabelConverter, locations, maps, locationNameMap, eventMap]);
 
+  useEffect(() => {
+    if (timelineItems.length === 0) return;
+
+    const autoScrollKey = `${activeDay}:${selectedEventId}`;
+    if (autoScrolledKeysRef.current.has(autoScrollKey)) return;
+
+    const nowMs = Date.now();
+    let targetIndex = timelineItems.findIndex(
+      (item) => item.startTimeMs <= nowMs && nowMs <= item.endTimeMs,
+    );
+
+    if (targetIndex < 0) {
+      targetIndex = timelineItems.findIndex((item) => item.startTimeMs >= nowMs);
+    }
+
+    if (targetIndex < 0) {
+      targetIndex = timelineItems.length - 1;
+    }
+
+    const target = slotRefs.current[targetIndex];
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      autoScrolledKeysRef.current.add(autoScrollKey);
+    }
+  }, [timelineItems, activeDay, selectedEventId]);
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center text-gray-500">
@@ -515,7 +543,12 @@ export default function SchedulePage() {
               const weather = getWeatherForTime(item.startTimeMs);
 
               return (
-                <React.Fragment key={`${item.startTimeMs}-${item.endTimeMs}-${item.venueName}`}>
+                <div
+                  key={`${item.startTimeMs}-${item.endTimeMs}-${item.venueName}`}
+                  ref={(node) => {
+                    slotRefs.current[index] = node;
+                  }}
+                >
                   {showVenueDivider ? <VenueDivider name={item.venueName} /> : null}
 
                   {isSimple ? (
@@ -545,7 +578,7 @@ export default function SchedulePage() {
                       horizontalScrollable={isAllEventsMode}
                     />
                   )}
-                </React.Fragment>
+                </div>
               );
             })
           )}
