@@ -25,6 +25,12 @@ export async function sendMatchReminders() {
   const to = addMinutes(now, 10);
 
   try {
+    console.log("[PushDebug] sendMatchReminders window", {
+      now: now.toISOString(),
+      from: from.toISOString(),
+      to: to.toISOString(),
+    });
+
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "match_reminder_logs" (
         "match_plan_id" integer NOT NULL,
@@ -68,6 +74,7 @@ export async function sendMatchReminders() {
         )
       );
 
+    console.log("[PushDebug] reminder targets", { count: rawTargets.length });
     if (rawTargets.length === 0) {
       return;
     }
@@ -131,9 +138,18 @@ export async function sendMatchReminders() {
             userSubscriptionId: target.subscriptionId,
           })
           .onConflictDoNothing();
+        console.log("[PushDebug] sent", {
+          matchId: target.matchId,
+          userSubscriptionId: target.subscriptionId,
+          minutesLeft,
+        });
 
       } catch (err: any) {
         if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+          console.warn("[PushDebug] stale subscription removed", {
+            subscriptionId: target.subscriptionId,
+            statusCode: err.statusCode,
+          });
           await db
             .delete(userSubscriptions)
             .where(eq(userSubscriptions.id, target.subscriptionId));

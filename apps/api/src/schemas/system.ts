@@ -1,5 +1,6 @@
 import { createRoute, z } from '@hono/zod-openapi'
-import { createResBody } from '../utils/schemaParser'
+import { createErrResBody, createReqBody, createResBody } from '../utils/schemaParser'
+import { uuidSchema } from './common'
 
 export const serviceInfoSchema = z
   .object({
@@ -37,5 +38,41 @@ export const getHealthStatusDoc = createRoute({
   }
 })
 
+export const debugPushTestReqSchema = z
+  .object({
+    uuid: uuidSchema,
+    title: z.string().min(1).max(100).optional(),
+    body: z.string().min(1).max(200).optional(),
+    url: z.string().min(1).optional()
+  })
+  .openapi('DebugPushTestRequest')
+
+export const debugPushTestResSchema = z
+  .object({
+    ok: z.boolean(),
+    uuid: uuidSchema,
+    subscriptionId: z.number().int().positive(),
+    endpoint: z.string(),
+    title: z.string(),
+    body: z.string()
+  })
+  .openapi('DebugPushTestResponse')
+
+export const postDebugPushTestDoc = createRoute({
+  path: '/debug/push/test',
+  method: 'post',
+  tags: ['system'],
+  summary: '指定 UUID の購読先へテスト通知を即時送信する（ADMIN限定）',
+  request: createReqBody(debugPushTestReqSchema, true),
+  responses: {
+    200: createResBody(debugPushTestResSchema, '送信成功'),
+    401: createErrResBody('認証されていません'),
+    403: createErrResBody('権限がありません'),
+    404: createErrResBody('対象 UUID の購読が見つかりません'),
+    500: createErrResBody('送信失敗'),
+  }
+})
+
 export type ServiceInfo = z.infer<typeof serviceInfoSchema>
 export type HealthStatus = z.infer<typeof healthStatusSchema>
+export type DebugPushTestReq = z.infer<typeof debugPushTestReqSchema>
