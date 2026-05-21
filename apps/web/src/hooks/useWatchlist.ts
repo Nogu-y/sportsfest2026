@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { api } from "../lib/api/client"; 
+import { webEnv } from "../env";
 
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+const VAPID_PUBLIC_KEY = webEnv.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
 const LOCAL_STORAGE_KEYS = {
     UUID: "sportsfest_user_uuid",
@@ -18,6 +19,13 @@ export function useWatchlist() {
     const [localWatchlist, setLocalWatchlist] = useState<number[]>([]);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
     const [isPushSupported, setIsPushSupported] = useState(false);
+
+    const decodeVapidPublicKey = (base64Url: string) => {
+        const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
+        const base64 = (base64Url + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+    };
 
     const persistLocalWatchlist = (nextIds: number[]) => {
         setLocalWatchlist(nextIds);
@@ -127,6 +135,18 @@ export function useWatchlist() {
         }
     };
 
+    const upsertSubscription = async (payload: {
+        uuid: string;
+        endpoint: string;
+        expirationTime: number | null;
+        keys: { p256dh: string; auth: string };
+    }) => {
+        const postRes = await api.api.public.subscriptions.$post({ json: payload });
+        if (postRes.ok) return true;
+        const putRes = await api.api.public.subscriptions.$put({ json: payload });
+        return putRes.ok;
+    };
+
     // 4. プッシュ通知の有効化 (Web Push購読とサーバー登録)
     const enableNotification = async () => {
         if (!isPushSupported || !uuid) return false;
@@ -136,13 +156,19 @@ export function useWatchlist() {
         }
 
         try {
+            if (Notification.permission === "default") {
+                const permission = await Notification.requestPermission();
+                if (permission !== "granted") return false;
+            }
+            if (Notification.permission !== "granted") return false;
+
             const registration = await navigator.serviceWorker.ready;
 
             let subscription = await registration.pushManager.getSubscription();
             if (!subscription) {
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: VAPID_PUBLIC_KEY,
+                    applicationServerKey: decodeVapidPublicKey(VAPID_PUBLIC_KEY),
                 });
             }
 
@@ -152,17 +178,16 @@ export function useWatchlist() {
             }
 
             // Hono RPC: サブスクリプションのPOST
-            await api.api.public.subscriptions.$post({
-                json: {
-                    uuid,
-                    endpoint: subObj.endpoint,
-                    expirationTime: subObj.expirationTime ?? null,
-                    keys: {
-                        p256dh: subObj.keys.p256dh,
-                        auth: subObj.keys.auth,
-                    },
+            const subscriptionSaved = await upsertSubscription({
+                uuid,
+                endpoint: subObj.endpoint,
+                expirationTime: subObj.expirationTime ?? null,
+                keys: {
+                    p256dh: subObj.keys.p256dh,
+                    auth: subObj.keys.auth,
                 },
             });
+            if (!subscriptionSaved) throw new Error("サブスクリプション登録に失敗しました");
 
             // Hono RPC: ローカルに保存していたウォッチリストを一気にサーバーへ登録同期
             if (localWatchlist.length > 0) {
@@ -182,6 +207,25 @@ export function useWatchlist() {
         }
     };
 
+    const reSubscribeNotification = async () => {
+        if (!isPushSupported || !uuid) return false;
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const existing = await registration.pushManager.getSubscription();
+            if (existing) {
+                await existing.unsubscribe();
+            }
+
+            localStorage.setItem(LOCAL_STORAGE_KEYS.PUSH_ENABLED, "false");
+            setIsNotificationEnabled(false);
+            return await enableNotification();
+        } catch (err) {
+            console.error("再購読に失敗しました", err);
+            return false;
+        }
+    };
+
     return {
         watchedIds,
         isNotificationEnabled,
@@ -189,5 +233,6 @@ export function useWatchlist() {
         isWatched: (matchId: number) => watchedIds.includes(matchId),
         toggleWatchlist,
         enableNotification,
+        reSubscribeNotification,
     };
 }
