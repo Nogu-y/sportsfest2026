@@ -225,6 +225,12 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     const teamsNames = getMatchTeamsLabel(match.participants);
     const watched = isWatched(matchId);
     const headerLabel = match.name ?? `#${match.id}`;
+    const isResultVisible = match.status === "Finished" || match.status === "Completed";
+    const sortedParticipants = [...(match.participants ?? [])].sort((left, right) => {
+        const leftRank = left.rank ?? Number.MAX_SAFE_INTEGER;
+        const rightRank = right.rank ?? Number.MAX_SAFE_INTEGER;
+        return leftRank - rightRank;
+    });
 
     // 共有処理
     const handleShare = async () => {
@@ -281,6 +287,28 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
                 <p className="text-xs text-gray-400">{eventName} {match.name && `・ ${match.name}`}</p>
                 <h3 className="text-2xl font-bold mt-1 text-dark">{teamsNames}</h3>
             </div>
+
+            {isResultVisible && sortedParticipants.length > 0 && (
+                <div className="mx-auto w-full max-w-sm overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-sm">
+                    <div className="grid grid-cols-[52px_1fr_56px] gap-2 border-b border-gray-100 px-3 py-2 text-[11px] text-gray-500">
+                        <span>順位</span>
+                        <span>所属</span>
+                        <span className="text-right">点</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {sortedParticipants.map((participant) => (
+                            <div
+                                key={participant.id}
+                                className="grid grid-cols-[52px_1fr_56px] items-center gap-2 px-3 py-2 text-sm text-dark"
+                            >
+                                <span>{participant.rank ?? "-"}</span>
+                                <span className="truncate">{getMatchTeamsLabel([participant])}</span>
+                                <span className="text-right">{participant.score ?? "-"}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* 試合情報グリッド */}
             <div className="grid grid-cols-2 gap-4 border-y border-gray-100 py-4">
