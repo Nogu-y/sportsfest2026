@@ -11,12 +11,19 @@ const LOCAL_STORAGE_KEYS = {
     WATCHLIST: "sportsfest_local_watchlist",
     PUSH_ENABLED: "sportsfest_push_enabled",
 };
+const WATCHLIST_UPDATED_EVENT = "sportsfest:watchlist-updated";
 
 export function useWatchlist() {
     const [uuid, setUuid] = useState<string | null>(null);
     const [localWatchlist, setLocalWatchlist] = useState<number[]>([]);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
     const [isPushSupported, setIsPushSupported] = useState(false);
+
+    const persistLocalWatchlist = (nextIds: number[]) => {
+        setLocalWatchlist(nextIds);
+        localStorage.setItem(LOCAL_STORAGE_KEYS.WATCHLIST, JSON.stringify(nextIds));
+        window.dispatchEvent(new CustomEvent(WATCHLIST_UPDATED_EVENT, { detail: nextIds }));
+    };
 
     // 1. 初期化: UUID生成, ローカルリスト, 通知設定の読み込み
     useEffect(() => {
@@ -38,6 +45,32 @@ export function useWatchlist() {
 
         const pushEnabled = localStorage.getItem(LOCAL_STORAGE_KEYS.PUSH_ENABLED) === "true";
         setIsNotificationEnabled(pushEnabled);
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        const syncLocalWatchlist = () => {
+            const localData = localStorage.getItem(LOCAL_STORAGE_KEYS.WATCHLIST);
+            setLocalWatchlist(localData ? JSON.parse(localData) : []);
+        };
+
+        const onStorage = (event: StorageEvent) => {
+            if (event.key === LOCAL_STORAGE_KEYS.WATCHLIST) {
+                syncLocalWatchlist();
+            }
+        };
+
+        const onWatchlistUpdated = () => {
+            syncLocalWatchlist();
+        };
+
+        window.addEventListener("storage", onStorage);
+        window.addEventListener(WATCHLIST_UPDATED_EVENT, onWatchlistUpdated);
+        return () => {
+            window.removeEventListener("storage", onStorage);
+            window.removeEventListener(WATCHLIST_UPDATED_EVENT, onWatchlistUpdated);
+        };
     }, []);
 
     // 2. リモートデータ同期 (SWR + Hono RPC)
@@ -67,6 +100,13 @@ export function useWatchlist() {
         if (isNotificationEnabled && uuid) {
             // 通知ON: サーバーと同期 (Hono RPC)
             try {
+                await mutateRemote(
+                    (current) => ({
+                        uuid,
+                        matchPlanIds: nextIds,
+                    }),
+                    { revalidate: false },
+                );
                 if (isWatched) {
                     await api.api.public.watchlist.$delete({
                         json: { uuid, matchPlanIds: [matchId] }
@@ -79,11 +119,11 @@ export function useWatchlist() {
                 await mutateRemote();
             } catch (err) {
                 console.error("ウォッチリストのリモート更新に失敗しました", err);
+                await mutateRemote();
             }
         } else {
             // 通知OFF: LocalStorageを更新
-            setLocalWatchlist(nextIds);
-            localStorage.setItem(LOCAL_STORAGE_KEYS.WATCHLIST, JSON.stringify(nextIds));
+            persistLocalWatchlist(nextIds);
         }
     };
 
