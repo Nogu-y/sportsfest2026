@@ -69,7 +69,7 @@ export async function sendMatchReminders() {
         and(
           gte(matchPlans.scheduledStartTime, from),
           lte(matchPlans.scheduledStartTime, to),
-          eq(matchPlans.status, "Waiting"),
+          inArray(matchPlans.status, ["Waiting", "Preparing"]),
           isNull(matchReminderLogs.matchPlanId)
         )
       );
