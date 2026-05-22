@@ -1,4 +1,5 @@
 "use client";
+import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
@@ -25,7 +26,7 @@ const MatchCard = ({
                        className = "",
                    }: MatchCardProps) => {
 
-    const {isLoading, dayLabelConverter, getEvent, getLocation, getMatchTeamsLabel} = useSportsFestData();
+    const {isLoading, matches, dayLabelConverter, getEvent, getLocation, getMatchTeamsLabel} = useSportsFestData();
     const {myTeamId} = useMyTeam();
     const {isWatched, toggleWatchlist} = useWatchlist();
 
@@ -41,8 +42,55 @@ const MatchCard = ({
     const timeLabel = formatTimeLabel(match.scheduledStartTime);
     const venue = match.locationId ? getLocation(match.locationId) : null;
     const statusLabel = formatStatusLabel(match.status);
-    const teamsNames = getMatchTeamsLabel(match.participants);
     const watched = isWatched(match.id);
+
+    const blockCompletionMap = useMemo(() => {
+        const byBlockId = new Map<number, MatchWithEventIdType[]>();
+        for (const item of matches) {
+            const rows = byBlockId.get(item.eventBlockId) ?? [];
+            rows.push(item);
+            byBlockId.set(item.eventBlockId, rows);
+        }
+
+        const completionMap = new Map<number, boolean>();
+        for (const [blockId, rows] of byBlockId) {
+            completionMap.set(
+                blockId,
+                rows.length > 0 && rows.every((row) => row.status === "Completed"),
+            );
+        }
+        return completionMap;
+    }, [matches]);
+
+    const matchCompletionMap = useMemo(() => {
+        const completionMap = new Map<number, boolean>();
+        for (const item of matches) {
+            completionMap.set(item.id, item.status === "Completed");
+        }
+        return completionMap;
+    }, [matches]);
+
+    const teamsNames = useMemo(() => {
+        const maskedParticipants = (match.participants ?? []).map((participant) => {
+            if (participant.prereqBlockId !== null) {
+                const completed = blockCompletionMap.get(participant.prereqBlockId) === true;
+                if (!completed) {
+                    return { ...participant, teamId: null };
+                }
+            }
+
+            if (participant.prereqMatchId !== null) {
+                const completed = matchCompletionMap.get(participant.prereqMatchId) === true;
+                if (!completed) {
+                    return { ...participant, teamId: null };
+                }
+            }
+
+            return participant;
+        });
+
+        return getMatchTeamsLabel(maskedParticipants);
+    }, [match.participants, blockCompletionMap, matchCompletionMap, getMatchTeamsLabel]);
     const delayMinutes = getMatchStartDelayMinutes(match);
 
     const isMyTeamMatch = match.participants?.some(p => p.teamId === myTeamId);
