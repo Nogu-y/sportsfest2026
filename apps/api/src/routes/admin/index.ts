@@ -6,6 +6,7 @@ import { adminMatchesRoutes } from './matches'
 import { adminLocationsRoutes } from './locations'
 import { adminMapsRoutes } from './maps'
 import { adminUsersRoutes } from './users'
+import { adminBlockRankingsRoutes } from './blockRankings'
 import { requireAdminRole } from '../../middleware/staffAuth'
 
 export const adminRoutes = new OpenAPIHono()
@@ -17,3 +18,4 @@ export const adminRoutes = new OpenAPIHono()
   .route('/locations', adminLocationsRoutes)
   .route('/users', adminUsersRoutes)
   .route('/teams', TeamsRoutes)
+  .route('/block-rankings', adminBlockRankingsRoutes)
