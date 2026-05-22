@@ -6,7 +6,6 @@ import { useSportsFestData } from "../../../hooks/useSportsFestData";
 import { useWatchlist } from "../../../hooks/useWatchlist";
 import { formatStatusLabel, formatTimeLabel, getMatchStartDelayMinutes } from "../../../lib/matchUtils";
 import { MapViewer, MapPin } from "../../map/MapViewer"; 
-import type { MatchWithEventIdType } from "../../../types/SportsFestDataTypes";
 
 type MatchDetailViewProps = {
     matchId: number;
@@ -15,9 +14,6 @@ type MatchDetailViewProps = {
 export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     const {
         isLoading,
-        matches,
-        teams,
-        eventBlocks,
         dayLabelConverter,
         getEvent,
         getLocation,
@@ -62,6 +58,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
     const dayLabel = dayLabelConverter(new Date(match.scheduledStartTime));
     const timeLabel = formatTimeLabel(match.scheduledStartTime);
     const statusLabel = formatStatusLabel(match.status);
+    const teamsNames = getMatchTeamsLabel(match.participants);
     const watched = isWatched(matchId);
     const headerLabel = match.name ?? `#${match.id}`;
     const delayMinutes = getMatchStartDelayMinutes(match);
@@ -71,62 +68,6 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
         const rightRank = right.rank ?? Number.MAX_SAFE_INTEGER;
         return leftRank - rightRank;
     });
-
-    const blockCompletionMap = useMemo(() => {
-        const byBlockId = new Map<number, MatchWithEventIdType[]>();
-        for (const item of matches) {
-            const rows = byBlockId.get(item.eventBlockId) ?? [];
-            rows.push(item);
-            byBlockId.set(item.eventBlockId, rows);
-        }
-
-        const completionMap = new Map<number, boolean>();
-        for (const [blockId, rows] of byBlockId) {
-            completionMap.set(
-                blockId,
-                rows.length > 0 && rows.every((row) => row.status === "Completed"),
-            );
-        }
-        return completionMap;
-    }, [matches]);
-
-    const matchCompletionMap = useMemo(() => {
-        const completionMap = new Map<number, boolean>();
-        for (const item of matches) {
-            completionMap.set(item.id, item.status === "Completed");
-        }
-        return completionMap;
-    }, [matches]);
-
-    const getGuardedParticipantLabel = (participant: MatchWithEventIdType["participants"][number]) => {
-        if (participant.prereqBlockId !== null) {
-            const blockName = eventBlocks?.find((block) => block.id === participant.prereqBlockId)?.name;
-            const rankText = participant.prereqRank ? ` ${participant.prereqRank}位` : " 代表";
-            const completed = blockCompletionMap.get(participant.prereqBlockId) === true;
-            if (!completed) {
-                return `${blockName || "予選"}${rankText}`;
-            }
-        }
-
-        if (participant.prereqMatchId !== null) {
-            const completed = matchCompletionMap.get(participant.prereqMatchId) === true;
-            if (!completed) {
-                return "未定";
-            }
-        }
-
-        if (participant.teamId) {
-            return teams.find((team) => team.id === participant.teamId)?.name ?? "未定";
-        }
-
-        return getMatchTeamsLabel([participant]);
-    };
-
-    const teamsNames = useMemo(() => {
-        return (match.participants ?? [])
-            .map((participant) => getGuardedParticipantLabel(participant))
-            .join(" vs ");
-    }, [match.participants, blockCompletionMap, matchCompletionMap, teams, eventBlocks, getMatchTeamsLabel]);
 
     // 共有処理
     const handleShare = async () => {
@@ -198,7 +139,7 @@ export const MatchDetailView = ({ matchId }: MatchDetailViewProps) => {
                                 className="grid grid-cols-[52px_1fr_56px] items-center gap-2 px-3 py-2 text-sm text-dark"
                             >
                                 <span>{participant.rank ?? "-"}</span>
-                                <span className="truncate">{getGuardedParticipantLabel(participant)}</span>
+                                <span className="truncate">{getMatchTeamsLabel([participant])}</span>
                                 <span className="text-right">{participant.score ?? "-"}</span>
                             </div>
                         ))}

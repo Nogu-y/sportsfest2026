@@ -42,24 +42,6 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
         [matches, block.id]
     )
 
-    const blockCompletionMap = useMemo(() => {
-        const byBlockId = new Map<number, any[]>();
-        for (const match of matches) {
-            const rows = byBlockId.get(match.eventBlockId) ?? [];
-            rows.push(match);
-            byBlockId.set(match.eventBlockId, rows);
-        }
-
-        const completionMap = new Map<number, boolean>();
-        for (const [blockId, rows] of byBlockId) {
-            completionMap.set(
-                blockId,
-                rows.length > 0 && rows.every((row: any) => row.status === "Completed"),
-            );
-        }
-        return completionMap;
-    }, [matches]);
-
     const mainBracketMatches = useMemo(
         () => blockMatches.filter((m: any) => m.stage !== "THIRD_PLACE"),
         [blockMatches]
@@ -275,17 +257,6 @@ export const TournamentTable = ({ block, previewData }: { block: any; previewDat
     const layout = useMemo(() => buildLayout(layoutMatches), [layoutMatches])
 
     const getTeamLabel = (p: any) => {
-        if (p.prereqBlockId) {
-            const blockCompleted = blockCompletionMap.get(p.prereqBlockId) === true;
-            const bName = eventBlocks?.find((b: any) => b.id === p.prereqBlockId)?.name;
-            const rankText = p.prereqRank ? ` ${p.prereqRank}位` : " 代表";
-
-            // 参照元リーグが未完了の間は、teamId が埋まっていても未確定表示に統一
-            if (!blockCompleted) {
-                return `${bName || "予選"}${rankText}`;
-            }
-        }
-
         if (p.teamId) return teams.find((t: any) => t.id === p.teamId)?.name ?? "未定";
         if (p.prereqBlockId) {
             const bName = eventBlocks?.find((b: any) => b.id === p.prereqBlockId)?.name;
