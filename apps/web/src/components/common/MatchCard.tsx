@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {MatchWithEventIdType} from "../../types/SportsFestDataTypes";
 import {useSportsFestData} from "../../hooks/useSportsFestData";
-import {formatStatusLabel, formatTimeLabel} from "../../lib/matchUtils";
+import {formatStatusLabel, formatTimeLabel, getMatchStartDelayMinutes} from "../../lib/matchUtils";
 import {ProgressBar} from "./ProgressBar";
 import {useWatchlist} from "../../hooks/useWatchlist";
 import {useMyTeam} from "../../hooks/useMyTeam";
@@ -43,6 +43,7 @@ const MatchCard = ({
     const statusLabel = formatStatusLabel(match.status);
     const teamsNames = getMatchTeamsLabel(match.participants);
     const watched = isWatched(match.id);
+    const delayMinutes = getMatchStartDelayMinutes(match);
 
     const isMyTeamMatch = match.participants?.some(p => p.teamId === myTeamId);
     // ハイライト用のCSSクラスを動的に付与
@@ -93,6 +94,12 @@ const MatchCard = ({
                         <p className="shrink-0 text-right text-[8px] leading-normal">{statusLabel}</p>
                     )}
                 </div>
+
+                {delayMinutes !== null && (
+                    <p className="text-right text-[10px] font-bold leading-normal text-red-200">
+                        {delayMinutes}分遅延
+                    </p>
+                )}
 
                 {showProgress && match.status === "Playing" && (
                     <ProgressBar

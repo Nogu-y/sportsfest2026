@@ -1,4 +1,5 @@
 import type {matchStatusEnumType} from "../../../api/src/schemas/sportsData";
+import type { MatchWithEventIdType } from "../types/SportsFestDataTypes";
 
 // 開始時刻を "HH:mm~" 形式に変換する
 export const formatTimeLabel = (dateString: string): string => {
@@ -31,6 +32,33 @@ export const formatStatusLabel = (status: matchStatusEnumType | string): string 
         default:
             return status || '';
     }
+};
+
+export const getMatchStartDelayMinutes = (
+    match: Pick<MatchWithEventIdType, "status" | "scheduledStartTime" | "startedAt">,
+    currentTime: Date = new Date(),
+): number | null => {
+    const scheduledStartMs = new Date(match.scheduledStartTime).getTime();
+    if (Number.isNaN(scheduledStartMs)) {
+        return null;
+    }
+
+    let delayedMs: number | null = null;
+
+    if (match.startedAt) {
+        const startedMs = new Date(match.startedAt).getTime();
+        if (!Number.isNaN(startedMs)) {
+            delayedMs = startedMs - scheduledStartMs;
+        }
+    } else if (match.status === "Waiting" || match.status === "Preparing") {
+        delayedMs = currentTime.getTime() - scheduledStartMs;
+    }
+
+    if (delayedMs === null || delayedMs < 3 * 60 * 1000) {
+        return null;
+    }
+
+    return Math.floor(delayedMs / (60 * 1000));
 };
 
 /**
