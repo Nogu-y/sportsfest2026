@@ -3,6 +3,9 @@
 高専体育大会向けの Web アプリケーション基盤です。  
 このリポジトリは、`Next.js` のフロントエンド、`Hono` の API、`PostgreSQL` と `Drizzle ORM` を組み合わせた pnpm モノレポとして構成されています。
 
+> [!NOTE]
+> `docs/test-output/` には本番検証時の資料や運用メモが含まれます。
+
 ## 概要
 
 - フロントエンド: `apps/web`
